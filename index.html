@@ -110,6 +110,17 @@ body.touch #bHelp{display:none}
 body.touch #bSnd.off{text-decoration:none;opacity:.6}
 body.touch #bMap,body.touch #bSnd{width:52px;height:52px}body.touch #bMap{right:14px}body.touch #bSnd{right:74px}
 #bJump svg{width:36px;height:36px}#bCar svg,#bView svg,#bRun svg,#bHit svg{width:30px;height:30px}
+/* ---- v12 phone layout: map + sound under the mini-map, car / view on the right (only when they apply), hit / run / jump along the bottom ---- */
+body.touch #touch #bMap,body.touch #touch #bSnd{top:132px;bottom:auto;right:auto;width:50px;height:50px}body.touch #touch #bMap{left:12px}body.touch #touch #bSnd{left:70px}
+body.touch #where{top:40px}
+body.touch #touch #bCar,body.touch #touch #bView{display:none;right:24px;bottom:auto;width:62px;height:62px}
+body.touch #touch #bCar{top:calc(50% - 76px)}body.touch #touch #bView{top:calc(50% + 2px)}
+body.touch.nearcar #touch #bCar,body.touch.driving #touch #bCar,body.touch.driving #touch #bView{display:flex}
+body.touch #touch #bJump{right:20px;bottom:20px;width:76px;height:76px}
+body.touch #touch #bRun{right:108px;bottom:26px;width:62px;height:62px}
+body.touch #touch #bHit{right:182px;bottom:26px;width:62px;height:62px}
+body.touch.driving #touch #bRun,body.touch.driving #touch #bHit{display:none}
+@media (max-height:340px){body.touch #touch #bCar{top:calc(50% - 66px)}body.touch #touch #bView{top:calc(50% + 2px)}body.touch #touch #bCar,body.touch #touch #bView{width:56px;height:56px}}
 </style>
 </head>
 <body>
