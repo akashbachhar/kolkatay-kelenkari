@@ -18,7 +18,7 @@ export class Player {
     addEventListener('blur', () => { this.keys = {}; });
     let drag = false;
     dom.addEventListener('mousedown', e => { if (e.button !== 0) return; if (document.pointerLockElement === dom) this.hit(); else drag = true; }); dom.addEventListener('contextmenu', e => e.preventDefault()); addEventListener('mouseup', () => drag = false);
-    addEventListener('mousemove', e => { if (document.pointerLockElement === dom || drag) { this.yaw -= e.movementX * .0026; this.pitch = Math.max(-.3, Math.min(1.35, this.pitch + e.movementY * .0022)); } });
+    addEventListener('mousemove', e => { if (document.pointerLockElement === dom || drag) { this.lookT = 1.2; this.yaw -= e.movementX * .0026; this.pitch = Math.max(-.3, Math.min(1.35, this.pitch + e.movementY * .0022)); } });
     dom.addEventListener('wheel', e => { this.dist = Math.max(2.5, Math.min(22, this.dist * (e.deltaY > 0 ? 1.1 : .9))); e.preventDefault(); }, { passive: false });
   }
   hit() { // a punch, straight ahead

@@ -279,18 +279,7 @@ export function buildLandmarks(scene) {
     for (const x of [-58, -50, -42, 42, 50, 58]) stall(k, c, x, 30, 0, pick(['tea', 'fruit', 'bag'])); for (let i = 0; i < 16; i++) c.person(rr(-40, 40), rr(26, 40), rr(0, 6), R() < .4);
   });
 
-  // ───────── North Kolkata: Nakhoda Masjid, Marble Palace, Jorasanko
-  site('Nakhoda Masjid', 'নাখোদা মসজিদ', ll(22.5772, 88.3561), -PI / 2, 45, (k, c) => {
-    c.clear(40, 42); const S = M.sand;
-    k.box(S, 30, 14, 30, 0, 0, 0); k.box(M.cream, 30.6, .7, 30.6, 0, 14, 0); k.box(S, 13, 21, 4, 0, 0, 15.5); k.box(M.dark, 6, 12, .5, 0, 0, 17.3); k.box(M.cream, 8, .6, .5, 0, 13, 17.4);
-    k.cyl(M.cream, 7.4, 7.4, 2.6, 0, 14, -2, 20); k.dome(M.domeG, 7.2, 0, 16.6, -2, 1.25, 22); k.cone(M.gold, .3, 3, 0, 25.6, -2);
-    for (const s of [-1, 1]) {
-      k.cyl(S, 1.5, 2, 40, s * 13.5, 0, 15, 10); k.cyl(M.cream, 2.6, 1.7, 1, s * 13.5, 28, 15, 10); k.cyl(M.cream, 2.4, 1.6, 1, s * 13.5, 37, 15, 10); k.dome(M.domeG, 1.9, s * 13.5, 40, 15, 1.4, 10); k.cone(M.gold, .2, 2, s * 13.5, 42.6, 15);
-      for (const z of [-13.5, 0, 13.5]) { k.cyl(S, .8, .9, 19, s * 15, 0, z, 8); k.dome(M.domeG, 1, s * 15, 19, z, 1.4, 8); }
-      k.wins(M.dark, s * 5.5, 15.05, s * 14, 15.05, 2, 2.4, 6, 1); k.wins(M.dark, s * 15.05, -12, s * 15.05, 12, 5, 2.4, 6, 1); k.dome(M.domeG, 2.6, s * 9, 14.6, 8, 1.2, 12);
-    }
-    k.sign('নাখোদা মসজিদ · NAKHODA MASJID', 10, 1.2, 0, 14.6, 17.6, 0, '#0f3d2e', '#f1e2b0'); c.box(0, 1, 32, 33);
-  });
+  // ───────── North Kolkata: Marble Palace, Jorasanko
   site('Marble Palace', 'মার্বেল প্যালেস', ll(22.5823, 88.36), 0, 50, (k, c) => {
     c.clear(74, 68, 0, 10); const W = M.marble;
     k.box(M.grass, 68, .1, 62, 0, 0, 10); k.box(M.gravel, 6, .14, 30, 0, 0, 26);

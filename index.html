@@ -104,6 +104,12 @@ body.touch #wanted{top:6px}body.touch #wanted i{font-size:26px}
 #wanted{left:auto;right:18px;transform:none;top:12px}
 #bHit{right:204px;bottom:22px;width:68px;height:68px}body.touch.driving #bHit{display:none}
 body.touch #wanted{right:12px;top:6px}body.touch #where{top:44px}body.touch #bMap,body.touch #bSnd{top:92px}body.touch #bHelp{top:96px}
+/* ---- v11: phones get icon buttons and no C button ---- */
+#touch button{display:flex;align-items:center;justify-content:center;padding:0}#touch button svg{display:block;pointer-events:none}
+body.touch #bHelp{display:none}
+body.touch #bSnd.off{text-decoration:none;opacity:.6}
+body.touch #bMap,body.touch #bSnd{width:52px;height:52px}body.touch #bMap{right:14px}body.touch #bSnd{right:74px}
+#bJump svg{width:36px;height:36px}#bCar svg,#bView svg,#bRun svg,#bHit svg{width:30px;height:30px}
 </style>
 </head>
 <body>

@@ -3,6 +3,7 @@ import { resolve, solid } from './collide.js';
 import { bankX, BRIDGE as B, X1, Z0, Z1 } from './data.js';
 import { POLES } from './world.js';
 import { makeFigure, look } from './human.js';
+import { ICON } from './touch.js';
 
 // Take any taxi or bus and drive it. E/F enter or leave, W/S throttle and reverse, A/D steer, Space brake, V view, H horn.
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), $ = id => document.getElementById(id), UP = new THREE.Vector3(0, 1, 0), O3 = new THREE.Object3D(), V3 = new THREE.Vector3();
@@ -27,7 +28,6 @@ export class Drive {
     // the drivers who get turned out of their cabs
     this.dr = []; this.di = 0; for (let i = 0; i < 4; i++) { const r = makeFigure({ ...look(Math.random, false), top: '#b9a77a', bottom: '#3d3a33', full: true }); r.g.visible = false; player.root.parent.add(r.g); this.dr.push(r); }
     addEventListener('keydown', e => { if (e.repeat || !this.playing) return; if (e.code === 'KeyE' || e.code === 'KeyF') this.toggle(); if (e.code === 'KeyV') this.view(); if (e.code === 'KeyH' && this.v) this.snd.horn(this.v.x, this.v.z, this.v.k ? 1 : 0, 1.6); });
-    addEventListener('mousemove', () => { this.look = 1.6; }); addEventListener('pointermove', e => { if (e.pointerType !== 'mouse') this.look = 1.2; });
     const btn = (id, fn) => $(id)?.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
     btn('bCar', () => this.toggle()); btn('bView', () => this.view());
   }
@@ -49,16 +49,16 @@ export class Drive {
       if (had) { // the driver is turned out and stands by his door, shaking his fist
         const r = this.dr[this.di++ % this.dr.length], off = v.hw + 1.1, fo = v.k ? 3.6 : .3; r.g.visible = true; r.g.position.set(v.x + rx * off + fx * fo, 0, v.z + rz * off + fz * fo); r.t = 0; r.car = v; this.snd.yelp(v.x, v.z); this.police?.offence(v.x, v.z, 'steal', 20);
       }
-      this.v = v; v.own = true; v.me = true; v.sp = Math.max(-2, Math.min(3, v.sp)); v.kt = 0; pl.car = v; pl.root.visible = false; this.d0 = pl.dist; pl.dist = Math.max(pl.dist, v.k ? 15 : 8.5); pl.pitch = Math.max(pl.pitch, v.k === 4 ? .3 : .2); this.look = 0; this.st = 0;
-      document.body.classList.add('driving'); if ($('bJump')) $('bJump').textContent = 'BRAKE';
-      this.hud.toast(`<small>DRIVING · ${NAME[v.k].toUpperCase()}</small>${had ? 'এই! আমার গাড়ি!' : NAME[v.k]}<i>E exit · V view · Space brake · H horn</i>`);
+      this.v = v; v.own = true; v.me = true; v.sp = Math.max(-2, Math.min(3, v.sp)); v.kt = 0; pl.car = v; pl.root.visible = false; this.d0 = pl.dist; pl.dist = Math.max(pl.dist, v.k ? 15 : 8.5); pl.pitch = Math.max(pl.pitch, v.k === 4 ? .3 : .2); this.st = 0; pl.lookT = 0; pl.yaw = this.behind = Math.atan2(-Math.cos(v.a), Math.sin(v.a));
+      document.body.classList.add('driving'); if ($('bJump')) $('bJump').innerHTML = ICON.brake;
+      this.hud.toast(`<small>DRIVING · ${NAME[v.k].toUpperCase()}</small>${had ? 'এই! আমার গাড়ি!' : NAME[v.k]}${document.body.classList.contains('touch') ? '' : '<i>E exit · V view · Space brake · H horn</i>'}`);
     } else {
       const v = this.v; if (!force && Math.abs(v.sp) > 3) { this.hud.toast('<small>TOO FAST</small>Brake first, then get out', 1); return; }
       const fx = Math.cos(v.a), fz = -Math.sin(v.a); let ex = null;
       for (const s of [1, -1]) { const x = v.x - fz * s * (v.hw + .9), z = v.z + fx * s * (v.hw + .9); if (!solid(x, 1, z)) { ex = [x, z]; break; } }
       if (!ex) ex = [v.x - fx * (v.hl + .9), v.z - fz * (v.hl + .9)];
       v.sp = 0; v.me = false; v.roll = 0; this.v = null; pl.car = null; pl.pos.set(ex[0], 0, ex[1]); pl.vel.set(0, 0, 0); pl.root.visible = true; pl.dist = this.d0; pl.heading = Math.atan2(fx, fz); this.fp = false;
-      document.body.classList.remove('driving'); if ($('bJump')) $('bJump').textContent = 'JUMP'; this.snd.engine(false); $('speed').textContent = '';
+      document.body.classList.remove('driving'); if ($('bJump')) $('bJump').innerHTML = ICON.jump; this.snd.engine(false); $('speed').textContent = '';
     }
   }
   update(dt) {
@@ -104,7 +104,7 @@ export class Drive {
     if (this.pp.carHit(v, this.snd)) { this.police?.offence(v.x, v.z, 'person'); v.sp *= .93; this.shake = Math.max(this.shake, .15); }
     pl.pos.set(v.x, 0, v.z); pl.heading = Math.atan2(fx, fz);
     // the chase camera swings round behind the car unless you are looking about
-    if ((this.look -= dt) < 0) pl.yaw += wrap(Math.atan2(-fx, -fz) - pl.yaw) * Math.min(1, dt * (1 + Math.min(3, Math.abs(v.sp) * .3))) * (Math.abs(v.sp) > .5 || this.fp ? 1 : 0);
+    { const behind = Math.atan2(-fx, -fz); let off = wrap(pl.yaw - (this.behind ?? behind)); if ((pl.lookT = (pl.lookT || 0) - dt) <= 0) off *= Math.exp(-dt * 4); pl.yaw = behind + off; this.behind = behind; } // turns with the car; only a look-around offset eases back
     this.snd.engine(true, Math.abs(v.sp), Math.abs(thr));
     if (this.n++ % 6 === 0) $('speed').textContent = Math.round(Math.abs(v.sp) * 3.2) + ' km/h' + (v.sp < -.3 ? ' · R' : '');
   }
