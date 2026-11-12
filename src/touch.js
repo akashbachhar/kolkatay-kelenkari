@@ -25,6 +25,7 @@ export function initTouch(player, dom, act) {
   addEventListener('pointerup', end); addEventListener('pointercancel', end);
   const btn = (id, down, up) => { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); down(b); }); if (up) for (const n of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(n, () => up(b)); };
   btn('bJump', () => { player.keys.Space = true; }, () => { player.keys.Space = false; });
+  btn('bHit', () => player.hit());
   btn('bRun', b => { player.run = !player.run; b.classList.toggle('act', player.run); });
   btn('bMap', () => act.map()); btn('bSnd', b => b.classList.toggle('off', act.sound()));
   for (const n of ['gesturestart', 'contextmenu']) addEventListener(n, e => e.preventDefault());

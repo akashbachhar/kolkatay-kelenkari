@@ -100,6 +100,7 @@ export class Drive {
       else { v.x -= fx * dir * .12; v.z -= fz * dir * .12; v.sp = 0; }
     }
     // --- people
+    if (this.police?.carHit(v)) { v.sp *= .93; this.shake = Math.max(this.shake, .15); }
     if (this.pp.carHit(v, this.snd)) { this.police?.offence(v.x, v.z, 'person'); v.sp *= .93; this.shake = Math.max(this.shake, .15); }
     pl.pos.set(v.x, 0, v.z); pl.heading = Math.atan2(fx, fz);
     // the chase camera swings round behind the car unless you are looking about

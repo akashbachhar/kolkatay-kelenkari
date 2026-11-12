@@ -27,13 +27,24 @@ export class Police {
     this.cool = 1.5; this.cases++; if (this.cases === 1) this.origin = [x, z];
     if (this.cases >= 3 && !this.hot) this.hot = HOT;
     this.wanted = true; this.snd.whistle(); this.stars();
-    this.hud.toast(`<small>${['', 'CASE 1', 'CASE 2', 'CASE 3'][Math.min(3, this.cases)]} · পুলিশ দেখে ফেলেছে!</small>${what === 'steal' ? 'Police saw you steal a car' : `Police saw you hit a ${what}`}`);
+    this.hud.toast(`<small>${['', 'CASE 1', 'CASE 2', 'CASE 3'][Math.min(3, this.cases)]} · পুলিশ দেখে ফেলেছে!</small>${what === 'steal' ? 'Police saw you steal a car' : what === 'officer' ? 'You hit a police officer!' : `Police saw you hit a ${what}`}`);
   }
   stars() { const n = Math.min(3, this.cases); document.querySelectorAll('#wanted i').forEach((e, i) => e.classList.toggle('on', i < n)); }
   clear(msg) { this.wanted = false; this.cases = 0; this.hot = 0; this.stars(); for (const o of this.o) if (o.chase) { o.chase = false; o.back = true; } if (msg) this.hud.toast(msg); }
   arrest() {
     this.busted = true; this.clear(); if (this.pl.car) this.dr.toggle(true); this.pl.held = true; this.pl.keys = {}; this.pl.vel.set(0, 0, 0); this.snd.whistle();
     document.exitPointerLock?.(); $('busted').classList.add('on');
+  }
+  knock(o, fx, fz) { o.down = 6; o.fx = fx; o.fz = fz; this.snd.yelp(o.x, o.z); this.offence(o.x, o.z, 'officer'); }
+  hitAt(x, z, fx, fz) { let best = null, bd = .95; for (const o of this.o) { if (!o.rig || o.down > 0) continue; const d = Math.hypot(o.x - x, o.z - z); if (d < bd) { bd = d; best = o; } } if (best) this.knock(best, fx * 2.2, fz * 2.2); return best; }
+  carHit(v) { // a moving car knocks down any officer it touches
+    const sp = v.sp; if (Math.abs(sp) < 1.5) return 0; const c = Math.cos(v.a), s = Math.sin(v.a); let n = 0;
+    for (const o of this.o) {
+      if (!o.rig || o.down > 0) continue; const dx = o.x - v.x, dz = o.z - v.z; if (dx * dx + dz * dz > 80) continue;
+      const lx = dx * c - dz * s, lz = dx * s + dz * c; if (Math.abs(lx) > v.hl + .3 || Math.abs(lz) > v.hw + .3) continue;
+      const side = Math.sign(lz || 1) * 3; this.knock(o, c * sp * .7 + s * side, -s * sp * .7 + c * side); n++;
+    }
+    return n;
   }
   release() { // start again outside Lalbazar
     const h = COPS.hq || [this.pl.pos.x, this.pl.pos.z]; this.busted = false; this.pl.held = false; this.pl.pos.set(h[0], 0, h[1]); $('busted').classList.remove('on');
@@ -45,12 +56,17 @@ export class Police {
       this.tick = .4;
       for (const o of this.o) {
         const d = Math.hypot(o.x - p.x, o.z - p.z);
-        if (o.rig && d > 175 && !o.chase) { o.rig.g.visible = false; this.pool.push(o.rig); o.rig = null; o.back = false; o.x = o.hx; o.z = o.hz; }
+        if (o.rig && d > 175 && !o.chase) { o.down = 0; o.rig.g.rotation.x = 0; o.rig.g.visible = false; this.pool.push(o.rig); o.rig = null; o.back = false; o.x = o.hx; o.z = o.hz; }
         else if (!o.rig && d < 150 && this.pool.length) { o.rig = this.pool.pop(); o.rig.g.visible = true; }
       }
     }
     for (const o of this.o) {
       if (!o.rig) continue; const g = o.rig.g, dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz) || 1;
+      if (o.down > 0) { // knocked over: flung, lies a while, then gets up and comes after you
+        o.down -= dt; o.x += o.fx * dt; o.z += o.fz * dt; const q = 1 - Math.min(1, 3.5 * dt); o.fx *= q; o.fz *= q;
+        const k = o.down <= 0 ? 0 : o.down < 1.2 ? o.down / 1.2 : Math.min(1, (6 - o.down) * 5); g.rotation.x = -Math.PI / 2 * k; g.position.set(o.x, .14 * k, o.z);
+        if (o.down <= 0) { g.rotation.x = 0; if (!o.chase) o.back = true; } continue;
+      }
       if (this.wanted && !o.chase && (this.hot || d < 60) && !pl.ride) { o.chase = true; o.back = false; }
       if (o.chase) {
         if ((!this.hot && d > 140) || pl.ride) { o.chase = false; o.back = true; }

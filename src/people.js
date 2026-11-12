@@ -55,6 +55,12 @@ export class People {
     const f = (x, z) => { const dx = p.x - x, dz = p.z - z, d = Math.hypot(dx, dz); if (d < .75 && d > 1e-3) { p.x = x + dx / d * .75; p.z = z + dz / d * .75; } };
     for (const w of this.w) if (w.seg && !(w.down > 0)) f(w.x, w.z); for (const r of this.r) if (r.rig.g.visible && !(r.down > 0)) f(r.x, r.z);
   }
+  hitAt(x, z, fx, fz, snd) { // the nearest person within reach of a punch falls over
+    let best = null, bd = .95;
+    for (const o of [...this.w.filter(w => w.seg), ...this.r.filter(r => r.rig.g.visible)]) { if (o.down > 0) continue; const d = Math.hypot(o.x - x, o.z - z); if (d < bd) { bd = d; best = o; } }
+    if (best) { best.down = 7; best.dazed = false; best.fx = fx * 2.2; best.fz = fz * 2.2; snd.yelp(best.x, best.z); }
+    return best;
+  }
   carHit(v, snd) { // a moving car knocks down anyone it touches
     const sp = v.sp; if (Math.abs(sp) < 1.5) return 0;
     const c = Math.cos(v.a), s = Math.sin(v.a); let n = 0;

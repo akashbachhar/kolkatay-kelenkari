@@ -41,12 +41,16 @@ async function start() {
   scene.add(sun, sun.target);
 
   const world = buildWorld(scene), traffic = new Traffic(scene), player = new Player(scene, camera, renderer.domElement), hud = new Hud(), people = new People(scene, folk, roams, TOUCH ? 26 : 48, TOUCH), sound = new Sound();
-  player.onStep = fast => sound.step(fast);
+  let police; player.onStep = fast => sound.step(fast);
+  player.onPunch = (x, z, fx, fz) => { // a person or an officer within reach falls; any officer within 50 m makes it a case
+    const who = people.hitAt(x, z, fx, fz, sound), cop = who ? null : police.hitAt(x, z, fx, fz); sound.punch(!!(who || cop));
+    if (who) police.offence(who.x, who.z, 'person');
+  };
   const ferry = new Ferry(scene, player, hud, sound); if (Q.get('zone') === 'dak') ferry.jump('dak');
   for (const k of ['x', 'z']) if (Q.has(k)) player.pos[k] = +Q.get(k);
   for (const k of ['yaw', 'pitch', 'dist', 'heading']) if (Q.has(k)) player[k] = +Q.get(k);
   const drive = new Drive(player, traffic, sound, hud, camera, people);
-  const police = new Police(scene, player, drive, hud, sound); drive.police = police;
+  police = new Police(scene, player, drive, hud, sound); drive.police = police;
   window.kk = { drive, police, player, scene, camera, renderer, hud, sound, people, traffic, ferry };
 
   let playing = false; const dom = renderer.domElement, ov = $('overlay');

@@ -100,6 +100,10 @@ body.touch #bHelp{display:block;left:auto;right:142px;top:66px}body.touch #bMap{
 body.touch #wanted{top:6px}body.touch #wanted i{font-size:26px}
 @media (max-width:900px),(max-height:560px){#where{right:20px;left:auto;bottom:20px}}
 @media (max-width:520px){body.touch #where{right:14px;top:12px}}
+/* ---- v10: case stars top right, HIT button on phones ---- */
+#wanted{left:auto;right:18px;transform:none;top:12px}
+#bHit{right:204px;bottom:22px;width:68px;height:68px}body.touch.driving #bHit{display:none}
+body.touch #wanted{right:12px;top:6px}body.touch #where{top:44px}body.touch #bMap,body.touch #bSnd{top:92px}body.touch #bHelp{top:96px}
 </style>
 </head>
 <body>
@@ -110,14 +114,14 @@ body.touch #wanted{top:6px}body.touch #wanted i{font-size:26px}
   <div id="where"><div id="road"></div><div id="area"></div></div>
   <button id="bHelp" aria-label="Controls">C</button>
   <div id="keys"><h4>Controls</h4>
-    <div class="grid kb"><b>W A S D</b><span>walk / drive</span><b>Mouse</b><span>look around</span><b>Shift</b><span>sprint</span><b>Space</b><span>jump · brake</span><b>X</b><span>walk / jog</span><b>E</b><span>get in / out of a taxi or bus</span><b>V</b><span>first / third person</span><b>H</b><span>horn</span><b>Wheel</b><span>zoom</span><b>M</b><span>city map</span><b>N</b><span>sound on / off</span><b>C</b><span>these controls</span><b>Esc</b><span>free the mouse</span></div>
-    <div class="grid tc"><b>Left thumb</b><span>walk / drive</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump · brake</span><b>CAR</b><span>get in / out</span><b>VIEW</b><span>first / third person</span><b>MAP</b><span>city map</span><b>SOUND</b><span>sound on / off</span></div>
+    <div class="grid kb"><b>W A S D</b><span>walk / drive</span><b>Mouse</b><span>look around</span><b>Shift</b><span>sprint</span><b>Space</b><span>jump · brake</span><b>Right click</b><span>hit</span><b>X</b><span>walk / jog</span><b>E</b><span>get in / out of a taxi or bus</span><b>V</b><span>first / third person</span><b>H</b><span>horn</span><b>Wheel</b><span>zoom</span><b>M</b><span>city map</span><b>N</b><span>sound on / off</span><b>C</b><span>these controls</span><b>Esc</b><span>free the mouse</span></div>
+    <div class="grid tc"><b>Left thumb</b><span>walk / drive</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump · brake</span><b>HIT</b><span>hit</span><b>CAR</b><span>get in / out</span><b>VIEW</b><span>first / third person</span><b>MAP</b><span>city map</span><b>SOUND</b><span>sound on / off</span></div>
     <small>Tap or press C to close</small></div>
   <canvas id="big"></canvas>
   <div id="wanted"><i>★</i><i>★</i><i>★</i></div><div id="hint"></div><div id="speed"></div>
   <div id="paused">Click to continue</div>
 </div>
-<div id="touch"><div id="joy"><div id="knob"></div></div><button id="bRun">RUN</button><button id="bCar">CAR</button><button id="bView">VIEW</button><button id="bJump">JUMP</button><button id="bMap">MAP</button><button id="bSnd">SOUND</button></div>
+<div id="touch"><div id="joy"><div id="knob"></div></div><button id="bRun">RUN</button><button id="bHit">HIT</button><button id="bCar">CAR</button><button id="bView">VIEW</button><button id="bJump">JUMP</button><button id="bMap">MAP</button><button id="bSnd">SOUND</button></div>
 <div id="busted"><h3>ধরা পড়েছ!</h3><p>GAME OVER · Arrested by Kolkata Police</p><button id="retry">Start again at Lalbazar</button></div>
 <div id="overlay">
   <h1>কলকাতায় কেলেঙ্কারি</h1>

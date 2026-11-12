@@ -17,9 +17,13 @@ export class Player {
     addEventListener('keyup', e => { this.keys[e.code] = false; });
     addEventListener('blur', () => { this.keys = {}; });
     let drag = false;
-    dom.addEventListener('mousedown', () => drag = true); addEventListener('mouseup', () => drag = false);
+    dom.addEventListener('mousedown', e => { if (e.button === 2) this.hit(); else drag = true; }); dom.addEventListener('contextmenu', e => e.preventDefault()); addEventListener('mouseup', () => drag = false);
     addEventListener('mousemove', e => { if (document.pointerLockElement === dom || drag) { this.yaw -= e.movementX * .0026; this.pitch = Math.max(-.3, Math.min(1.35, this.pitch + e.movementY * .0022)); } });
     dom.addEventListener('wheel', e => { this.dist = Math.max(2.5, Math.min(22, this.dist * (e.deltaY > 0 ? 1.1 : .9))); e.preventDefault(); }, { passive: false });
+  }
+  hit() { // a punch, straight ahead
+    if (this.car || this.ride || this.held || this.punchT > 0) return; this.punchT = .32;
+    const fx = Math.sin(this.heading), fz = Math.cos(this.heading); this.onPunch?.(this.pos.x + fx * .9, this.pos.z + fz * .9, fx, fz);
   }
   update(dt, traffic, people) {
     const p = this.pos, k = this.keys;
@@ -52,6 +56,7 @@ export class Player {
     this.speed = Math.hypot(this.vel.x, this.vel.z);
     this.root.position.copy(p); this.root.rotation.y = this.heading;
     animate(this.rig, this.speed, dt);
+    if (this.punchT > 0) { this.punchT -= dt; const k = Math.sin(Math.max(0, this.punchT) / .32 * Math.PI); this.rig.armR.rotation.x = -1.65 * k; this.rig.body.rotation.y = -.35 * k; } else this.rig.body.rotation.y = 0;
     const st = Math.floor(this.rig.ph / PI); if (st !== this.stepN) { this.stepN = st; if (this.speed > .7 && p.y === 0) this.onStep?.(this.speed > 6); }
     // orbit camera, pulled in when a wall is in the way
     const cp = Math.cos(this.pitch), dx = Math.sin(this.yaw) * cp, dy = Math.sin(this.pitch), dz = Math.cos(this.yaw) * cp, tx = p.x, ty = p.y + 1.6, tz = p.z;
