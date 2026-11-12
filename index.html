@@ -69,6 +69,24 @@ body.touch #wanted{top:72px;font-size:13px}
 #busted{display:none;position:fixed;inset:0;background:rgba(20,8,6,.86);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:5}#busted.on{display:flex}
 #busted h3{margin:0;font-size:clamp(40px,9vw,96px);line-height:1;color:#fff;text-shadow:0 4px 0 var(--red)}#busted p{font-size:20px;margin:10px 0 24px;color:var(--taxi)}
 #retry{border:0;background:var(--taxi);color:var(--ink);font:800 20px "Baloo Da 2",system-ui;padding:10px 36px;border-radius:4px;cursor:pointer}
+/* ---- minimal HUD: map and place name on the right, controls behind C ---- */
+#mapbox{left:auto;right:20px}
+#where{left:auto;right:240px;bottom:28px;text-align:right}
+#road{font-size:16px}
+#speed{right:auto;left:50%;transform:translateX(-50%);bottom:22px}
+#bHelp{position:absolute;right:20px;bottom:232px;width:40px;height:40px;border-radius:50%;border:2px solid var(--taxi);background:rgba(23,19,15,.75);color:var(--taxi);font:800 18px "Baloo Da 2",system-ui;pointer-events:auto;cursor:pointer;padding:0}
+#keys{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(23,19,15,.94);border:5px solid var(--ink);box-shadow:0 0 0 2px var(--taxi),0 20px 60px rgba(0,0,0,.6);padding:20px 30px 16px;pointer-events:auto;max-width:94vw;max-height:90vh;overflow:auto}
+#keys.on{display:block}#keys h4{margin:0 0 12px;font-size:24px;color:var(--taxi);text-align:center}
+#keys .grid{display:grid;grid-template-columns:auto auto;gap:6px 22px;font-size:16px}#keys .grid b{color:var(--taxi);text-align:right}
+#keys small{display:block;text-align:center;margin-top:14px;opacity:.6}
+#keys .tc{display:none}body.touch #keys .tc{display:grid}body.touch #keys .kb{display:none}
+#load{margin-top:8px}
+body.touch #mapbox{left:auto;right:12px;top:12px;bottom:auto}
+body.touch #where{left:auto;right:136px;top:16px;bottom:auto}
+body.touch #bMap,body.touch #bSnd{width:58px;height:58px;font-size:10px;letter-spacing:0}body.touch #bMap{right:auto;left:12px}body.touch #bSnd{right:auto;left:76px}
+body.touch #bHelp{right:auto;left:142px;top:22px;bottom:auto;width:50px;height:50px}
+@media (max-width:900px),(max-height:560px){#where{left:auto;right:166px;bottom:20px}#bHelp{bottom:160px}}
+@media (max-width:520px){body.touch #where{left:auto;right:12px;top:132px}}
 </style>
 </head>
 <body>
@@ -76,8 +94,12 @@ body.touch #wanted{top:72px;font-size:13px}
 <div id="hud">
   <div id="toast"></div>
   <div id="mapbox"><canvas id="mini" width="200" height="200"></canvas></div>
-  <div id="where"><div id="road"></div><div id="area"></div><div id="count"></div></div>
-  <div id="help">WASD move · Mouse look · Shift sprint · Space jump<br>E drive a taxi or bus · V view · H horn · C walk / jog<br>Wheel zoom · M map · N sound · Esc free the mouse</div>
+  <div id="where"><div id="road"></div><div id="area"></div></div>
+  <button id="bHelp" aria-label="Controls">C</button>
+  <div id="keys"><h4>Controls</h4>
+    <div class="grid kb"><b>W A S D</b><span>walk / drive</span><b>Mouse</b><span>look around</span><b>Shift</b><span>sprint</span><b>Space</b><span>jump · brake</span><b>X</b><span>walk / jog</span><b>E</b><span>get in / out of a taxi or bus</span><b>V</b><span>first / third person</span><b>H</b><span>horn</span><b>Wheel</b><span>zoom</span><b>M</b><span>city map</span><b>N</b><span>sound on / off</span><b>C</b><span>these controls</span><b>Esc</b><span>free the mouse</span></div>
+    <div class="grid tc"><b>Left thumb</b><span>walk / drive</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump · brake</span><b>CAR</b><span>get in / out</span><b>VIEW</b><span>first / third person</span><b>MAP</b><span>city map</span><b>SOUND</b><span>sound on / off</span></div>
+    <small>Tap or press C to close</small></div>
   <canvas id="big"></canvas>
   <div id="wanted"></div><div id="hint"></div><div id="speed"></div>
   <div id="paused">Click to continue</div>
@@ -85,13 +107,10 @@ body.touch #wanted{top:72px;font-size:13px}
 <div id="touch"><div id="joy"><div id="knob"></div></div><button id="bRun">RUN</button><button id="bCar">CAR</button><button id="bView">VIEW</button><button id="bJump">JUMP</button><button id="bMap">MAP</button><button id="bSnd">SOUND</button></div>
 <div id="busted"><h3>ধরা পড়েছ!</h3><p>GAME OVER · Arrested by Kolkata Police</p><button id="retry">Start again at Lalbazar</button></div>
 <div id="overlay">
-  <div class="plate">WB · 04 · 2026</div>
   <h1>কলকাতায় কেলেঙ্কারি</h1>
   <h2>Kolkatay Kelenkari</h2>
   <div id="load">Building the city…</div>
   <button id="play">PLAY</button>
-  <div class="keys kb"><b>W A S D</b><span>walk around</span><b>Mouse</b><span>look</span><b>Shift</b><span>sprint</span><b>Space</b><span>jump</span><b>E</b><span>get in / out of a car</span><b>M</b><span>city map</span><b>N</b><span>sound on / off</span></div>
-  <div class="keys tc"><b>Left thumb</b><span>move</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump</span><b>CAR</b><span>drive a taxi or bus</span></div>
 </div>
 <script type="module" src="./src/main.js"></script>
 </body>

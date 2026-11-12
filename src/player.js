@@ -13,7 +13,7 @@ export class Player {
     this.root = new THREE.Group(); scene.add(this.root);
     // the protagonist: a boy in a white checked shirt and black trousers
     this.rig = makeFigure({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', map: checkTex(), s: .96, hi: true }); this.root.add(this.rig.g); this.stepN = 0;
-    addEventListener('keydown', e => { if (e.repeat) return; this.keys[e.code] = true; if (e.code === 'KeyC') this.walk = !this.walk; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); });
+    addEventListener('keydown', e => { if (e.repeat) return; this.keys[e.code] = true; if (e.code === 'KeyX') this.walk = !this.walk; if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault(); });
     addEventListener('keyup', e => { this.keys[e.code] = false; });
     addEventListener('blur', () => { this.keys = {}; });
     let drag = false;
