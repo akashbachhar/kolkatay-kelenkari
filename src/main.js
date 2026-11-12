@@ -50,7 +50,7 @@ async function start() {
   for (const k of ['x', 'z']) if (Q.has(k)) player.pos[k] = +Q.get(k);
   for (const k of ['yaw', 'pitch', 'dist', 'heading']) if (Q.has(k)) player[k] = +Q.get(k);
   const drive = new Drive(player, traffic, sound, hud, camera, people);
-  police = new Police(scene, player, drive, hud, sound); drive.police = police;
+  police = new Police(scene, player, drive, hud, sound); player.police = police; drive.police = police;
   window.kk = { drive, police, player, scene, camera, renderer, hud, sound, people, traffic, ferry };
 
   let playing = false; const dom = renderer.domElement, ov = $('overlay');

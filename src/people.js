@@ -38,7 +38,9 @@ export class People {
       if (w.down > 0) { this.fall(w, dt); if (w.down <= 0) w.dazed = true; continue; }
       if (w.dazed) { animate(w.rig, 0, dt); if (far > 60) { w.dazed = false; this.place(w, p, false); } continue; }
       if (!w.seg || far > 135) { this.place(w, p, !w.seg && this.first || far > 320); if (!w.seg) continue; }
-      w.s += w.dir * w.sp * dt; if (w.s > w.len - 1) w.dir = -1; else if (w.s < 1) w.dir = 1;
+      const bx = p.x - w.x, bz = p.z - w.z, bd = Math.hypot(bx, bz), block = bd < 1.3 && (bx * w.tx + bz * w.tz) * w.dir > 0;
+      if (block) { w.wait = (w.wait || 0) + dt; if (w.wait > 2.5) { w.dir *= -1; w.wait = 0; } animate(w.rig, 0, dt); w.rig.g.rotation.y = Math.atan2(w.tx * w.dir, w.tz * w.dir); continue; } // wait, then turn back
+      w.wait = 0; w.s += w.dir * w.sp * dt; if (w.s > w.len - 1) w.dir = -1; else if (w.s < 1) w.dir = 1;
       w.x = w.seg.ax + w.tx * w.s + w.tz * w.side * w.off; w.z = w.seg.az + w.tz * w.s - w.tx * w.side * w.off;
       const g = w.rig.g; g.position.set(w.x, 0, w.z); g.rotation.y = Math.atan2(w.tx * w.dir, w.tz * w.dir); animate(w.rig, w.sp, dt);
     }
@@ -46,13 +48,13 @@ export class People {
       const g = r.rig.g, on = Math.hypot(r.zn.x - p.x, r.zn.z - p.z) < 230; g.visible = on; if (!on) continue;
       if (r.down > 0) { this.fall(r, dt); continue; }
       if (r.wait > 0) { r.wait -= dt; animate(r.rig, 0, dt); }
-      else { const dx = r.t[0] - r.x, dz = r.t[1] - r.z, d = Math.hypot(dx, dz); if (d < .4) { r.wait = 1 + Math.random() * 6; r.t = this.spot(r.zn); } else { r.x += dx / d * r.sp * dt; r.z += dz / d * r.sp * dt; g.rotation.y = Math.atan2(dx, dz); animate(r.rig, r.sp, dt); } }
+      else { const dx = r.t[0] - r.x, dz = r.t[1] - r.z, d = Math.hypot(dx, dz), qx = p.x - r.x, qz = p.z - r.z; if (Math.hypot(qx, qz) < 1.3 && qx * dx + qz * dz > 0) { r.wait = .8; r.t = this.spot(r.zn); } else if (d < .4) { r.wait = 1 + Math.random() * 6; r.t = this.spot(r.zn); } else { r.x += dx / d * r.sp * dt; r.z += dz / d * r.sp * dt; g.rotation.y = Math.atan2(dx, dz); animate(r.rig, r.sp, dt); } }
       g.position.set(r.x, 0, r.z);
     }
     this.first = false;
   }
   push(p) {
-    const f = (x, z) => { const dx = p.x - x, dz = p.z - z, d = Math.hypot(dx, dz); if (d < .75 && d > 1e-3) { p.x = x + dx / d * .75; p.z = z + dz / d * .75; } };
+    const R = .8, f = (x, z) => { const dx = p.x - x, dz = p.z - z, d = Math.hypot(dx, dz); if (d < R && d > 1e-3) { p.x = x + dx / d * R; p.z = z + dz / d * R; } };
     for (const w of this.w) if (w.seg && !(w.down > 0)) f(w.x, w.z); for (const r of this.r) if (r.rig.g.visible && !(r.down > 0)) f(r.x, r.z);
   }
   hitAt(x, z, fx, fz, snd) { // the nearest person within reach of a punch falls over

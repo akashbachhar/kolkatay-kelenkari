@@ -46,6 +46,7 @@ export class Police {
     }
     return n;
   }
+  push(p) { for (const o of this.o) { if (!o.rig || o.down > 0) continue; const dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .8 && d > 1e-3) { p.x = o.x + dx / d * .8; p.z = o.z + dz / d * .8; } } }
   release() { // start again outside Lalbazar
     const h = COPS.hq || [this.pl.pos.x, this.pl.pos.z]; this.busted = false; this.pl.held = false; this.pl.pos.set(h[0], 0, h[1]); $('busted').classList.remove('on');
     for (const o of this.o) { o.back = false; o.x = o.hx; o.z = o.hz; }

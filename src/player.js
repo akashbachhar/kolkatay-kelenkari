@@ -17,7 +17,7 @@ export class Player {
     addEventListener('keyup', e => { this.keys[e.code] = false; });
     addEventListener('blur', () => { this.keys = {}; });
     let drag = false;
-    dom.addEventListener('mousedown', e => { if (e.button === 2) this.hit(); else drag = true; }); dom.addEventListener('contextmenu', e => e.preventDefault()); addEventListener('mouseup', () => drag = false);
+    dom.addEventListener('mousedown', e => { if (e.button !== 0) return; if (document.pointerLockElement === dom) this.hit(); else drag = true; }); dom.addEventListener('contextmenu', e => e.preventDefault()); addEventListener('mouseup', () => drag = false);
     addEventListener('mousemove', e => { if (document.pointerLockElement === dom || drag) { this.yaw -= e.movementX * .0026; this.pitch = Math.max(-.3, Math.min(1.35, this.pitch + e.movementY * .0022)); } });
     dom.addEventListener('wheel', e => { this.dist = Math.max(2.5, Math.min(22, this.dist * (e.deltaY > 0 ? 1.1 : .9))); e.preventDefault(); }, { passive: false });
   }
@@ -37,7 +37,7 @@ export class Player {
       p.x += this.vel.x * dt; p.z += this.vel.z * dt;
       if (k.Space && p.y === 0) this.vy = 6.4;
       p.y += this.vy * dt; this.vy -= 19 * dt; if (p.y <= 0) { p.y = 0; this.vy = 0; }
-      resolve(p, .45); traffic.push(p, .45); people?.push(p); resolve(p, .45);
+      resolve(p, .45); traffic.push(p, .45); people?.push(p); this.police?.push(p); resolve(p, .45);
       this.edge = 0;
       if (this.zone) { const Z = this.zone; if (p.x < Z.x0) p.x = Z.x0; if (p.x > Z.x1) { p.x = Z.x1; this.edge = 1; } if (p.z < Z.z0) { p.z = Z.z0; this.edge = 1; } if (p.z > Z.z1) { p.z = Z.z1; this.edge = 1; } }
       else {
