@@ -18,12 +18,12 @@ export function buildLandmarks(scene) {
     const W = (lx, lz) => [x + lx * cs + lz * sn, z - lx * sn + lz * cs];
     const c = {
       W,
-      roam: (w, d, ox = 0, oz = 0, n = 6) => { const p = W(ox, oz); roams.push({ x: p[0], z: p[1], hw: w / 2, hd: d / 2, c: cs, s: sn, n }); },
+      roam: (w, d, ox = 0, oz = 0, n = 6, o) => { const p = W(ox, oz); roams.push({ x: p[0], z: p[1], hw: w / 2, hd: d / 2, c: cs, s: sn, n, o }); },
       box: (lx, lz, w, d, h = 60, r2 = 0) => { const p = W(lx, lz); addBox(p[0], p[1], w, d, ry + r2, h); },
       circ: (lx, lz, rad, h = 60) => { const p = W(lx, lz); addCirc(p[0], p[1], rad, h); },
       clear: (w, d, ox = 0, oz = 0) => { const p = W(ox, oz); clears.push({ x: p[0], z: p[1], hw: w / 2, hd: d / 2, c: cs, s: sn }); },
       tree: (lx, lz, s = 1) => trees.push([...W(lx, lz), s]),
-      person: (lx, lz, r2 = 0, woman, pose, o) => { const p = W(lx, lz); folk.push({ x: p[0], z: p[1], ry: ry + r2, woman, pose, o }); },
+      person: (lx, lz, r2 = 0, woman, pose, o, y = 0) => { const p = W(lx, lz); folk.push({ x: p[0], z: p[1], y, ry: ry + r2, woman, pose, o }); },
     };
     fn(k, c);
     const g = k.build(); g.position.set(x, 0, z); g.rotation.y = ry; scene.add(g);
@@ -334,14 +334,6 @@ export function buildLandmarks(scene) {
     for (let i = 0; i < 6; i++) { const a = i * PI / 3 + .4, x = Math.cos(a) * 52, z = Math.sin(a) * 52; k.box(M.cream, 36, 8, 11, x, 0, z, -a + PI / 2); k.add(M.roofR, new THREE.BoxGeometry(36, 7, 7), x, 8, z, -a + PI / 2, PI / 4); }
     k.cyl(M.steel, .16, .22, 32, 0, 0, 0, 8); k.box(M.saffron, 6, 1.3, .1, 3.1, 30.6, 0); k.box(M.white, 6, 1.3, .1, 3.1, 29.3, 0); k.box(M.green, 6, 1.3, .1, 3.1, 28, 0);
     for (let i = 0; i < 26; i++) { const a = R() * 7, d = rr(14, 88); c.tree(Math.cos(a) * d, Math.sin(a) * d, 1.1); }
-  });
-  site('Race Course', 'রেস কোর্স', ll(22.545, 88.3368), 0, 110, (k, c) => {
-    c.clear(206, 132, 6, 0);
-    k.add(M.track, new THREE.RingGeometry(.87, 1, 72).rotateX(-PI / 2).scale(90, 1, 56), 0, .12, 0);
-    for (const [s, m] of [[.86, M.white], [1.01, M.white]]) k.add(m, new THREE.TorusGeometry(1, .004, 4, 72).rotateX(PI / 2).scale(90 * s, 70, 56 * s), 0, 1, 0);
-    k.box(M.white, 12, 9, 70, 100, 0, 0); for (let i = 0; i < 5; i++) k.box(M.conc, 2.2, 1.5 + i * 1.5, 70, 93 - i * 2.2 + 4, 0, 0);
-    k.box(M.tin, 18, .5, 72, 96, 11.5, 0); k.cols(M.steel, 89, -34, 89, 34, 8, .2, 11.5, 0);
-    k.sign('ROYAL CALCUTTA TURF CLUB · রেস কোর্স', 22, 2, 106.2, 6.5, 0, PI / 2, '#1d3b2a', '#f3e9c8'); c.box(98, 0, 18, 72);
   });
   site('Prinsep Ghat', 'প্রিন্সেপ ঘাট', ll(22.5563, 88.3314), PI / 2, 55, (k, c) => {
     c.clear(54, 50); const W = M.white;

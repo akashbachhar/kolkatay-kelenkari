@@ -11,6 +11,7 @@ import { initTouch } from './touch.js';
 import { folk, roams, anims } from './landmarks.js';
 import { Ferry } from './ferry.js';
 import { Drive } from './drive.js';
+import { Police } from './police.js';
 import { nearestRoad } from './world.js';
 
 const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search);
@@ -44,8 +45,9 @@ async function start() {
   const ferry = new Ferry(scene, player, hud, sound); if (Q.get('zone') === 'dak') ferry.jump('dak');
   for (const k of ['x', 'z']) if (Q.has(k)) player.pos[k] = +Q.get(k);
   for (const k of ['yaw', 'pitch', 'dist', 'heading']) if (Q.has(k)) player[k] = +Q.get(k);
-  const drive = new Drive(player, traffic, sound, hud, camera);
-  window.kk = { drive, player, scene, camera, renderer, hud, sound, people, traffic, ferry };
+  const drive = new Drive(player, traffic, sound, hud, camera, people);
+  const police = new Police(scene, player, drive, hud, sound); drive.police = police;
+  window.kk = { drive, police, player, scene, camera, renderer, hud, sound, people, traffic, ferry };
 
   let playing = false; const dom = renderer.domElement, ov = $('overlay');
   const lock = () => { if (!TOUCH) dom.requestPointerLock?.()?.catch?.(() => { }); };
@@ -66,7 +68,7 @@ async function start() {
     if (playing && (oc -= dt) < 0) { oc = 1; open = !!player.zone || player.ride || nearestRoad(player.pos.x, player.pos.z).d > 45; }
     if (playing) sound.tick(dt, open, !!player.zone && !player.ride);
     ferry.update(dt, t, playing); for (const f of anims) f(t);
-    drive.playing = playing; drive.update(dt);
+    drive.playing = playing; drive.update(dt); if (playing) police.update(dt);
     if (playing) { player.update(dt, traffic, people); drive.camera(); } else { player.yaw += dt * .05; player.update(0, traffic); }
     sun.position.copy(player.pos).addScaledVector(sunDir, 420); sun.target.position.copy(player.pos);
     world.update(t); if (playing) hud.update(player);

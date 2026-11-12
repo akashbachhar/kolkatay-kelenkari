@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { M, PI, R, rr, pick } from './kit.js';
-import { ll, ROADS, DAK, RIVER_W } from './data.js';
+import { Kit, M, PI, R, rr, pick } from './kit.js';
+import { ll, ROADS, DAK, RIVER_W, COPS } from './data.js';
 import { addBox } from './collide.js';
 
 // Second batch of places: Park Street, the markets, metro entrances, College Street, gully cricket, Dakshineswar.
@@ -308,4 +308,128 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
       k.beam(St, [a0, h0, z], [a1, h1, z], .7); if (i) k.beam(St, [a0, 4.2, z], [a0, h0, z], .35); k.beam(St, i % 2 ? [a0, h0, z] : [a0, 4.2, z], i % 2 ? [a1, 4.2, z] : [a1, h1, z], .28);
     }
   });
+
+  // ───────── The 42, the tower on Chowringhee
+  onRoad('The 42', 'দ্য ফর্টি-টু', 'Chowringhee Road', 900, 50, (k, c, hw) => {
+    const zc = -(hw + 6 + 16), T = M.tower, W = M.white; c.clear(54, 44, 0, zc);
+    k.box(M.conc, 44, 11, 30, 0, 0, zc); k.box(W, 44.8, .6, 30.8, 0, 11, zc); for (const y of [.8, 6]) k.wins(M.glass, -21, zc + 15.05, 21, zc + 15.05, 9, 3.6, 3.8, y);
+    k.box(M.dark, 7, 4.4, .4, 0, 0, zc + 15.1); k.box(W, 12, .4, 5, 0, 4.8, zc + 17); k.cols(M.steel, -5, zc + 19, 5, zc + 19, 2, .15, 4.8, 0);
+    k.box(T, 24, 216, 22, 0, 11.6, zc); for (const s of [-1, 1]) { k.box(W, 2.4, 222, 8, s * 12.8, 11.6, zc); k.box(W, 24, 216, .5, 0, 11.6, zc + s * 11.2).box(T, 21, 216, .7, 0, 11.6, zc + s * 11.2); }
+    for (let y = 47.6; y < 220; y += 36) k.box(W, 25.4, .8, 23.4, 0, y, zc);
+    k.box(W, 25.6, 2.4, 23.6, 0, 227.6, zc); k.box(W, 12, 7, 10, 0, 230, zc); k.cyl(M.steel, .15, .3, 20, 0, 237, zc, 6); k.box(M.lamp, .5, .5, .5, 0, 257, zc);
+    k.sign('THE 42', 9, 2, 0, 12.6, zc + 15.5, 0, '#141414', '#e8e8e8'); k.sign('42 · CHOWRINGHEE', 5, .8, 0, 5.4, zc + 19.6, 0, '#e8e8e8', '#141414');
+    c.box(0, zc, 44, 30, 260);
+  });
+
+  // ───────── South Park Street Cemetery (1767)
+  onRoad('South Park Street Cemetery', 'সাউথ পার্ক স্ট্রিট সেমেট্রি', 'Park Street', 640, 64, (k, c, hw) => {
+    const z0 = hw + 5.5, D = 82, zc = z0 + D / 2, Wd = 112, S = M.moss;
+    const wall = (x1, za, x2, zb) => { const L = Math.hypot(x2 - x1, zb - za), a = Math.atan2(-(zb - za), x2 - x1), mx = (x1 + x2) / 2, mz = (za + zb) / 2; k.box(M.brickD, L, 3.4, .8, mx, 0, mz, a); k.box(S, L + .2, .3, 1.1, mx, 3.4, mz, a); c.box(mx, mz, L, .8, 4, a); };
+    c.clear(Wd + 8, D + 8, 0, zc); k.box(M.grass, Wd, .1, D, 0, 0, zc); k.box(M.gravel, 4.5, .14, D - 2, 0, 0, zc); k.box(M.gravel, Wd - 4, .14, 3.5, 0, 0, zc);
+    wall(-Wd / 2, z0, -5.8, z0); wall(5.8, z0, Wd / 2, z0); wall(-Wd / 2, z0 + D, Wd / 2, z0 + D); wall(-Wd / 2, z0, -Wd / 2, z0 + D); wall(Wd / 2, z0, Wd / 2, z0 + D);
+    for (const s of [-1, 1]) { k.box(M.cream, 3, 7, 3.4, s * 4.4, 0, z0); c.box(s * 4.4, z0, 3, 3.4, 8); k.box(M.iron, .12, 3.6, 2.7, s * 2.8, .1, z0 + 1.6); }
+    k.box(M.cream, 12, 1.5, 3.6, 0, 7, z0); k.gable(M.cream, 12.8, 2.6, 3.8, 0, 8.5, z0);
+    k.sign('SOUTH PARK STREET CEMETERY\nসাউথ পার্ক স্ট্রিট সেমেট্রি · 1767', 10.5, 1.4, 0, 7.75, z0 - 1.85, PI, '#e6d6ad', '#3a2a1a');
+    const tomb = (x, z) => {
+      const t = R() * 6 | 0, m = R() < .65 ? S : M.stone, s = rr(.8, 1.3);
+      if (t === 0) { k.box(m, 2.4 * s, 1.2 * s, 2.4 * s, x, 0, z); k.add(m, new THREE.CylinderGeometry(.25 * s, .85 * s, 6.5 * s, 4).rotateY(PI / 4), x, 4.45 * s, z); c.box(x, z, 2.4 * s, 2.4 * s, 8); } // obelisk
+      else if (t === 1) { k.box(m, 3.4 * s, .8, 3.4 * s, x, 0, z); k.pyr(m, 3.2 * s, 4.2 * s, x, .8, z); c.box(x, z, 3.4 * s, 3.4 * s, 5); } // pyramid
+      else if (t === 2) { k.cyl(m, 2 * s, 2.1 * s, .7, x, 0, z, 12); for (let i = 0; i < 6; i++) k.cyl(m, .18 * s, .2 * s, 2.8 * s, x + Math.cos(i * PI / 3) * 1.6 * s, .7, z + Math.sin(i * PI / 3) * 1.6 * s, 6); k.cyl(m, 2 * s, 2 * s, .4, x, .7 + 2.8 * s, z, 12); k.dome(m, 1.8 * s, x, 1.1 + 2.8 * s, z, .9, 12); k.cyl(m, .4 * s, .55 * s, s, x, .7, z, 8); c.circ(x, z, 2.1 * s, 6); } // domed cupola
+      else if (t === 3) { k.box(m, 1.5, .5, 2.9, x, 0, z); k.box(m, 1.2, .9, 2.5, x, .5, z); k.box(m, 1.5, .2, 2.9, x, 1.4, z); c.box(x, z, 1.5, 2.9, 2); } // chest tomb
+      else if (t === 4) { k.box(m, 1.6, 1.4, 1.6, x, 0, z); k.cyl(m, .3, .34, 3 * s, x, 1.4, z, 8); k.dome(m, .45, x, 1.4 + 3 * s, z, 1.3, 8); c.box(x, z, 1.6, 1.6, 5); } // column and urn
+      else { k.box(m, 3 * s, 3.2 * s, 3 * s, x, 0, z); k.pyr(m, 3.4 * s, 1.7 * s, x, 3.2 * s, z); k.box(M.dark, 1 * s, 2 * s, .2, x, 0, z - 1.5 * s); c.box(x, z, 3 * s, 3 * s, 6); } // mausoleum
+    };
+    for (let x = -50; x <= 50; x += 6.2) for (let z = z0 + 5; z < z0 + D - 3; z += 6.4) { if (Math.abs(x) < 4.6 || Math.abs(z - zc) < 3.8 || R() < .16) continue; tomb(x + rr(-.7, .7), z + rr(-.7, .7)); }
+    for (let i = 0; i < 26; i++) c.tree(pick([-1, 1]) * rr(4, 52), z0 + rr(3, D - 3), rr(1, 1.5));
+    c.roam(Wd - 12, 2.4, 0, zc, 3); c.roam(3, D - 10, 0, zc, 3);
+  });
+
+  // ───────── Race Course: the track, the stand, horses racing and the betting ring
+  site('Race Course', 'রেস কোর্স', ll(22.545, 88.3368), 0, 125, (k, c) => {
+    c.clear(266, 136, 30, 0);
+    k.add(M.track, new THREE.RingGeometry(.87, 1, 72).rotateX(-PI / 2).scale(90, 1, 56), 0, .12, 0);
+    for (const s of [.86, 1.01]) k.add(M.white, new THREE.TorusGeometry(1, .004, 4, 72).rotateX(PI / 2).scale(90 * s, 70, 56 * s), 0, 1, 0);
+    k.cyl(M.white, .1, .1, 5, 92.6, 0, 0, 6); k.add(M.red, new THREE.CylinderGeometry(.6, .6, .08, 14).rotateX(PI / 2), 92.6, 4.6, 0);
+    for (let i = 0; i < 6; i++) k.box(M.conc, 2.2, 1 + i * 1.2, 76, 98 + i * 2.2, 0, 0);
+    k.box(M.white, 2.4, 13, 78, 112.4, 0, 0); k.box(M.tin, 19, .4, 80, 104.4, 13, 0); k.box(M.white, .5, 1.7, 80, 95.2, 12.1, 0); k.cols(M.steel, 96, -38, 96, 38, 9, .18, 13, 0);
+    k.sign('ROYAL CALCUTTA TURF CLUB · রয়্যাল ক্যালকাটা টার্ফ ক্লাব', 36, 1.4, 94.9, 12.95, 0, -PI / 2, '#1d3b2a', '#f3e9c8');
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 12; j++) if (R() < .8) c.person(98 + i * 2.2, -35 + j * 6.3 + rr(-2, 2), -PI / 2 + rr(-.3, .3), R() < .35, 'stand', undefined, 1 + i * 1.2);
+    c.box(104.6, 0, 18, 78, 14);
+    // the betting ring behind the stand
+    k.box(M.gravel, 36, .12, 84, 132, 0, 0);
+    const NAMES = ['KOLKATA KING', 'HOWRAH EXPRESS', 'MISHTI DOI', 'TIGER OF BENGAL', 'MONSOON MAGIC', "DADA'S PRIDE", 'ROSOGOLLA', 'MAIDAN STAR'], odds = () => pick(['2/1', '5/2', '7/2', '4/1', '6/1', '9/2', '10/1', '12/1']);
+    for (let i = 0; i < 6; i++) {
+      const z = -30 + i * 12; k.box(M.wood, 2.2, .5, 2.4, 120, 0, z); k.cyl(M.steel, .04, .04, 3.1, 119.2, .5, z, 5); k.cone(pick([M.red, M.blue, M.yellow, M.green]), 1.9, .5, 119.2, 3.5, z, 10);
+      k.sign(`BOOKMAKER ${i + 1} · বুকি\n${NAMES[i]}  ${odds()}\n${NAMES[(i + 3) % 8]}  ${odds()}\n${NAMES[(i + 5) % 8]}  ${odds()}`, 2.8, 2, 120.4, 2.4, z - 2.7, PI / 2, '#141414', '#f2c118'); k.cols(M.steel, 120.35, z - 4, 120.35, z - 1.4, 2, .05, 3.4, 0);
+      c.person(120.3, z, PI / 2, false, 'stand', { top: '#f4f4f0', bottom: '#2b2b30' }, .5); c.box(120, z, 2.2, 2.4, 4);
+      for (let j = 0; j < 4; j++) c.person(rr(122.6, 126), z + rr(-2.6, 2.6), -PI / 2 + rr(-.5, .5), R() < .2);
+    }
+    k.box(M.cream, 7, 6.4, 46, 147, 0, 0); k.box(M.white, 7.6, .5, 46.6, 147, 6.4, 0); k.wins(M.dark, 143.45, -20, 143.45, 20, 10, 2.4, 1.3, 1.3, .2); k.box(M.tin, 3, .15, 46, 142.2, 3.3, 0);
+    k.sign('TOTE · টোট · WIN · PLACE · QUINELLA · TANALA', 30, 1.4, 143.42, 4.7, 0, -PI / 2, '#b3261e', '#fff'); c.box(147, 0, 7, 46);
+    for (let i = 0; i < 10; i++) for (let j = 0; j < 2; j++) if (R() < .75) c.person(142.2 - j * 1, -18 + i * 4, PI / 2, R() < .2);
+    c.roam(12, 72, 133, 0, 8);
+    // eight runners
+    const HC = [M.wood, M.dark, M.thatch, M.clay, M.wood, M.stone, M.dark, M.clay], SILK = [M.red, M.yellow, M.blue, M.green, M.pink, M.orange, M.white, M.lime], legG = new THREE.BoxGeometry(.11, 1.2, .11).translate(0, -.6, 0);
+    const hs = HC.map((Bd, i) => {
+      const h = new Kit(), Sk = SILK[i];
+      h.add(Bd, new THREE.SphereGeometry(1, 10, 8).scale(.82, .36, .3), 0, 1.5, 0); h.beam(Bd, [.6, 1.6, 0], [1.05, 2.15, 0], .26); h.add(Bd, new THREE.BoxGeometry(.5, .2, .18), 1.27, 2.2, 0, 0, 0, -.5); h.beam(M.dark, [-.78, 1.6, 0], [-1.2, 1.15, 0], .08);
+      h.add(Sk, new THREE.BoxGeometry(.5, .3, .28), .12, 1.98, 0, 0, 0, .35); h.add(M.skin, new THREE.SphereGeometry(.11, 8, 6), .42, 2.22, 0); h.dome(Sk, .12, .42, 2.24, 0, 1, 8); h.add(M.white, new THREE.BoxGeometry(.16, .4, .46), 0, 1.72, 0);
+      const g = h.build(), legs = [[.55, .13], [.55, -.13], [-.55, .13], [-.55, -.13]].map(([x, z]) => { const m = new THREE.Mesh(legG, Bd); m.position.set(x, 1.3, z); m.castShadow = true; g.add(m); return m; });
+      k.extras.push(g); return { g, legs, th: i * .03, lane: (i % 4) * 1.5 - 2.2, v: 15 + (i * 37 % 10) * .22, ph: i * 1.7 };
+    });
+    let last = 0;
+    anims.push(t => {
+      const dt = Math.min(.1, t - last); last = t;
+      for (const h of hs) {
+        const a = 84.2 + h.lane, b = 52.4 + h.lane; h.th += (h.v + Math.sin(t * .3 + h.ph) * 1.6) * dt / Math.hypot(a * Math.sin(h.th), b * Math.cos(h.th));
+        const tx = -a * Math.sin(h.th), tz = b * Math.cos(h.th), ph = t * 11 + h.ph; h.g.position.set(a * Math.cos(h.th), Math.abs(Math.sin(ph)) * .12, b * Math.sin(h.th)); h.g.rotation.y = Math.atan2(-tz, tx);
+        h.legs[0].rotation.z = Math.sin(ph) * .9; h.legs[1].rotation.z = Math.sin(ph + .5) * .9; h.legs[2].rotation.z = Math.sin(ph + 2.6) * .9; h.legs[3].rotation.z = Math.sin(ph + 3.1) * .9;
+      }
+    });
+  });
+
+  // ───────── Kolkata Police: Lalbazar headquarters and the thanas
+  const cz2 = (r, w) => new THREE.CylinderGeometry(r, r, w, 12).rotateX(PI / 2);
+  const pcar = (k, c, x, z, r, van) => { // parked police jeep or van; nose along local +x turned by r
+    const cs = Math.cos(r), sn = Math.sin(r), at = (lx, lz) => [x + lx * cs + lz * sn, z - lx * sn + lz * cs], bx = (m, w, h, d, lx, y, lz) => { const p = at(lx, lz); k.box(m, w, h, d, p[0], y, p[1], r); };
+    const L = van ? 5.6 : 3.9, H = van ? 2.5 : 1.75, body = van ? M.blue : M.rosh;
+    bx(body, L, .75, 1.8, 0, .4, 0); bx(body, L * (van ? .96 : .62), H - 1.15, 1.74, van ? 0 : -.5, 1.15, 0); bx(M.glass, L * (van ? .5 : .6), .5, 1.78, van ? 1.2 : -.5, 1.2, 0); bx(M.glass, .06, .5, 1.5, van ? L / 2 - .08 : .74, 1.2, 0);
+    bx(van ? M.white : M.blue, L + .02, .16, 1.83, 0, .72, 0); bx(M.red, .3, .14, .5, van ? 1.8 : -.4, H, -.3); bx(M.blue, .3, .14, .5, van ? 1.8 : -.4, H, .3); bx(M.dark, .14, .2, 1.84, L / 2, .4, 0);
+    for (const lx of [-L / 2 + .8, L / 2 - .8]) for (const lz of [-.82, .82]) { const p = at(lx, lz); k.add(M.tyre, cz2(.4, .26), p[0], .4, p[1], r); }
+    for (const s of [-1, 1]) { const p = at(van ? -.9 : .9, s * .925); k.sign('POLICE · পুলিশ', van ? 2.6 : 1.5, .34, p[0], van ? 1.5 : .98, p[1], r + (s > 0 ? 0 : PI), van ? '#27408f' : '#f4f1e8', van ? '#ffffff' : '#27408f'); }
+    c.box(x, z, L, 1.8, H, r);
+  };
+  const bike = (k, c, x, z) => { k.add(M.tyre, cz2(.32, .1), x, .32, z - .7).add(M.tyre, cz2(.32, .1), x, .32, z + .7); k.box(M.rosh, .3, .4, 1.1, x, .5, z); k.box(M.dark, .34, .12, .6, x, .9, z - .2); k.box(M.chrome, .6, .04, .04, x, 1.1, z + .5); k.box(M.blue, .06, .3, .3, x, .95, z + .62); c.box(x, z, .5, 1.9, 1.2); };
+  const cop = (c, lx, lz, r = 0) => c.person(lx, lz, r, false, 'stand', { ...COPS.look, skin: pick(['#8d5a3b', '#a36f48', '#7a4a2e']) });
+  const post = (c, lx, lz) => { const p = c.W(lx, lz); COPS.posts.push({ x: p[0], z: p[1] }); };
+
+  onRoad('Lalbazar Police Headquarters', 'লালবাজার · কলকাতা পুলিশ সদর দপ্তর', 'B.B. Ganguly Street, Bowbazar', 86, 62, (k, c, hw) => {
+    const z0 = -(hw + 5), zb = z0 - 42, Rb = M.brick, W = M.white; c.clear(110, 70, 0, z0 - 30);
+    k.box(M.conc, 102, .1, 31, 0, 0, z0 - 15.5);
+    k.box(Rb, 98, 15, 22, 0, 0, zb); k.box(W, 99, .8, 23, 0, 15, zb); for (const y of [5.2, 10.2]) k.box(W, 98.4, .4, 22.4, 0, y, zb);
+    for (const y of [1.2, 6.2, 11.2]) for (const s of [-1, 1]) k.wins(M.green, s * 14, zb + 11.05, s * 47, zb + 11.05, 9, 1.6, 3.2, y);
+    for (const s of [-1, 1]) { k.box(Rb, 9, 19, 24, s * 45, 0, zb); k.box(W, 9.6, .7, 24.6, s * 45, 19, zb); k.pyr(M.roofR, 10, 4, s * 45, 19.7, zb); }
+    k.box(Rb, 24, 20, 6, 0, 0, zb + 12); portico(k, W, 0, zb + 15, 20, 6, 12, 1.4, 4); k.gable(W, 25, 4, 6, 0, 20, zb + 12); k.clock(2.6, 0, 21.6, zb + 15.05);
+    k.sign('KOLKATA POLICE HEADQUARTERS · LALBAZAR\nকলকাতা পুলিশ সদর দপ্তর · লালবাজার', 19, 2.2, 0, 16.2, zb + 20.3, 0, '#12356b', '#fff');
+    k.cyl(M.steel, .12, .16, 17, 16, 0, z0 - 8, 8); k.box(M.saffron, 3.6, .8, .08, 17.9, 16, z0 - 8); k.box(M.white, 3.6, .8, .08, 17.9, 15.2, z0 - 8); k.box(M.green, 3.6, .8, .08, 17.9, 14.4, z0 - 8);
+    fence(k, c, -51, z0, -6.5, z0); fence(k, c, 6.5, z0, 51, z0); fence(k, c, -51, z0, -51, z0 - 31); fence(k, c, 51, z0, 51, z0 - 31);
+    for (const s of [-1, 1]) { k.box(W, 2, 5, 2, s * 5.6, 0, z0); c.box(s * 5.6, z0, 2, 2, 6); k.box(M.blue, 1.6, 2.6, 1.6, s * 8.6, 0, z0 + 2.2); k.pyr(M.red, 2, .8, s * 8.6, 2.6, z0 + 2.2); } // gate posts and sentry boxes
+    k.box(W, 14, 1, 1, 0, 5, z0); k.sign('কলকাতা পুলিশ · KOLKATA POLICE', 11, 1.3, 0, 6.7, z0 + .1, 0, '#b3261e', '#fff'); k.sign('LALBAZAR', 6, .9, 0, 5.5, z0 + .56, 0, '#12356b', '#fff');
+    for (let i = 0; i < 6; i++) pcar(k, c, -46 + i * 5.2, z0 - 22, PI / 2, false); for (let i = 0; i < 4; i++) pcar(k, c, 22 + i * 6.6, z0 - 21, PI / 2, true);
+    for (let i = 0; i < 7; i++) bike(k, c, -45 + i * 2.2, z0 - 5); pcar(k, c, 30, z0 - 5.5, 0, false); pcar(k, c, 38, z0 - 5.5, 0, false);
+    for (let i = 0; i < 9; i++) cop(c, -12 + i * 3, z0 - 25.5, 0); for (let i = 0; i < 14; i++) cop(c, rr(-44, 44), z0 - rr(9, 17), rr(0, 6));
+    c.roam(84, 9, 0, z0 - 12, 9, COPS.look);
+    for (const [x, z] of [[-4, z0 + 2.6], [4, z0 + 2.6], [-9, z0 + 4], [9, z0 + 4], [-30, z0 + 3], [30, z0 + 3]]) post(c, x, z);
+    COPS.hq = c.W(0, z0 + 6.5);
+    c.box(0, zb, 98, 24); c.box(0, zb + 14, 24, 8);
+  });
+  const thana = (name, bn, road, d, side) => onRoad(name + ' Police Station', bn + ' থানা', road, d, 28, (k, c, hw) => {
+    const zc = side * (hw + 4.5 + 6.5), zf = side * (hw + 2.6); c.clear(36, 24, 3, zc);
+    shop(k, c, 0, zc, -side, { name: name.toUpperCase() + ' POLICE STATION', sub: bn + ' থানা · কলকাতা পুলিশ', w: 18, d: 13, fl: 2, wall: M.brick, bg: '#12356b', fg: '#fff', awn: M.blue, blade: false, ppl: 0 });
+    pcar(k, c, 13.5, zc + side * 1, 0, false); pcar(k, c, 13.5, zc - side * 3.4, 0, false); k.box(M.blue, 1.4, 2.5, 1.4, -8, 0, side * (hw + 3.4)); k.pyr(M.red, 1.8, .7, -8, 2.5, side * (hw + 3.4));
+    cop(c, 3.5, zf + side * .8, side > 0 ? PI : 0); cop(c, 5, zf + side * 1.1, side > 0 ? PI : 0); post(c, -3, zf); post(c, 2, zf); post(c, -6.5, zf - side * .8);
+  });
+  thana('Burrabazar', 'বড়বাজার', 'Mahatma Gandhi Road', 210, 1); thana('Bowbazar', 'বউবাজার', 'B.B. Ganguly Street, Bowbazar', 405, 1); thana('Park Street', 'পার্ক স্ট্রিট', 'Park Street', 292, -1);
+  thana('New Market', 'নিউ মার্কেট', 'Free School Street', 255, 1); thana('Jorasanko', 'জোড়াসাঁকো', 'Chittaranjan Avenue', 1050, 1); thana('Taltala', 'তালতলা', 'S.N. Banerjee Road', 430, 1);
+  thana('Hare Street', 'হেয়ার স্ট্রিট', 'Council House Street', 150, -1); thana('Amherst Street', 'আমহার্স্ট স্ট্রিট', 'Mahatma Gandhi Road', 780, -1);
 }

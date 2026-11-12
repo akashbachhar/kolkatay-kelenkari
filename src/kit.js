@@ -100,6 +100,12 @@ function booksTex() {
   for (let r = 0; r < 4; r++) { let x = 2; while (x < 250) { const w = 5 + R() * 9, h = 44 + R() * 14; g.fillStyle = `hsl(${R() * 360},${30 + R() * 45}%,${28 + R() * 42}%)`; g.fillRect(x, r * 64 + 60 - h, w, h); if (R() < .4) { g.fillStyle = 'rgba(255,240,200,.6)'; g.fillRect(x + 1, r * 64 + 66 - h, w - 2, 3); } x += w + 1; } g.fillStyle = '#6a4c36'; g.fillRect(0, r * 64 + 60, 256, 4); }
   return tex(c);
 }
+function curtainTex() { // glass curtain wall: one tile is one floor by two bays
+  const [c, g] = canvas(256, 256), gr = g.createLinearGradient(0, 0, 0, 256); gr.addColorStop(0, '#eef6fa'); gr.addColorStop(1, '#a9c3d2'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 2; i++) if (R() < .5) { g.fillStyle = 'rgba(255,240,200,.25)'; g.fillRect(i * 128, 0, 128, 200); }
+  g.fillStyle = 'rgba(50,70,85,.6)'; g.fillRect(0, 204, 256, 52); g.fillStyle = 'rgba(245,248,250,.95)'; g.fillRect(0, 0, 5, 256); g.fillRect(126, 0, 4, 256); g.fillRect(0, 250, 256, 6);
+  return tex(c);
+}
 // Painted sign board
 export function signMesh(text, w, h, bg = '#f4f1e8', fg = '#141414') {
   const H = 160, W = Math.min(2048, Math.round(H * w / h)), [c, g] = canvas(W, H);
@@ -131,12 +137,13 @@ export function initMats() {
     gold: m('#c9a23a', { metalness: .8, roughness: .35 }), gravel: m('#c2ad88'), wood: m('#6b4a2e'), thatch: m('#a48d5a'), yellow: m('#f2c118', { roughness: .45 }),
     blue: m('#27408f', { roughness: .5 }), tin: m('#8c9296', { metalness: .4, roughness: .6 }), conc: m('#a9a59c'), stone: m('#8f897e'), tyre: m('#141414'),
     red: m('#b3261e'), track: m('#8a6f52'), rampart: m('#6f7a4e'), seat: m('#3f6f9e', { side: THREE.DoubleSide }), tram: m('#f1efe6', { roughness: .5 }),
-    bus: m('#2f63b5', { roughness: .5 }), rosh: m('#faf6ea', { roughness: .4 }), clay: m('#a8623c'), orange: m('#e8862a'), pink: m('#d8568a'), lime: m('#8ab83a'), saffron: m('#f08c28'), asph: m('#38383a'), tinD: m('#8c9296', { metalness: .4, roughness: .6, side: THREE.DoubleSide }), lamp: m('#fff3c4', { emissive: '#ffe9a0', emissiveIntensity: .6 }),
+    bus: m('#2f63b5', { roughness: .5 }), chrome: m('#dadcde', { metalness: .92, roughness: .22 }), cglass: m('#b8d0da', { transparent: true, opacity: .3, roughness: .05, metalness: .3, depthWrite: false }), seatr: m('#5a2a22'), ddred: m('#c4261c', { roughness: .38 }), skin: m('#9a6846'), rosh: m('#faf6ea', { roughness: .4 }), clay: m('#a8623c'), orange: m('#e8862a'), pink: m('#d8568a'), lime: m('#8ab83a'), saffron: m('#f08c28'), asph: m('#38383a'), tinD: m('#8c9296', { metalness: .4, roughness: .6, side: THREE.DoubleSide }), lamp: m('#fff3c4', { emissive: '#ffe9a0', emissiveIntensity: .6 }),
   });
   const bt = brickTex(), pt = plasterTex(false), mbl = plasterTex(true);
   Object.assign(M, { brick: tri('#a8473a', bt, .3), brickD: tri('#8a372c', bt, .3), redOx: tri('#9a4032', pt, .09), sand: tri('#b85a40', bt, .16),
     flag: tri('#d6ccb6', mbl, .2), white: tri('#efebe1', pt, .07), cream: tri('#e6d6ad', pt, .07), marble: tri('#f4f1ea', mbl, .12, { roughness: .45 }), stone: tri('#9a948a', mbl, .2) });
   M.books = m('#ffffff', { map: booksTex() }); M.iron = m('#1c1e20', { metalness: .5, roughness: .6 });
+  M.moss = tri('#8d917a', pt, .09); M.tower = tri('#9dbfd3', curtainTex(), 1 / 3.6, { roughness: .12, metalness: .6 });
   T.fac = [0, 1, 2, 3, 4, 5].map(facade); T.shops = shops(); T.road = road();
   T.grass = plain('#5f7b3c', 9000, .12, 512); T.ground = plain('#8f877a', 7000, .1, 512); T.pave = plain('#aaa69c', 4000, .1);
   M.grass = m('#ffffff', { map: T.grass.clone() }); M.grass.map.repeat.set(6, 6);
@@ -194,6 +201,15 @@ export class Kit {
     return this;
   }
   gable(mat, w, h, d, x, y, z, ry = 0) { const s = new THREE.Shape(); s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(0, h); return this.add(mat, new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: false }).translate(0, 0, -d / 2), x, y, z, ry); }
+  loft(mat, secs, n = 3.2, K = 20) { // smooth body through rounded cross-sections [x, half-width, y0, y1]
+    const pos = [], idx = [], e = 2 / n, S = secs.length;
+    for (const [x, w, y0, y1] of secs) for (let i = 0; i < K; i++) { const t = i / K * PI * 2, c = Math.cos(t), s = Math.sin(t); pos.push(x, (y0 + y1) / 2 + Math.sign(s) * Math.abs(s) ** e * (y1 - y0) / 2, Math.sign(c) * Math.abs(c) ** e * w); }
+    for (let j = 0; j < S - 1; j++) for (let i = 0; i < K; i++) { const a = j * K + i, b = j * K + (i + 1) % K; idx.push(a, a + K, b, b, a + K, b + K); }
+    const c0 = pos.length / 3; pos.push(secs[0][0], (secs[0][2] + secs[0][3]) / 2, 0, secs[S - 1][0], (secs[S - 1][2] + secs[S - 1][3]) / 2, 0);
+    for (let i = 0; i < K; i++) idx.push(c0, i, (i + 1) % K, c0 + 1, (S - 1) * K + (i + 1) % K, (S - 1) * K + i);
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(pos.length / 3 * 2), 2));
+    return this.add(mat, g);
+  }
   clock(d, x, y, z, ry = 0) {
     const [c, g] = canvas(128, 128); g.fillStyle = '#f3ecd8'; g.beginPath(); g.arc(64, 64, 62, 0, 7); g.fill(); g.strokeStyle = '#2a2018'; g.lineWidth = 6; g.stroke();
     for (let i = 0; i < 12; i++) { const a = i * PI / 6; g.lineWidth = i % 3 ? 2 : 5; g.beginPath(); g.moveTo(64 + Math.sin(a) * 46, 64 - Math.cos(a) * 46); g.lineTo(64 + Math.sin(a) * 55, 64 - Math.cos(a) * 55); g.stroke(); }

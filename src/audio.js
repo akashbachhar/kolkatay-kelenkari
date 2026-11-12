@@ -39,6 +39,17 @@ export class Sound {
   noise(freq, q, vol, dur) { if (!this.ctx || this.muted) return; const c = this.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime; s.buffer = this.white; s.loop = true; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); s.connect(f); f.connect(g); g.connect(this.out); s.start(t); s.stop(t + dur + .05); }
   skid() { this.noise(1700, 3, .07, .55); }
   thud() { if ((this.ctx?.currentTime || 0) - (this.tt || 0) < .4) return; this.tt = this.ctx?.currentTime; this.noise(140, .7, .3, .22); }
+  crash(i = .5, metal) { // layered impact: thump, crunch, ringing metal and, for hard hits, glass
+    if (!this.ctx || this.muted) return; const t = this.ctx.currentTime; if (t - (this.ct || 0) < .25) return; this.ct = t;
+    this.noise(105, .6, .32 * (.4 + i), .32); this.noise(650 + Math.random() * 500, 1.1, .16 * (.4 + i), .2 + i * .22);
+    if (metal || i > .45) for (let j = 0; j < 4; j++) this.voice([800 + Math.random() * 2300], j * .03, .25 + Math.random() * .3, .01 + i * .012, Math.random() - .5, 'triangle', 6000, .97);
+    if (i > .6) for (let j = 0; j < 8; j++) this.voice([3000 + Math.random() * 4200], .04 + Math.random() * .4, .08, .007, Math.random() * 1.6 - .8, 'sine', 9000);
+  }
+  clang() { if (!this.ctx || this.muted) return; for (const [f, d] of [[410, .9], [1130, .7], [1870, .5], [2760, .35]]) this.voice([f * (.97 + Math.random() * .06)], 0, d, .03, 0, 'sine', 8000); this.noise(2500, 2, .09, .08); }
+  scrape() { const t = this.ctx?.currentTime || 0; if (t - (this.st || 0) < .3) return; this.st = t; this.noise(1300, 1.5, .035, .3); }
+  yelp(x, z) { if (!this.ctx || this.muted) return; const a = this.at(x, z, .3, 60); if (!a) return; const f = 380 + Math.random() * 260; this.voice([f, f * 2.02, f * 3.01], 0, .34, a[0] * .22, a[1], 'sawtooth', 1800, .6); this.noise(170, .8, .2, .15); }
+  whistle() { if (!this.ctx || this.muted) return; for (const t of [0, .16, .32]) this.voice([2850, 3080], t, .14, .03, 0, 'square', 7000); }
+  siren() { if (!this.ctx || this.muted) return; this.sn = !this.sn; this.voice([this.sn ? 660 : 880], 0, .5, .022, 0, 'triangle', 2400); }
   step(fast) {
     if (!this.ctx || this.muted) return; const c = this.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime; s.buffer = this.white;
     f.type = 'bandpass'; f.frequency.value = 500 + Math.random() * 300; f.Q.value = .8; g.gain.setValueAtTime(fast ? .1 : .06, t); g.gain.exponentialRampToValueAtTime(.0001, t + .09);

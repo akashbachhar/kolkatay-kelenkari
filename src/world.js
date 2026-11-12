@@ -5,6 +5,7 @@ import { BANK, RIVER_W, WATER_Y, bankX, ROADS, MAIDAN, TRAM, X0, X1, Z0, Z1, LAT
 import { addBox, addCirc } from './collide.js';
 import { buildLandmarks, clears, trees } from './landmarks.js';
 
+export const POLES = { list: [], im: null }; // lamp posts, which a car can knock down
 export const SEG = [];
 for (const r of ROADS) for (let i = 0; i < r.p.length - 1; i++) {
   const a = r.p[i], b = r.p[i + 1];
@@ -147,7 +148,8 @@ export function buildWorld(scene) {
   let tc = leaf[0];
   inst(can, new THREE.MeshStandardMaterial({ roughness: .9 }), blobs, (e, i, im) => { dm.position.set(e[0], e[1], e[2]); dm.rotation.set(0, R() * 6, 0); dm.scale.set(e[3], e[3] * .78, e[3]); if (!e[4]) tc = R() < .06 ? flame : pick(leaf); im.setColorAt(i, tc); });
   const lg = mergeGeometries([new THREE.CylinderGeometry(.09, .13, 7.5, 6).translate(0, 3.75, 0), new THREE.BoxGeometry(2.2, .12, .12).translate(1, 7.4, 0), new THREE.BoxGeometry(.9, .16, .36).translate(2.1, 7.3, 0)]);
-  inst(lg, M.tin, lamps, e => { dm.position.set(e[0], 0, e[1]); dm.rotation.set(0, e[2], 0); dm.scale.setScalar(1); }, false);
+  POLES.list = lamps.map(l => ({ x: l[0], z: l[1], down: false }));
+  POLES.im = inst(lg, M.tin, lamps, e => { dm.position.set(e[0], 0, e[1]); dm.rotation.set(0, e[2], 0); dm.scale.setScalar(1); }, false);
 
   const wb = M.water.bumpMap;
   return { update(t) { wb.offset.set(t * .004, t * .011); }, water };

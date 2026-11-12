@@ -23,7 +23,7 @@ export class Player {
   }
   update(dt, traffic, people) {
     const p = this.pos, k = this.keys;
-    if (this.ride || this.car) { this.vel.set(0, 0, 0); this.vy = 0; this.edge = 0; if (this.car) p.y = 0; }
+    if (this.ride || this.car || this.held) { this.vel.set(0, 0, 0); this.vy = 0; this.edge = 0; if (this.car) p.y = 0; }
     else {
       const jm = Math.hypot(this.joy.x, this.joy.y), f = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) - this.joy.y, s = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + this.joy.x;
       const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw); let mx = fx * f - fz * s, mz = fz * f + fx * s; const ml = Math.hypot(mx, mz);

@@ -54,6 +54,8 @@ export const MAIDAN = L([[22.5645, 88.3509], [22.56, 88.3506], [22.5545, 88.3508
 
 export const AREAS = [['Esplanade', 22.564, 88.351], ['Maidan', 22.557, 88.345], ['Maidan', 22.551, 88.342], ['B.B.D. Bagh', 22.5725, 88.3495], ['Burrabazar', 22.581, 88.353], ['Posta', 22.587, 88.352], ['College Street · Boi Para', 22.5755, 88.3635], ['Sealdah', 22.568, 88.3695], ['Park Street', 22.551, 88.357], ['Chowringhee', 22.5575, 88.3515], ['New Market', 22.5605, 88.353], ['Bowbazar', 22.5705, 88.359], ['Jorasanko', 22.585, 88.36], ['Hastings', 22.546, 88.3335], ['Taltala', 22.5595, 88.363], ['Dharmatala', 22.5645, 88.356], ['Chandni Chowk', 22.5675, 88.355], ['Rabindra Sadan', 22.5425, 88.347], ['Entally', 22.555, 88.369], ['Strand · Hooghly riverfront', 22.568, 88.341], ['Kolutola', 22.5765, 88.359], ['Amherst Street', 22.578, 88.368], ['Girish Park', 22.587, 88.3635], ['Dalhousie', 22.569, 88.345], ['Wellesley', 22.553, 88.362], ['Camac Street', 22.545, 88.354]].map(([n, a, b]) => ({ n, p: ll(a, b) }));
 
+// Kolkata Police: officer posts (filled in as the city is built), the release point outside Lalbazar, the uniform
+export const COPS = { posts: [], hq: null, look: { top: '#f5f5f1', bottom: '#f1f1ec', shoe: '#111111', hair: '#111111', cap: '#1b2a55', full: true, skin: '#8d5a3b' } };
 export const SPAWN = ll(22.5629, 88.3503);
 
 // Dakshineswar: a separate area upriver, reached by ferry from Babughat
