@@ -47,7 +47,7 @@ export class Drive {
       const v = this.find(); if (!v) return;
       const fx = Math.cos(v.a), fz = -Math.sin(v.a), rx = Math.sin(v.a), rz = Math.cos(v.a), had = !v.own;
       if (had) { // the driver is turned out and stands by his door, shaking his fist
-        const r = this.dr[this.di++ % this.dr.length], off = v.hw + 1.1, fo = v.k ? 3.6 : .3; r.g.visible = true; r.g.position.set(v.x + rx * off + fx * fo, 0, v.z + rz * off + fz * fo); r.t = 0; r.car = v; this.snd.yelp(v.x, v.z);
+        const r = this.dr[this.di++ % this.dr.length], off = v.hw + 1.1, fo = v.k ? 3.6 : .3; r.g.visible = true; r.g.position.set(v.x + rx * off + fx * fo, 0, v.z + rz * off + fz * fo); r.t = 0; r.car = v; this.snd.yelp(v.x, v.z); this.police?.offence(v.x, v.z, 'steal', 20);
       }
       this.v = v; v.own = true; v.me = true; v.sp = Math.max(-2, Math.min(3, v.sp)); v.kt = 0; pl.car = v; pl.root.visible = false; this.d0 = pl.dist; pl.dist = Math.max(pl.dist, v.k ? 15 : 8.5); pl.pitch = Math.max(pl.pitch, v.k === 4 ? .3 : .2); this.look = 0; this.st = 0;
       document.body.classList.add('driving'); if ($('bJump')) $('bJump').textContent = 'BRAKE';

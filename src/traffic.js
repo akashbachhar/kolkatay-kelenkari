@@ -113,15 +113,17 @@ export class Traffic {
     const mk = (kit, n, hl, hw, fn, occ = {}) => {
       const im = (g, m) => { const i = new THREE.InstancedMesh(g, m, n); i.castShadow = !m.transparent; i.frustumCulled = false; scene.add(i); return i; };
       const set = { ims: kit.build().children.map(m => { m.updateMatrix(); return im(m.geometry.clone().applyMatrix4(m.matrix), m.material); }) };
-      for (const key of ['drv', 'pas', 'boy']) if (occ[key]) set[key] = im(occ[key], PM); if (occ.fixed) set.ims.push(im(occ.fixed, PM));
+      for (const key of ['drv', 'pas', 'boy']) if (occ[key]) set[key] = im(occ[key], PM); if (occ.fixed) set.ims.push(im(occ.fixed, PM)); if (occ.frames) set.fr = occ.frames.map(g => im(g, PM));
       for (let i = 0; i < n; i++) this.v.push({ set, idx: i, hl, hw, a: 0, sp: 0, x: 0, z: 0, nop: i % 3 === 0, ...fn(i) });
     };
     const car = (k, lo, hi) => () => { const e = pe(); return { k, e, s: R() * e.len, vmax: rr(lo, hi) }; }, rows = [-3.7, -2.5, -1.3, -.1, 1.1, 2.3];
     mk(taxiKit(), 46, 2.3, .95, car(0, 8.5, 11.5), { drv: bust(DRV(), .2, .78, .4), boy: bust(BOY, .2, .78, .4), pas: bust(look(R), -.72, .76, -.32) });
     mk(busKit(), 9, 4.8, 1.35, car(1, 7, 9), { drv: bust(DRV(), 3.95, 1.4, .7), boy: bust(BOY, 3.95, 1.4, .7), pas: mergeGeometries(crowd(rows, [-.8, .8], 1.45)) });
     mk(ddKit(), 5, 4.8, 1.35, car(4, 6, 7.5), { drv: bust(DRV(), 3.95, 1.33, .7), boy: bust(BOY, 3.95, 1.33, .7), pas: mergeGeometries([...crowd(rows.slice(0, 5), [-.8, .8], 1.33), ...crowd([...rows, 3.5], [-.8, .8], 2.66, .7)]) });
-    const puller = bake({ ...look(R, false), top: '#d9d2c0', bottom: '#6a5a48', full: false, s: .95 }, 'pull').rotateY(PI / 2).translate(1.75, 0, 0), rider = bake({ ...look(R, false), s: .95 }, 'sit').rotateY(PI / 2).translate(-.55, .6, 0);
-    mk(rickKit(), 14, 2.2, .55, car(3, 2.1, 2.9), { fixed: mergeGeometries([puller, rider]) });
+    // the puller walks: a cycle of baked strides, one shown at a time
+    const po = { ...look(R, false), top: '#d9d2c0', bottom: '#6a5a48', full: false, s: .95 }, rider = bake({ ...look(R, false), s: .95 }, 'sit').rotateY(PI / 2).translate(-.55, .6, 0);
+    const frames = Array.from({ length: 8 }, (_, i) => bake(po, 'pull', i / 8 * PI * 2).rotateY(PI / 2).translate(1.75, 0, 0));
+    mk(rickKit(), 14, 2.2, .55, car(3, 2.1, 2.9), { fixed: rider, frames });
     mk(tramKit(), 4, 9, 1.25, i => ({ k: 2, r: tr, i: 0, s: tr.len * (.1 + i * .22), dir: i % 2 ? 1 : -1, side: i % 2 ? 1 : -1, vmax: 6.5 }));
     this.m = new THREE.Object3D(); this.m.rotation.order = 'YXZ'; this.update(0, { x: 1e6, z: 1e6 });
   }
@@ -129,6 +131,7 @@ export class Traffic {
     const m = this.m, s = v.set; m.position.set(v.x, 0, v.z); m.rotation.set(v.roll || 0, v.a, 0); m.updateMatrix();
     for (const im of s.ims) im.setMatrixAt(v.idx, m.matrix);
     if (s.drv) s.drv.setMatrixAt(v.idx, v.own ? ZERO : m.matrix); if (s.boy) s.boy.setMatrixAt(v.idx, v.me ? m.matrix : ZERO);
+    if (s.fr) { const f = Math.floor(((v.ph || 0) / (PI * 2)) * s.fr.length) % s.fr.length; s.fr.forEach((im, i) => im.setMatrixAt(v.idx, i === f ? m.matrix : ZERO)); }
     if (s.pas) s.pas.setMatrixAt(v.idx, v.k === 0 && (v.own || v.nop) ? ZERO : m.matrix);
   }
   update(dt, p, snd) {
@@ -151,6 +154,7 @@ export class Traffic {
         else if (v.hk < 0 && (man || v.honk || Math.random() < dt * .03)) { snd.horn(v.x, v.z, v.k ? 1 : 0, man || v.honk ? 1.5 : 1); v.hk = man ? 2.2 : v.honk ? 1.2 : 6 + Math.random() * 10; v.honk = 0; }
       }
       v.sp += ((stop ? 0 : v.vmax) - v.sp) * Math.min(1, dt * (stop ? 6 : 1.2));
+      if (v.k === 3) v.ph = ((v.ph || 0) + v.sp * dt * 4.3) % (PI * 2);
       let tx, tz, ta = null;
       if (v.k === 2) { // trams shuttle along the line and wait at each terminus
         const r = v.r; v.s += v.dir * v.sp * dt;
@@ -175,7 +179,7 @@ export class Traffic {
       }
       this.put(v);
     }
-    for (const s of new Set(V.map(v => v.set))) for (const im of [...s.ims, s.drv, s.pas, s.boy]) if (im) im.instanceMatrix.needsUpdate = true;
+    for (const s of new Set(V.map(v => v.set))) for (const im of [...s.ims, ...(s.fr || []), s.drv, s.pas, s.boy]) if (im) im.instanceMatrix.needsUpdate = true;
   }
   // keep the player (on foot) out of vehicles
   push(p, rad, skip) {

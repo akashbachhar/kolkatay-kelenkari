@@ -69,11 +69,11 @@ export function animate(r, speed, dt) {
 }
 
 // one merged geometry of a standing or sitting person (for hawkers and shop customers)
-export function bake(o, pose) {
+export function bake(o, pose, ph = 0) {
   const r = makeFigure(o);
   r.armL.rotation.x = -.45; r.armR.rotation.x = -.3;
   if (!r.saree) {
-    if (pose === 'pull') { r.armL.rotation.x = r.armR.rotation.x = .12; r.legL.rotation.x = -.5; r.legR.rotation.x = .35; r.shinR.rotation.x = .6; r.body.rotation.x = .2; }
+    if (pose === 'pull') { r.ph = ph; animate(r, 2.6, 0); r.armL.rotation.x = r.armR.rotation.x = .12; r.body.rotation.x = .2; }
     if (pose === 'bat') { r.armL.rotation.x = r.armR.rotation.x = -.75; r.armL.rotation.z = .3; r.armR.rotation.z = -.3; r.body.rotation.x = .25; r.legL.rotation.x = -.2; r.legR.rotation.x = .2; }
     if (pose === 'bowl') { r.armR.rotation.x = -2.9; r.armL.rotation.x = -.9; r.legL.rotation.x = -.6; r.legR.rotation.x = .5; r.shinR.rotation.x = .7; r.body.rotation.x = .15; }
   }

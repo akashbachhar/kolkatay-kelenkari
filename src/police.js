@@ -4,12 +4,15 @@ import { SEG } from './world.js';
 import { COPS } from './data.js';
 import { R } from './kit.js';
 
-// Kolkata Police. Officers stand at posts all over the city. Hit a person or a vehicle with a car where an officer
-// within 50 m can see it and you are wanted: officers chase on foot and arrest you. Get 500 m clear and the case is dropped.
-const $ = id => document.getElementById(id), SEE = 50, ESCAPE = 500;
+// Kolkata Police. Officers stand at posts all over the city. Hit a person or a vehicle in a car where an officer within 50 m
+// can see it, or steal a car within 20 m of one, and that is a case. The rules are not shown to the player:
+//  1-2 cases: officers nearby chase on foot; get 500 m from where the first case happened and they are dropped.
+//  3 cases:   every officer you come near chases you, wherever you go, for 5 minutes.
+// An officer who reaches you on foot, or reaches your car while it is slow, arrests you.
+const $ = id => document.getElementById(id), SEE = 50, ESCAPE = 500, HOT = 300;
 export class Police {
   constructor(scene, player, drive, hud, sound) {
-    this.pl = player; this.dr = drive; this.hud = hud; this.snd = sound; this.wanted = false; this.busted = false; this.cases = 0; this.seen = [0, 0]; this.tick = 0; this.sir = 0;
+    this.pl = player; this.dr = drive; this.hud = hud; this.snd = sound; this.wanted = false; this.busted = false; this.cases = 0; this.origin = [0, 0]; this.hot = 0; this.cool = 0; this.tick = 0; this.sir = 0;
     for (const s of SEG) { // street posts at the kerb
       const L = Math.hypot(s.bx - s.ax, s.bz - s.az), tx = (s.bx - s.ax) / L, tz = (s.bz - s.az) / L;
       for (let d = 25 + R() * 60; d < L - 12; d += 100 + R() * 70) { const sd = R() < .5 ? 1 : -1, o = s.w / 2 + 1.1; COPS.posts.push({ x: s.ax + tx * d + tz * sd * o, z: s.az + tz * d - tx * sd * o, ry: Math.atan2(-tz * sd, tx * sd) }); }
@@ -18,13 +21,16 @@ export class Police {
     this.pool = []; for (let i = 0; i < 14; i++) { const r = makeFigure({ ...COPS.look, skin: ['#8d5a3b', '#a36f48', '#7a4a2e'][i % 3], s: .98 + (i % 3) * .03 }); r.g.visible = false; scene.add(r.g); this.pool.push(r); }
     $('retry').addEventListener('click', () => this.release());
   }
-  offence(x, z, what) { // called when the player's car hits someone or something
-    if (this.busted || this.pl.ride) return;
-    if (!this.o.some(o => Math.hypot(o.x - x, o.z - z) < SEE)) return;
-    this.cases++; this.seen = [x, z];
-    if (!this.wanted) { this.wanted = true; this.snd.whistle(); this.hud.toast(`<small>WANTED · পুলিশ দেখে ফেলেছে!</small>Police saw you hit a ${what}<i>Get 500 m away to drop the case — or be arrested</i>`); }
+  offence(x, z, what, reach = SEE) { // the player's car hit someone or something, or a car was stolen
+    if (this.busted || this.pl.ride || this.cool > 0) return;
+    if (!this.o.some(o => Math.hypot(o.x - x, o.z - z) < reach)) return;
+    this.cool = 1.5; this.cases++; if (this.cases === 1) this.origin = [x, z];
+    if (this.cases >= 3 && !this.hot) this.hot = HOT;
+    this.wanted = true; this.snd.whistle(); this.stars();
+    this.hud.toast(`<small>${['', 'CASE 1', 'CASE 2', 'CASE 3'][Math.min(3, this.cases)]} · পুলিশ দেখে ফেলেছে!</small>${what === 'steal' ? 'Police saw you steal a car' : `Police saw you hit a ${what}`}`);
   }
-  clear(msg) { this.wanted = false; this.cases = 0; $('wanted').textContent = ''; for (const o of this.o) if (o.chase) { o.chase = false; o.back = true; } if (msg) this.hud.toast(msg); }
+  stars() { const n = Math.min(3, this.cases); document.querySelectorAll('#wanted i').forEach((e, i) => e.classList.toggle('on', i < n)); }
+  clear(msg) { this.wanted = false; this.cases = 0; this.hot = 0; this.stars(); for (const o of this.o) if (o.chase) { o.chase = false; o.back = true; } if (msg) this.hud.toast(msg); }
   arrest() {
     this.busted = true; this.clear(); if (this.pl.car) this.dr.toggle(true); this.pl.held = true; this.pl.keys = {}; this.pl.vel.set(0, 0, 0); this.snd.whistle();
     document.exitPointerLock?.(); $('busted').classList.add('on');
@@ -34,7 +40,7 @@ export class Police {
     for (const o of this.o) { o.back = false; o.x = o.hx; o.z = o.hz; }
   }
   update(dt) {
-    const pl = this.pl, p = pl.pos, car = pl.car;
+    const pl = this.pl, p = pl.pos, car = pl.car; if (this.cool > 0) this.cool -= dt;
     if ((this.tick -= dt) < 0) { // hand the few animated figures to the officers nearest the player
       this.tick = .4;
       for (const o of this.o) {
@@ -45,12 +51,11 @@ export class Police {
     }
     for (const o of this.o) {
       if (!o.rig) continue; const g = o.rig.g, dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz) || 1;
-      if (this.wanted && !o.chase && d < 60 && !pl.ride) { o.chase = true; o.back = false; }
+      if (this.wanted && !o.chase && (this.hot || d < 60) && !pl.ride) { o.chase = true; o.back = false; }
       if (o.chase) {
-        if (d > 140 || pl.ride) { o.chase = false; o.back = true; }
+        if ((!this.hot && d > 140) || pl.ride) { o.chase = false; o.back = true; }
         else {
           const sp = 8.3; o.x += dx / d * sp * dt; o.z += dz / d * sp * dt; resolve(o, .4); g.rotation.y = Math.atan2(dx, dz); animate(o.rig, sp, dt);
-          if (d < SEE) this.seen = [p.x, p.z];
           if (car) { const c = Math.cos(car.a), s = Math.sin(car.a), lx = -dx * c + dz * s, lz = -dx * s - dz * c; if (Math.abs(car.sp) < 6 && Math.abs(lx) < car.hl + 1 && Math.abs(lz) < car.hw + 1) this.arrest(); }
           else if (d < 1.3) this.arrest();
         }
@@ -60,9 +65,10 @@ export class Police {
       g.position.set(o.x, 0, o.z);
     }
     if (this.wanted) {
-      const esc = Math.hypot(p.x - this.seen[0], p.z - this.seen[1]);
-      if (pl.ride || esc > ESCAPE) this.clear('<small>CASE DROPPED · মামলা খারিজ</small>You lost the police');
-      else { $('wanted').textContent = `★ WANTED · ${this.cases} case${this.cases > 1 ? 's' : ''} · ${Math.round(esc)} m / ${ESCAPE} m`; if ((this.sir -= dt) < 0) { this.sir = .5; this.snd.siren(); } }
+      if (pl.ride) this.clear('<small>ফেরি · FERRY</small>The police lost you');
+      else if (this.hot) { if ((this.hot -= dt) <= 0) this.clear('<small>মামলা খারিজ</small>The police gave up'); }
+      else if (Math.hypot(p.x - this.origin[0], p.z - this.origin[1]) > ESCAPE) this.clear('<small>মামলা খারিজ</small>The police lost you');
+      if (this.wanted && (this.sir -= dt) < 0) { this.sir = .5; this.snd.siren(); }
     }
   }
 }
