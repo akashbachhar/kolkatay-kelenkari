@@ -56,7 +56,7 @@ export class Player {
     this.speed = Math.hypot(this.vel.x, this.vel.z);
     this.root.position.copy(p); this.root.rotation.y = this.heading;
     animate(this.rig, this.speed, dt);
-    if (this.punchT > 0) { this.punchT -= dt; const k = Math.sin(Math.max(0, this.punchT) / .32 * Math.PI); this.rig.armR.rotation.x = -1.65 * k; this.rig.body.rotation.y = -.35 * k; } else this.rig.body.rotation.y = 0;
+    if (this.punchT > 0) { this.punchT -= dt; const k = Math.sin(Math.max(0, this.punchT) / .32 * Math.PI); this.rig.armL.rotation.x = -1.65 * k; this.rig.body.rotation.y = .35 * k; } else this.rig.body.rotation.y = 0; // punch with the right hand (armL: the figure faces +z, so its right is -x), right shoulder forward
     const st = Math.floor(this.rig.ph / PI); if (st !== this.stepN) { this.stepN = st; if (this.speed > .7 && p.y === 0) this.onStep?.(this.speed > 6); }
     // orbit camera, pulled in when a wall is in the way
     const cp = Math.cos(this.pitch), dx = Math.sin(this.yaw) * cp, dy = Math.sin(this.pitch), dz = Math.cos(this.yaw) * cp, tx = p.x, ty = p.y + 1.6, tz = p.z;
