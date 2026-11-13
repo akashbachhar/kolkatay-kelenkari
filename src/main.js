@@ -14,7 +14,7 @@ import { Drive } from './drive.js';
 import { Puja } from './puja.js';
 import { Police } from './police.js';
 import { nearestRoad } from './world.js';
-import { RACE } from './data.js';
+import { RACE, LOCKED } from './data.js';
 
 const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search);
 // phones and tablets: touch controls, lighter rendering
@@ -88,6 +88,7 @@ async function start() {
     if (playing && (oc -= dt) < 0) { oc = 1; open = !!player.zone || player.ride || nearestRoad(player.pos.x, player.pos.z).d > 45; }
     if (playing) sound.tick(dt, open, !!player.zone && !player.ride);
     ferry.update(dt, t, playing); for (const f of anims) f(t);
+    if (playing) { const L = LOCKED.find(q => Math.hypot(player.pos.x - q.x, player.pos.z - q.z) < q.r), el = $('lock'); if ((L?.html || '') !== el.dataset.h) { el.dataset.h = L?.html || ''; el.innerHTML = L?.html || ''; el.classList.toggle('on', !!L); } }
     if (playing && RACE.horses.length && Math.hypot(player.pos.x - RACE.x, player.pos.z - RACE.z) < RACE.a + 30) for (const h of RACE.horses) { // a galloping horse knocks people over
       const hx = RACE.x + h.g.position.x, hz = RACE.z + h.g.position.z, fx = Math.cos(h.g.rotation.y), fz = -Math.sin(h.g.rotation.y);
       for (const d of [1.1, 0, -.9]) {

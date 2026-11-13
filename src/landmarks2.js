@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Kit, M, PI, R, rr, pick } from './kit.js';
-import { ll, ROADS, DAK, RIVER_W, COPS, BUS_ROUTES, PARKED, RACE } from './data.js';
+import { ll, ROADS, DAK, RIVER_W, COPS, BUS_ROUTES, PARKED, RACE, LOCKED } from './data.js';
 import { addBox } from './collide.js';
 
 // Second batch of places: Park Street, the markets, metro entrances, College Street, gully cricket, Dakshineswar.
@@ -531,5 +531,56 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
     pts.forEach((p, i) => { im.setMatrixAt(i, m4.makeTranslation(p[0], p[1], p[2])); im.setColorAt(i, cols[i]); }); im.frustumCulled = false; k.extras.push(im);
     let last = 0;
     anims.push(t => { if (t - last < .12) return; last = t; for (let j = 0; j < 40; j++) { const i = (Math.random() * pts.length) | 0; im.setColorAt(i, Math.random() < .35 ? dim.copy(cols[i]).multiplyScalar(.2) : cols[i]); } im.instanceColor.needsUpdate = true; }); // twinkle
+  });
+
+  // ───────── Sobhabazar: a petrol pump on the Ganga side of C.R. Avenue, a gully behind it, and at its end the locked gate of Sonagachi.
+  // Site-local x runs north along the avenue; -z is west, towards the river.
+  onRoad('Sonagachi', 'সোনাগাছি · নিষিদ্ধপল্লী', 'Chittaranjan Avenue', 1395, 0, (k, c, hw) => {
+    const W0 = -(hw + 2); // the west kerb
+    c.clear(40, 30, -10, W0 - 14); c.clear(8, 46, -27, W0 - 21); c.clear(96, 96, -30, W0 - 88);
+    // the petrol pump: forecourt, canopy on four columns, two islands of dispensers, the kiosk, the tall sign
+    k.box(M.apron, 26, .1, 22, -10, 0, W0 - 11);
+    k.box(M.white, 18, .8, 9, -10, 5.2, W0 - 10); k.box(M.blue, 18.1, .45, 9.1, -10, 5.55, W0 - 10); k.box(M.red, 18.1, .12, 9.1, -10, 5.35, W0 - 10);
+    for (const x of [-17, -3]) for (const z of [W0 - 7, W0 - 13]) { k.box(M.white, .45, 5.2, .45, x, 0, z); c.box(x, z, .45, .45, 6); }
+    k.sign('HINDUSTAN PETROLEUM · হিন্দুস্থান পেট্রোলিয়াম', 14, .7, -10, 5.55, W0 - 5.44, PI, '#27408f', '#ffffff');
+    for (const x of [-14, -6]) { k.box(M.conc, 2.4, .25, 1.2, x, 0, W0 - 10); for (const dx of [-.6, .6]) { k.box(M.white, .6, 1.6, .5, x + dx, .25, W0 - 10); k.box(M.blue, .62, .3, .52, x + dx, 1.5, W0 - 10); k.box(M.dark, .4, .25, .05, x + dx, 1.1, W0 - 9.74); } c.box(x, W0 - 10, 2.4, 1.2, 2); }
+    k.box(M.white, 10, 3.4, 5, -12, 0, W0 - 19.5); k.box(M.blue, 10.2, .5, 5.2, -12, 3.4, W0 - 19.5); k.wins(M.glass, -16.5, W0 - 16.95, -7.5, W0 - 16.95, 2, 3.4, 2.2, .5, .2); k.box(M.dark, 1.2, 2.4, .1, -12, 0, W0 - 16.95);
+    k.sign('শোভাবাজার ফিলিং স্টেশন · SOBHABAZAR FILLING STATION', 9, .55, -12, 3.1, W0 - 16.9, PI, '#ffffff', '#27408f'); c.box(-12, W0 - 19.5, 10, 5, 4);
+    k.cyl(M.steel, .2, .25, 9, 1.5, 0, W0 - 3, 8); k.box(M.blue, 2.6, 2.6, .4, 1.5, 9, W0 - 3); k.sign('HP', 1.9, 1.3, 1.5, 10.5, W0 - 2.78, PI, '#27408f', '#ffffff'); k.sign('PETROL · DIESEL', 2.4, .5, 1.5, 9.4, W0 - 2.78, PI, '#c4261c', '#ffffff'); c.circ(1.5, W0 - 3, .3, 9);
+    c.person(-14, W0 - 8.6, PI, false, 'stand', { top: '#27408f', bottom: '#27408f' }); c.person(-6, W0 - 11.5, 0, false, 'stand', { top: '#27408f', bottom: '#27408f' });
+    // the gully: a narrow lane running west from beside the pump, between tall old walls, wires overhead
+    const GX = -27, G0 = W0, G1 = W0 - 42; k.box(M.apron, 3.4, .1, G0 - G1, GX, 0, (G0 + G1) / 2);
+    for (const s of [-1, 1]) { const x = GX + s * 4.2; k.box(pick([M.cream, M.moss, M.sand]), 5, 13, G0 - G1, x, 0, (G0 + G1) / 2); k.wins(M.green, x - s * 2.52, G0 - 3, x - s * 2.52, G1 + 3, 6, 1.2, 2.2, 4.6); k.wins(M.green, x - s * 2.52, G0 - 3, x - s * 2.52, G1 + 3, 6, 1.2, 2.2, 8.8); c.box(x, (G0 + G1) / 2, 5, G0 - G1, 14); }
+    for (let i = 0; i < 9; i++) { const z = G0 - 3 - i * 4.4; k.beam(M.dark, [GX - 1.7, 6.6 + (i % 3) * .5, z], [GX + 1.7, 6.3 + ((i + 1) % 3) * .5, z - 1.5], .03); }
+    k.cyl(M.steel, .05, .05, 1, GX - 1.6, 4.6, G0 - 18, 5); k.box(M.lamp, .5, .15, .25, GX - 1.3, 5.6, G0 - 18);
+    // the gate: an old arched doorway with a closed double door, the board above
+    const DZ = G1 - .4; k.box(M.redOx, 5.2, 7, 1.2, GX - 3.4, 0, DZ); k.box(M.redOx, 5.2, 7, 1.2, GX + 3.4, 0, DZ); k.box(M.redOx, 3.4, 2.4, 1.2, GX, 4.6, DZ); k.add(M.redOx, new THREE.CylinderGeometry(1.7, 1.7, 1.2, 16, 1, false, 0, PI).rotateZ(PI / 2).rotateY(PI / 2), GX, 4.6, DZ);
+    k.box(M.wood, 1.62, 4.5, .2, GX - .83, .1, DZ + .4); k.box(M.wood, 1.62, 4.5, .2, GX + .83, .1, DZ + .4); for (const y of [1, 2.2, 3.4]) k.box(M.iron, 3.3, .08, .06, GX, y, DZ + .52);
+    k.box(M.iron, .5, .18, .08, GX, 2.2, DZ + .55); k.cyl(M.gold, .05, .05, .14, GX - .15, 2.2, DZ + .6, 6); k.cyl(M.gold, .05, .05, .14, GX + .15, 2.2, DZ + .6, 6);
+    k.sign('সোনাগাছি · নিষিদ্ধপল্লী\nSONAGACHI', 4.6, 1.5, GX, 6.1, DZ + .62, 0, '#5a1022', '#ffd9a0');
+    for (let i = 0; i < 9; i++) k.add([M.red, M.pink, M.yellow][i % 3], new THREE.SphereGeometry(.08, 6, 4), GX - 2 + i * .5, 5.1 + Math.sin(i / 8 * PI) * -.35, DZ + .66); // a string of coloured bulbs over the arch
+    c.box(GX, DZ, 3.4, 1, 6); c.box(GX - 3.4, DZ, 5.2, 1.2, 8); c.box(GX + 3.4, DZ, 5.2, 1.2, 8);
+    { const p = c.W(GX, DZ + 2); LOCKED.push({ x: p[0], z: p[1], r: 4.5, html: 'সোনাগাছি · নিষিদ্ধপল্লী<small>Keep playing to unlock · খেলা চালিয়ে যান, শীঘ্রই খুলবে</small>' }); }
+    // Sonagachi itself: a walled block of tall, brightly painted houses, every door and window shut, no way in
+    const BX = -30, BZ = W0 - 88, BW = 80, BD = 84, wall = M.redOx;
+    for (const [x, z, w, d] of [[BX, BZ + BD / 2, BW, 1.2], [BX, BZ - BD / 2, BW, 1.2], [BX - BW / 2, BZ, 1.2, BD], [BX + BW / 2, BZ, 1.2, BD]]) { k.box(wall, w, 4.5, d, x, 0, z); k.box(M.white, w + .2, .3, d + .2, x, 4.5, z); }
+    c.box(BX, BZ, BW, BD, 30); // closed: nobody gets in
+    const COL = ['#e8558a', '#3fb6a8', '#f2c53a', '#9a7ad8', '#f08a3c', '#7ed08f', '#5aa8e8', '#e04a4a', '#f3a6c8', '#c9e86a'].map(h => new THREE.MeshStandardMaterial({ color: h, roughness: .7 }));
+    const SH = [M.green, M.blue, M.red, M.wood, M.white], TRIM = [M.white, M.cream, M.yellow, M.pink];
+    const house = (x, z, w, d, fl, ry) => { // facing local +z of its own frame
+      const cs = Math.cos(ry), sn = Math.sin(ry), at = (lx, lz) => [x + lx * cs + lz * sn, z - lx * sn + lz * cs], H = fl * 3.4 + .6, col = pick(COL), sh = pick(SH), tr = pick(TRIM), f = at(0, d / 2);
+      k.box(col, w, H, d, x, 0, z, ry); k.box(tr, w + .3, .35, d + .3, x, H, z, ry);
+      for (let i = 0; i < fl; i++) { const y = .8 + i * 3.4, a = at(-w / 2 + .9, d / 2 + .06), b = at(w / 2 - .9, d / 2 + .06);
+        k.wins(sh, a[0], a[1], b[0], b[1], Math.max(2, Math.round(w / 2.6)), 1.1, 2.2, y, .12); // shut shutters
+        k.box(tr, w + .1, .18, .4, f[0], y + 2.5, f[1], ry);
+        if (i) { const bp = at(0, d / 2 + .65); k.box(tr, w * .7, .14, 1.2, bp[0], y - .45, bp[1], ry); k.box(M.iron, w * .7, .05, .05, ...[at(0, d / 2 + 1.25)[0], y + .55, at(0, d / 2 + 1.25)[1]], ry); }
+      }
+      const dp = at(0, d / 2 + .08); k.box(sh, 1.4, 2.4, .12, dp[0], 0, dp[1], ry); k.box(M.iron, 1.5, .12, .14, dp[0], 1.2, dp[1], ry); // a shut door, barred
+      for (let j = 0; j < 7; j++) { const q = at(-w / 2 + .4 + j * (w - .8) / 6, d / 2 + .3); k.add([M.red, M.yellow, M.pink, M.lime][j % 4], new THREE.SphereGeometry(.07, 5, 4), q[0], H - .55 - Math.sin(j / 6 * PI) * .3, q[1]); }
+      if (R() < .5) { const q = at(0, d / 2 + .2); k.sign(pick(['বাড়ি নং ' + (1 + (R() * 90 | 0)), 'ঠাকুর', 'শুভ দীপাবলি', '·  ·  ·']), w * .5, .45, q[0], 3.15, q[1], ry, '#5a1022', '#ffd9a0'); }
+    };
+    for (let i = 0; i < 6; i++) { house(BX - 33 + i * 13.2, BZ + BD / 2 - 7, 12, 10, 3 + (i % 2), 0); house(BX - 33 + i * 13.2, BZ - BD / 2 + 7, 12, 10, 3 + ((i + 1) % 2), PI); }
+    for (let i = 0; i < 4; i++) { house(BX - BW / 2 + 7, BZ - 21 + i * 14, 10, 10, 3 + (i % 2), -PI / 2); house(BX + BW / 2 - 7, BZ - 21 + i * 14, 10, 10, 4 - (i % 2), PI / 2); }
+    for (let i = 0; i < 3; i++) { house(BX - 14 + i * 14, BZ - 6, 12, 10, 2 + (i % 2), 0); house(BX - 14 + i * 14, BZ + 6, 12, 10, 2 + ((i + 1) % 2), PI); }
   });
 }

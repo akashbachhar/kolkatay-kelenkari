@@ -62,8 +62,11 @@ export const BUS_ROUTES = [['D28B', 'ESPLANADE', 'ধর্মতলা'], ['43'
 export const PARKED = []; // vehicles standing at the bus terminus and taxi stand: {k, x, z, a, route}
 // the race course: centre and the ellipse cars may not enter (filled in when it is built); the running horses
 export const RACE = { x: 0, z: 0, a: 0, b: 0, horses: [] };
+// places that are locked for now: a point, a radius and the message shown there
+export const LOCKED = [];
 export const SPAWN = [-8, 41.6]; // at the north end of the Dharmatala bus stand, by the Esplanade metro
 
 // Dakshineswar: a separate area upriver, reached by ferry from Babughat
 export const DAK = (() => { const z = -2950, bx = bankX(z); return { z, bx, x0: bx + 1.2, x1: bx + 236, z0: z - 215, z1: z + 215 }; })();
 AREAS.push({ n: 'Dakshineswar', p: [DAK.bx + 80, DAK.z] });
+AREAS.push({ n: 'Sobhabazar', p: [622, -1268] }, { n: 'Sonagachi', p: [507, -1251] });
