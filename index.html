@@ -146,6 +146,18 @@ body.cine #points,body.cine #ptsWhy{opacity:0}
 #ctl.tc{display:none}body.touch #ctl.tc{display:grid}body.touch #ctl.kb{display:none}
 #inav{display:flex;align-items:center;justify-content:space-between;margin-top:min(14px,2vh)}#inav span{opacity:.7;font-size:18px;font-weight:700}
 #next{border:0;background:var(--red);color:#fff;font:800 20px "Baloo Da 2",system-ui;padding:9px 34px;border-radius:4px;cursor:pointer;box-shadow:0 4px 0 #6d140f}
+
+/* v14: points sit exactly left of the stars (desktop, tablet); on phones they go under the stars, with the place name below that */
+#wanted{line-height:40px;height:40px;top:10px}#wanted i{line-height:40px;vertical-align:top}
+#points{top:10px;right:160px;height:40px;line-height:40px;font-size:30px}#ptsWhy{top:58px}
+body.touch #wanted{top:6px;right:12px;height:32px;line-height:32px}body.touch #wanted i{line-height:32px}
+body.touch #points{top:6px;right:122px;height:32px;line-height:32px;font-size:24px}
+body.touch #where{top:44px}body.touch #ptsWhy{top:100px;right:14px;font-size:14px}
+@media (max-width:520px),(max-height:480px){
+  body.touch #points{top:38px;right:14px;height:26px;line-height:26px;font-size:20px}
+  body.touch #where{top:66px}body.touch #ptsWhy{top:124px;right:92px}
+}
+@media (max-width:520px){body.touch #ptsWhy{right:14px;top:126px;max-width:calc(100vw - 150px);white-space:normal;line-height:1.2}}
 </style>
 </head>
 <body>
