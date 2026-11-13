@@ -8,13 +8,13 @@ import { Hud } from './hud.js';
 import { People } from './people.js';
 import { Sound } from './audio.js';
 import { initTouch } from './touch.js';
-import { folk, roams, anims } from './landmarks.js';
+import { folk, roams, anims, LM } from './landmarks.js';
 import { Ferry } from './ferry.js';
 import { Drive } from './drive.js';
 import { Puja } from './puja.js';
 import { Police } from './police.js';
 import { nearestRoad } from './world.js';
-import { RACE, LOCKED } from './data.js';
+import { RACE, LOCKED, ROADS, BRIDGE, DAK, COPS } from './data.js';
 
 const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search);
 // phones and tablets: touch controls, lighter rendering
@@ -83,8 +83,10 @@ async function start() {
   if (Q.has('auto')) go();
 
   const clock = new THREE.Clock(); let t = 0, open = false, oc = 0;
-  renderer.setAnimationLoop(() => {
-    const dt = Math.min(.05, clock.getDelta()); t += dt;
+  // window.kkManual stops the clock so a recorder can step frames itself with kk.step(dt); window.kkCam(camera, t) can take over the camera
+  if (/[?&]rec=1/.test(location.search)) window.kkManual = true; // recorder mode: frames only advance on kk.step
+  const frame = (dt, skip) => {
+    t += dt;
     sound.listen(player.pos, player.yaw); traffic.update(dt, player.pos, playing ? sound : null); people.update(dt, player.pos);
     if (playing && (oc -= dt) < 0) { oc = 1; open = !!player.zone || player.ride || nearestRoad(player.pos.x, player.pos.z).d > 45; }
     if (playing) sound.tick(dt, open, !!player.zone && !player.ride);
@@ -102,7 +104,10 @@ async function start() {
     if (playing) { player.update(dt, traffic, people); drive.camera(); puja.update(dt, t); } else { player.yaw += dt * .05; player.update(0, traffic); }
     sun.position.copy(player.pos).addScaledVector(sunDir, 420); sun.target.position.copy(player.pos); glow.position.copy(camera.position).addScaledVector(sunDir, 8000); band.position.copy(camera.position).addScaledVector(bandDir, 8000);
     world.update(t); if (playing) hud.update(player);
-    renderer.render(scene, camera);
-  });
+    if (window.kkCam) window.kkCam(camera, t, dt);
+    if (!skip) renderer.render(scene, camera);
+  };
+  renderer.setAnimationLoop(() => { const dt = Math.min(.05, clock.getDelta()); if (!window.kkManual) frame(dt); });
+  Object.assign(window.kk, { step: (dt, skip) => frame(dt, skip), LM, ROADS, BRIDGE, DAK, COPS, go: () => go() });
 }
 start().catch(e => { console.error(e); $('load').textContent = 'Could not start: ' + e.message; });
