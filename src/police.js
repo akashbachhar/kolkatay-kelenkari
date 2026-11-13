@@ -2,7 +2,8 @@ import { makeFigure, animate } from './human.js';
 import { resolve } from './collide.js';
 import { SEG } from './world.js';
 import { COPS } from './data.js';
-import { R } from './kit.js';
+import * as THREE from 'three';
+import { R, M } from './kit.js';
 
 // Kolkata Police. Officers stand at posts all over the city. Hit a person or a vehicle in a car where an officer within 50 m
 // can see it, or steal a car within 20 m of one, and that is a case. The rules are not shown to the player:
@@ -12,6 +13,11 @@ import { R } from './kit.js';
 const $ = id => document.getElementById(id), SEE = 50, ESCAPE = 500, HOT = 300;
 export class Police {
   constructor(scene, player, drive, hud, sound) {
+    // the lathi, and a pool of 💥 bursts for the beating after an arrest
+    this.stick = new THREE.Mesh(new THREE.CylinderGeometry(.022, .026, 1, 6).translate(0, -1.02, .05), M.wood); this.stick.castShadow = true;
+    { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '104px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.fillText('💥', 64, 70);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+      this.fx = Array.from({ length: 14 }, () => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false })); sp.renderOrder = 99; sp.visible = false; scene.add(sp); return { sp, t: 0, life: 0, s: 1 }; }); }
     this.pl = player; this.dr = drive; this.hud = hud; this.snd = sound; this.wanted = false; this.busted = false; this.cases = 0; this.origin = [0, 0]; this.hot = 0; this.cool = 0; this.tick = 0; this.sir = 0;
     for (const s of SEG) { // street posts at the kerb
       const L = Math.hypot(s.bx - s.ax, s.bz - s.az), tx = (s.bx - s.ax) / L, tz = (s.bz - s.az) / L;
@@ -31,10 +37,33 @@ export class Police {
   }
   stars() { const n = Math.min(3, this.cases); document.querySelectorAll('#wanted i').forEach((e, i) => e.classList.toggle('on', i < n)); }
   clear(msg) { this.wanted = false; this.cases = 0; this.hot = 0; this.stars(); for (const o of this.o) if (o.chase) { o.chase = false; o.back = true; } if (msg) this.hud.toast(msg); }
-  arrest() {
+  arrest(o) {
     this.busted = true; this.clear(); if (this.pl.car) this.dr.toggle(true); this.pl.held = true; this.pl.keys = {}; this.pl.vel.set(0, 0, 0); this.snd.whistle();
-    document.exitPointerLock?.(); $('busted').classList.add('on');
+    document.exitPointerLock?.();
+    if (!o?.rig) { let bd = 1e9; for (const q of this.o) if (q.rig && !(q.down > 0)) { const d = Math.hypot(q.x - this.pl.pos.x, q.z - this.pl.pos.z); if (d < bd) { bd = d; o = q; } } }
+    if (!o?.rig) { $('busted').classList.add('on'); return; }
+    o.chase = false; o.back = false; o.rig.armL.add(this.stick); this.beat = { o, t: 0, hits: 0 }; // the lathi comes out
   }
+  burst(x, y, z, n) { // a few 💥 of different sizes around the point
+    for (let i = 0; i < n; i++) { const f = this.fx.find(q => q.t >= q.life) || this.fx[0]; f.t = 0; f.life = .45 + Math.random() * .25; f.s = .35 + Math.random() * (i ? .8 : 1.2); f.sp.position.set(x + (Math.random() - .5) * .9, y + (Math.random() - .3) * .7, z + (Math.random() - .5) * .9); f.sp.visible = true; }
+  }
+  beating(dt) { // the arresting officer strikes with his lathi; the boy flinches, then falls; then the game-over screen
+    const b = this.beat, o = b.o, pl = this.pl, p = pl.pos, g = o.rig.g; b.t += dt;
+    const dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz) || 1;
+    if (d > 1) { o.x += dx / d * Math.min(d - 1, 6 * dt); o.z += dz / d * Math.min(d - 1, 6 * dt); }
+    g.position.set(o.x, 0, o.z); g.rotation.y = Math.atan2(dx, dz); pl.heading = Math.atan2(-dx, -dz);
+    const HIT = .55, ph = (b.t % HIT) / HIT, n = Math.floor(b.t / HIT);
+    if (b.hits < 5) { o.rig.armL.rotation.x = ph < .55 ? -2.9 * (ph / .55) : -2.9 + 2.5 * Math.min(1, (ph - .55) / .15); o.rig.body.rotation.x = ph > .55 ? .25 : 0; }
+    if (n > b.hits - 1 && b.t > .3 && b.hits < 5 && ph > .7) {
+      b.hits++; this.snd.lathi(); this.snd.yelp(p.x, p.z);
+      this.burst(p.x, 1.45 - (b.hits > 3 ? .9 : 0), p.z, 2 + (Math.random() * 3 | 0));
+      if (b.hits === 5) b.fall = b.t;
+    }
+    const r = pl.rig; r.body.rotation.x = b.fall ? 0 : (ph > .7 && ph < .9 ? -.25 : 0);
+    if (b.fall) { const k = Math.min(1, (b.t - b.fall) / .4); r.g.rotation.x = -Math.PI / 2 * k; r.g.position.y = .14 * k; o.rig.armL.rotation.x = -.4; o.rig.body.rotation.x = 0; }
+    if (b.fall && b.t - b.fall > 1.4 && !b.shown) { b.shown = true; $('busted').classList.add('on'); }
+  }
+
   knock(o, fx, fz) { o.down = 6; o.fx = fx; o.fz = fz; this.snd.yelp(o.x, o.z); this.offence(o.x, o.z, 'officer'); }
   hitAt(x, z, fx, fz) { let best = null, bd = .95; for (const o of this.o) { if (!o.rig || o.down > 0) continue; const d = Math.hypot(o.x - x, o.z - z); if (d < bd) { bd = d; best = o; } } if (best) this.knock(best, fx * 2.2, fz * 2.2); return best; }
   carHit(v) { // a moving car knocks down any officer it touches
@@ -48,10 +77,13 @@ export class Police {
   }
   push(p) { for (const o of this.o) { if (!o.rig || o.down > 0) continue; const dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .8 && d > 1e-3) { p.x = o.x + dx / d * .8; p.z = o.z + dz / d * .8; } } }
   release() { // start again outside Lalbazar
+    if (this.beat) { const r = this.pl.rig; r.g.rotation.x = 0; r.g.position.y = 0; this.beat.o.rig?.armL.remove(this.stick); if (this.beat.o.rig) this.beat.o.rig.body.rotation.x = 0; this.beat = null; }
     const h = COPS.hq || [this.pl.pos.x, this.pl.pos.z]; this.busted = false; this.pl.held = false; this.pl.pos.set(h[0], 0, h[1]); $('busted').classList.remove('on');
     for (const o of this.o) { o.back = false; o.x = o.hx; o.z = o.hz; }
   }
   update(dt) {
+    for (const f of this.fx) if (f.sp.visible) { f.t += dt; const k = f.t / f.life; if (k >= 1) f.sp.visible = false; else { f.sp.scale.setScalar(f.s * (.45 + .75 * Math.min(1, k * 3))); f.sp.material.opacity = 1 - k * k; } }
+    if (this.beat) { this.beating(dt); return; }
     const pl = this.pl, p = pl.pos, car = pl.car; if (this.cool > 0) this.cool -= dt;
     if ((this.tick -= dt) < 0) { // hand the few animated figures to the officers nearest the player
       this.tick = .4;
@@ -73,8 +105,8 @@ export class Police {
         if ((!this.hot && d > 140) || pl.ride) { o.chase = false; o.back = true; }
         else {
           const sp = 8.3; o.x += dx / d * sp * dt; o.z += dz / d * sp * dt; resolve(o, .4); g.rotation.y = Math.atan2(dx, dz); animate(o.rig, sp, dt);
-          if (car) { const c = Math.cos(car.a), s = Math.sin(car.a), lx = -dx * c + dz * s, lz = -dx * s - dz * c; if (Math.abs(car.sp) < 6 && Math.abs(lx) < car.hl + 1 && Math.abs(lz) < car.hw + 1) this.arrest(); }
-          else if (d < 1.3) this.arrest();
+          if (car) { const c = Math.cos(car.a), s = Math.sin(car.a), lx = -dx * c + dz * s, lz = -dx * s - dz * c; if (Math.abs(car.sp) < 6 && Math.abs(lx) < car.hl + 1 && Math.abs(lz) < car.hw + 1) this.arrest(o); }
+          else if (d < 1.3) this.arrest(o);
         }
       } else if (o.back) {
         const bx = o.hx - o.x, bz = o.hz - o.z, bd = Math.hypot(bx, bz); if (bd < .5) o.back = false; else { o.x += bx / bd * 2.2 * dt; o.z += bz / bd * 2.2 * dt; g.rotation.y = Math.atan2(bx, bz); animate(o.rig, 2.2, dt); }
