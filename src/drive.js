@@ -5,6 +5,7 @@ import { POLES } from './world.js';
 import { M } from './kit.js';
 import { makeFigure, look } from './human.js';
 import { ICON } from './touch.js';
+import { Score, PTS } from './score.js';
 
 // Take any taxi or bus and drive it. E/F enter or leave, W/S throttle and reverse, A/D steer, Space brake, V view, H horn.
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), $ = id => document.getElementById(id), UP = new THREE.Vector3(0, 1, 0), O3 = new THREE.Object3D(), V3 = new THREE.Vector3();
@@ -76,6 +77,7 @@ export class Drive {
       if (had) { // the driver is turned out and stands by his door, shaking his fist
         const r = this.dr[this.di++ % this.dr.length], off = v.hw + 1.1, fo = v.k ? 3.6 : .3; r.g.visible = true; r.g.position.set(v.x + rx * off + fx * fo, 0, v.z + rz * off + fz * fo); r.t = 0; r.car = v; this.snd.yelp(v.x, v.z); this.police?.offence(v.x, v.z, 'steal', 20);
       } else if (v.park && !v.taken) this.police?.offence(v.x, v.z, 'steal', 20);
+      if (had || (v.park && !v.taken)) v.k === 0 ? Score.add(PTS.taxi, 'ট্যাক্সি চুরি') : Score.add(PTS.bus, 'বাস চুরি');
       v.taken = true;
       this.v = v; v.own = true; v.me = true; v.sp = Math.max(-2, Math.min(3, v.sp)); v.kt = 0; pl.car = v; pl.root.visible = false; this.d0 = pl.dist; pl.dist = Math.max(pl.dist, v.k ? 15 : 8.5); pl.pitch = Math.max(pl.pitch, v.k === 4 ? .3 : .2); this.st = 0; pl.lookT = 0; pl.yaw = this.behind = Math.atan2(-Math.cos(v.a), Math.sin(v.a));
       document.body.classList.add('driving'); if ($('bJump')) $('bJump').innerHTML = ICON.brake;
@@ -116,7 +118,7 @@ export class Drive {
     if (pen > 1e-3) {
       const back = -(px * fx + pz * fz) * dir / pen, imp = Math.abs(sp0) * Math.max(0, back); // back = 1 for a head-on hit
       if (veh && Math.abs(sp0) > 2.5) this.police?.offence(v.x, v.z, 'vehicle');
-      if (back > .35) { if (imp > 3) { this.snd.crash(Math.min(1, imp / 16), veh); this.shake = Math.min(.6, imp * .035); } v.sp = imp > 3 ? -sp0 * .18 : sp0 * .4; }
+      if (back > .35) { if (imp > 3) { if (veh && !(this.hitT > performance.now())) { this.hitT = performance.now() + 900; Score.add(PTS.car, 'গাড়িতে ধাক্কা'); } this.snd.crash(Math.min(1, imp / 16), veh); this.shake = Math.min(.6, imp * .035); } v.sp = imp > 3 ? -sp0 * .18 : sp0 * .4; }
       else { v.sp *= 1 - Math.min(1, 2.5 * dt); if (Math.abs(sp0) > 5) this.snd.scrape(); }
     }
     // --- lamp posts: knocked flat at speed, solid otherwise
@@ -124,12 +126,12 @@ export class Drive {
     for (let i = 0; i < L.length; i++) {
       const p = L[i]; if (p.down) continue; const dx = p.x - v.x, dz = p.z - v.z; if (dx * dx + dz * dz > 40) continue;
       if (Math.abs(dx * ca - dz * sa) > v.hl + .15 || Math.abs(dx * sa + dz * ca) > v.hw + .15) continue;
-      if (Math.abs(v.sp) > 4) { p.down = true; O3.position.set(p.x, .12, p.z); O3.quaternion.setFromUnitVectors(UP, V3.set(fx * dir + (Math.random() - .5) * .5, .06, fz * dir + (Math.random() - .5) * .5).normalize()); O3.updateMatrix(); POLES.im.setMatrixAt(i, O3.matrix); POLES.im.instanceMatrix.needsUpdate = true; this.snd.clang(); this.snd.crash(.4, true); this.shake = .3; v.sp *= .7; }
+      if (Math.abs(v.sp) > 4) { p.down = true; Score.add(PTS.pole, 'পোল ফেলা'); O3.position.set(p.x, .12, p.z); O3.quaternion.setFromUnitVectors(UP, V3.set(fx * dir + (Math.random() - .5) * .5, .06, fz * dir + (Math.random() - .5) * .5).normalize()); O3.updateMatrix(); POLES.im.setMatrixAt(i, O3.matrix); POLES.im.instanceMatrix.needsUpdate = true; this.snd.clang(); this.snd.crash(.4, true); this.shake = .3; v.sp *= .7; }
       else { v.x -= fx * dir * .12; v.z -= fz * dir * .12; v.sp = 0; }
     }
     // --- people
     if (this.police?.carHit(v)) { v.sp *= .93; this.shake = Math.max(this.shake, .15); }
-    if (this.pp.carHit(v, this.snd)) { this.police?.offence(v.x, v.z, 'person'); v.sp *= .93; this.shake = Math.max(this.shake, .15); }
+    { const n = this.pp.carHit(v, this.snd); if (n) Score.add(PTS.person * n, 'পাবলিক মারা'); if (n) { this.police?.offence(v.x, v.z, 'person'); v.sp *= .93; this.shake = Math.max(this.shake, .15); } }
     pl.pos.set(v.x, 0, v.z); pl.heading = Math.atan2(fx, fz);
     // the chase camera swings round behind the car unless you are looking about
     { const behind = Math.atan2(-fx, -fz); let off = wrap(pl.yaw - (this.behind ?? behind)); if ((pl.lookT = (pl.lookT || 0) - dt) <= 0) off *= Math.exp(-dt * 4); pl.yaw = behind + off; this.behind = behind; } // turns with the car; only a look-around offset eases back

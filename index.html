@@ -124,6 +124,28 @@ body.touch.driving #touch #bRun,body.touch.driving #touch #bHit{display:none}
 #busted h3{font-size:clamp(28px,6vw,64px);line-height:1.25;margin:0 0 30px;max-width:92vw}
 body.cine #hud{opacity:0}body.cine #touch{display:none!important}
 #lock{display:none;position:absolute;left:50%;top:76%;transform:translate(-50%,-50%);text-align:center;background:rgba(40,8,18,.82);border:2px solid #ffd9a0;border-radius:6px;padding:14px 30px 12px;color:#ffd9a0;font-size:30px;font-weight:800;line-height:1.2;max-width:90vw}#lock.on{display:block}#lock small{display:block;font-size:16px;font-weight:600;margin-top:6px;color:#fff;opacity:.9}
+
+/* v13: points beside the stars, and the three pages shown before play */
+#points{position:absolute;top:10px;right:158px;text-align:right;color:#f2c118;font-weight:800;font-size:30px;line-height:1.25;text-shadow:0 2px 6px rgba(0,0,0,.7);white-space:nowrap}
+#points b{display:inline-block;transition:transform .15s}#points b::before{content:"পয়েন্ট ";font-size:15px;font-weight:700;color:#fff;opacity:.85}
+#points.bump b{animation:ptb .45s}@keyframes ptb{30%{transform:scale(1.35)}}
+#ptsWhy{position:absolute;top:52px;right:18px;text-align:right;color:#fff;font-weight:700;font-size:17px;text-shadow:0 2px 6px rgba(0,0,0,.8);opacity:0;transform:translateY(-6px);transition:opacity .3s,transform .3s;white-space:nowrap}#ptsWhy.on{opacity:1;transform:none}
+body.touch #points{top:6px;right:120px;font-size:22px}body.touch #points b::before{font-size:12px}body.touch #ptsWhy{top:150px;right:14px;font-size:14px}
+body.cine #points,body.cine #ptsWhy{opacity:0}
+#intro{display:none;width:min(760px,94vw);max-height:92vh;background:rgba(23,19,15,.94);border:5px solid var(--ink);box-shadow:0 0 0 2px var(--taxi),0 20px 60px rgba(0,0,0,.6);padding:min(18px,2.5vh) 26px min(16px,2.5vh);text-align:left;flex-direction:column}
+#overlay.pages h1,#overlay.pages h2,#overlay.pages #play{display:none!important}#overlay.pages #intro{display:flex}
+#intro h3{margin:0 0 10px;font-size:clamp(22px,4vw,30px);color:var(--taxi);text-align:center}
+#intro .pg{display:none;overflow:auto;min-height:0}#intro .pg.on{display:block}
+#intro ol{margin:0;padding:0;list-style:none;font-size:clamp(14px,min(2.6vw,3.5vh),21px);font-weight:600}
+#intro ol li{display:flex;justify-content:space-between;gap:18px;padding:min(5px,.6vh) 2px;border-bottom:1px solid rgba(255,255,255,.12)}#intro ol li b{color:var(--taxi);white-space:nowrap}
+@media (max-height:440px){#intro ol{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}#intro ol li:last-child{grid-column:1/3}#intro h3{margin-bottom:4px}}
+#places{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:3px 16px;font-size:15px;font-weight:600}
+#places span{opacity:.75}#places span::before{content:"○ ";color:var(--taxi)}#places span.ok{opacity:1;color:var(--taxi)}#places span.ok::before{content:"✓ "}
+#intro .note{font-size:14px;opacity:.75;text-align:center;margin:8px 0 0}
+#ctl{display:grid;grid-template-columns:auto auto;gap:6px 22px;font-size:16px;justify-content:center}#ctl b{color:var(--taxi);text-align:right}
+#ctl.tc{display:none}body.touch #ctl.tc{display:grid}body.touch #ctl.kb{display:none}
+#inav{display:flex;align-items:center;justify-content:space-between;margin-top:min(14px,2vh)}#inav span{opacity:.7;font-size:18px;font-weight:700}
+#next{border:0;background:var(--red);color:#fff;font:800 20px "Baloo Da 2",system-ui;padding:9px 34px;border-radius:4px;cursor:pointer;box-shadow:0 4px 0 #6d140f}
 </style>
 </head>
 <body>
@@ -138,7 +160,7 @@ body.cine #hud{opacity:0}body.cine #touch{display:none!important}
     <div class="grid tc"><b>Left thumb</b><span>walk / drive</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump · brake</span><b>HIT</b><span>hit</span><b>CAR</b><span>get in / out</span><b>VIEW</b><span>first / third person</span><b>MAP</b><span>city map</span><b>SOUND</b><span>sound on / off</span></div>
     <small>Tap or press C to close</small></div>
   <canvas id="big"></canvas>
-  <div id="lock"></div><div id="wanted"><i>★</i><i>★</i><i>★</i></div><div id="hint"></div><div id="speed"></div>
+  <div id="lock"></div><div id="points"><b>০</b></div><div id="ptsWhy"></div><div id="wanted"><i>★</i><i>★</i><i>★</i></div><div id="hint"></div><div id="speed"></div>
   <div id="paused">Click to continue</div>
 </div>
 <div id="touch"><div id="joy"><div id="knob"></div></div><button id="bRun">RUN</button><button id="bHit">HIT</button><button id="bCar">CAR</button><button id="bView">VIEW</button><button id="bJump">JUMP</button><button id="bMap">MAP</button><button id="bSnd">SOUND</button></div>
@@ -148,6 +170,15 @@ body.cine #hud{opacity:0}body.cine #touch{display:none!important}
   <h2>Kolkatay Kelenkari</h2>
   <div id="load">Building the city…</div>
   <button id="play">PLAY</button>
+  <div id="intro">
+    <div class="pg on"><h3>কীসে কত পয়েন্ট</h3><ol>
+      <li><span>পুলিশ ক্যালালে</span><b>১০০</b></li><li><span>পাবলিক মারলে</span><b>১০</b></li><li><span>গাড়িতে ধাক্কা মারলে</span><b>৫০</b></li><li><span>রাস্তার পোল ফেললে</span><b>৩০</b></li>
+      <li><span>১টা কেস খেলে</span><b>২০০</b></li><li><span>৩টে কেস খেলে</span><b>৫০০</b></li><li><span>ট্যাক্সি চুরি করলে</span><b>২০</b></li><li><span>বাস চুরি করলে</span><b>৩০</b></li>
+      <li><span>নতুন জায়গা খুঁজে পেলে</span><b>৩০০</b></li><li><span>দক্ষিণেশ্বরে পুজো দিলে</span><b>সব কেস মুকুব + ১০০০</b></li></ol></div>
+    <div class="pg"><h3>যে জায়গাগুলো খুঁজে বের করতে হবে</h3><div id="places"></div><p class="note">খুঁজে পেলে তবেই ম্যাপে দেখা যাবে · প্রতিটায় ৩০০ পয়েন্ট</p></div>
+    <div class="pg"><h3>কন্ট্রোল</h3><div id="ctl" class="kb"></div><div id="ctl2"></div></div>
+    <div id="inav"><span id="pgno"></span><button id="next"></button></div>
+  </div>
 </div>
 <script type="module" src="./src/main.js"></script>
 </body>

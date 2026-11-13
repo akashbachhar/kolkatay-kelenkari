@@ -13,6 +13,7 @@ import { Ferry } from './ferry.js';
 import { Drive } from './drive.js';
 import { Puja } from './puja.js';
 import { Police } from './police.js';
+import { Score, PTS } from './score.js';
 import { nearestRoad } from './world.js';
 import { RACE, LOCKED, ROADS, BRIDGE, DAK, COPS } from './data.js';
 
@@ -58,7 +59,7 @@ async function start() {
   let police; player.onStep = fast => sound.step(fast);
   player.onPunch = (x, z, fx, fz) => { // a person or an officer within reach falls; any officer within 50 m makes it a case
     const who = people.hitAt(x, z, fx, fz, sound), cop = who ? null : police.hitAt(x, z, fx, fz); sound.punch(!!(who || cop));
-    if (who) police.offence(who.x, who.z, 'person');
+    if (who) { Score.add(PTS.person, 'পাবলিক মারা'); police.offence(who.x, who.z, 'person'); }
   };
   const ferry = new Ferry(scene, player, hud, sound); if (Q.get('zone') === 'dak') ferry.jump('dak');
   for (const k of ['x', 'z']) if (Q.has(k)) player.pos[k] = +Q.get(k);
@@ -74,10 +75,17 @@ async function start() {
   if (TOUCH) initTouch(player, dom, { map: () => hud.toggleMap(), sound: () => sound.toggle() });
   $('load').style.display = 'none'; $('play').style.display = 'inline-block';
   $('bHelp').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.toggleHelp(); }); $('keys').addEventListener('pointerdown', () => hud.toggleHelp(false));
-  $('play').onclick = go; dom.addEventListener('click', () => { if (playing && !police.busted && document.pointerLockElement !== dom) lock(); });
+  // before play: what earns points, the places to find, the controls
+  Score.load();
+  { const pgs = [...document.querySelectorAll('#intro .pg')]; let pi = -1;
+    $('places').innerHTML = LM.map(l => `<span class="${Score.found.has(l.n) ? 'ok' : ''}">${l.bn || l.n}</span>`).join('');
+    $('ctl').innerHTML = document.querySelector('#keys .kb').innerHTML; { const t = $('ctl2'); t.id = 'ctl'; t.className = 'tc'; t.innerHTML = document.querySelector('#keys .tc').innerHTML; }
+    const page = () => { pi++; if (pi >= pgs.length) { ov.classList.remove('pages'); return go(); } ov.classList.add('pages'); pgs.forEach((e, i) => e.classList.toggle('on', i === pi)); $('pgno').textContent = `${Score.BN(pi + 1)} / ${Score.BN(pgs.length)}`; $('next').textContent = pi === pgs.length - 1 ? 'খেলা শুরু ▶' : 'পরের পাতা ›'; };
+    window.kkPage = page; $('next').onclick = page; }
+  $('play').onclick = () => window.kkPage(); dom.addEventListener('click', () => { if (playing && !police.busted && document.pointerLockElement !== dom) lock(); });
   window.kkLock = lock;
   document.addEventListener('pointerlockchange', () => { if (playing && !TOUCH && !police.busted && document.pointerLockElement !== dom) $('paused').classList.add('on'); else $('paused').classList.remove('on'); });
-  addEventListener('keydown', e => { if (e.code === 'KeyM' && playing) hud.toggleMap(); if (e.code === 'KeyC' && playing) hud.toggleHelp(); if (e.code === 'KeyN' && playing) hud.toast(sound.toggle() ? '<small>SOUND</small>Off' : '<small>SOUND</small>On'); if (e.code === 'Enter' && !playing) go(); });
+  addEventListener('keydown', e => { if (e.code === 'KeyM' && playing) hud.toggleMap(); if (e.code === 'KeyC' && playing) hud.toggleHelp(); if (e.code === 'KeyN' && playing) hud.toast(sound.toggle() ? '<small>SOUND</small>Off' : '<small>SOUND</small>On'); if (e.code === 'Enter' && !playing) window.kkPage(); });
   const fit = () => { camera.aspect = innerWidth / innerHeight; camera.fov = innerWidth < innerHeight ? 72 : 58; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
   addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 250)); fit();
   if (Q.has('auto')) go();
@@ -91,7 +99,7 @@ async function start() {
     if (playing && (oc -= dt) < 0) { oc = 1; open = !!player.zone || player.ride || nearestRoad(player.pos.x, player.pos.z).d > 45; }
     if (playing) sound.tick(dt, open, !!player.zone && !player.ride);
     ferry.update(dt, t, playing); for (const f of anims) f(t);
-    if (playing) { const L = LOCKED.find(q => Math.hypot(player.pos.x - q.x, player.pos.z - q.z) < q.r), el = $('lock'); if ((L?.html || '') !== el.dataset.h) { el.dataset.h = L?.html || ''; el.innerHTML = L?.html || ''; el.classList.toggle('on', !!L); } }
+    if (playing) { const L = LOCKED.find(q => Math.hypot(player.pos.x - q.x, player.pos.z - q.z) < q.r), el = $('lock'); if ((L?.html || '') !== el.dataset.h) { el.dataset.h = L?.html || ''; el.innerHTML = L?.html || ''; el.classList.toggle('on', !!L); if (L) { const s = LM.find(l => l.n === 'Sonagachi'); if (s) Score.find(s); } } }
     if (playing && RACE.horses.length && Math.hypot(player.pos.x - RACE.x, player.pos.z - RACE.z) < RACE.a + 30) for (const h of RACE.horses) { // a galloping horse knocks people over
       const hx = RACE.x + h.g.position.x, hz = RACE.z + h.g.position.z, fx = Math.cos(h.g.rotation.y), fz = -Math.sin(h.g.rotation.y);
       for (const d of [1.1, 0, -.9]) {

@@ -4,6 +4,7 @@ import { SEG } from './world.js';
 import { COPS } from './data.js';
 import * as THREE from 'three';
 import { R, M } from './kit.js';
+import { Score, PTS } from './score.js';
 
 // Kolkata Police. Officers stand at posts all over the city. Hit a person or a vehicle in a car where an officer within 50 m
 // can see it, or steal a car within 20 m of one, and that is a case. The rules are not shown to the player:
@@ -31,6 +32,7 @@ export class Police {
     if (this.busted || this.pl.ride || this.cool > 0) return;
     if (!this.o.some(o => Math.hypot(o.x - x, o.z - z) < reach)) return;
     this.cool = 1.5; this.cases++; if (this.cases === 1) this.origin = [x, z];
+    if (this.cases === 3) Score.add(PTS.case3, '৩টে কেস!'); else Score.add(PTS.case, 'কেস খেলে');
     if (this.cases >= 3 && !this.hot) this.hot = HOT;
     this.wanted = true; this.snd.whistle(); this.stars();
     this.hud.toast(`<small>${['', 'CASE 1', 'CASE 2', 'CASE 3'][Math.min(3, this.cases)]} · পুলিশ দেখে ফেলেছে!</small>${what === 'steal' ? 'Police saw you steal a car' : what === 'officer' ? 'You hit a police officer!' : `Police saw you hit a ${what}`}`);
@@ -64,7 +66,7 @@ export class Police {
     if (b.fall && b.t - b.fall > 1.4 && !b.shown) { b.shown = true; document.exitPointerLock?.(); $('busted').classList.add('on'); }
   }
 
-  knock(o, fx, fz) { o.down = 6; o.fx = fx; o.fz = fz; this.snd.yelp(o.x, o.z); this.offence(o.x, o.z, 'officer'); }
+  knock(o, fx, fz) { Score.add(PTS.cop, 'পুলিশ ক্যালানো'); o.down = 6; o.fx = fx; o.fz = fz; this.snd.yelp(o.x, o.z); this.offence(o.x, o.z, 'officer'); }
   hitAt(x, z, fx, fz) { let best = null, bd = .95; for (const o of this.o) { if (!o.rig || o.down > 0) continue; const d = Math.hypot(o.x - x, o.z - z); if (d < bd) { bd = d; best = o; } } if (best) this.knock(best, fx * 2.2, fz * 2.2); return best; }
   carHit(v) { // a moving car knocks down any officer it touches
     const sp = v.sp; if (Math.abs(sp) < 1.5) return 0; const c = Math.cos(v.a), s = Math.sin(v.a); let n = 0;

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Kit, M, PI } from './kit.js';
 import { DAK } from './data.js';
 import { animate } from './human.js';
+import { Score, PTS } from './score.js';
 
 // Puja at Dakshineswar. A glowing yellow mark stands at the foot of the Bhavatarini temple steps.
 // Step on it and the temple opens: the boy walks in to Ma Kali, stands with folded hands, rings the bell,
@@ -184,7 +185,7 @@ export class Puja {
     this.once('dark', T, 15.3, () => $('fade').classList.add('on'));
     if (T >= 16.1) {
       p.set(mx, 0, mz + 3.5); pl.heading = 0; pl.yaw = 0; pl.pitch = .18; r.armL.rotation.set(0, 0, -.07); r.armR.rotation.set(0, 0, .07); r.body.rotation.x = 0;
-      this.t = -1; this.closed = true; pl.held = false; this.bt = null; document.body.classList.remove('cine'); setTimeout(() => $('fade').classList.remove('on'), 300);
+      this.t = -1; this.closed = true; pl.held = false; pl.police?.clear(); Score.add(PTS.puja, 'মায়ের আশীর্বাদ · সব কেস মুকুব'); this.bt = null; document.body.classList.remove('cine'); setTimeout(() => $('fade').classList.remove('on'), 300);
     }
   }
 }

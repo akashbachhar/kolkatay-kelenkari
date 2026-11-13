@@ -1,6 +1,7 @@
 import { ROADS, BANK, RIVER_W, MAIDAN, AREAS, X0, X1, Z0, Z1, BRIDGE as B, DAK } from './data.js';
 import { LM } from './landmarks.js';
 import { nearestRoad } from './world.js';
+import { Score } from './score.js';
 
 const K = .8, $ = id => document.getElementById(id); let OX = X0, OZ = Z0;
 const mx = x => (x - OX) * K, mz = z => (z - OZ) * K;
@@ -32,6 +33,7 @@ export class Hud {
     if (n % 12 === 0) {
       const r = nearestRoad(p.x, p.z); let a = AREAS[0], bd = 1e9;
       for (const e of AREAS) { const d = (e.p[0] - p.x) ** 2 + (e.p[1] - p.z) ** 2; if (d < bd) { bd = d; a = e; } }
+      if (!pl.ride && !pl.held) for (const l of LM) if (l.r > 0 && !Score.found.has(l.n) && Math.hypot(l.x - p.x, l.z - p.z) < Math.max(22, l.r * .8)) Score.find(l);
       $('road').textContent = pl.ride ? 'On the Hooghly' : r.d < 12 ? r.s.n : ''; $('area').textContent = a.n;
       if (pl.edge) this.toast(pl.zone ? '<small>DAKSHINESWAR</small>Take the ferry back from the ghat' : '<small>CITY LIMIT</small>More of Kolkata is coming soon', 1);
     }
@@ -39,7 +41,7 @@ export class Hud {
       const g = this.mini, Z = 1.05 / K;
       g.save(); g.clearRect(0, 0, 200, 200); g.beginPath(); g.arc(100, 100, 97, 0, 7); g.clip(); g.fillStyle = pl.ride ? '#8fb6c9' : '#e4dccb'; g.fillRect(0, 0, 200, 200);
       g.translate(100, 100); g.rotate(pl.yaw); g.scale(Z, Z); g.translate(-mx(p.x), -mz(p.z)); g.drawImage(this.base, 0, 0);
-      for (const l of LM) { g.beginPath(); g.arc(mx(l.x), mz(l.z), 4.5, 0, 7); g.fillStyle = /Metro$/.test(l.n) ? '#2a5bd7' : /Police/.test(l.n) ? '#1b2a55' : '#d99a1c'; g.fill(); g.lineWidth = 1.5; g.strokeStyle = '#fff'; g.stroke(); }
+      for (const l of LM) { if (!Score.found.has(l.n)) continue; g.beginPath(); g.arc(mx(l.x), mz(l.z), 4.5, 0, 7); g.fillStyle = /Metro$/.test(l.n) ? '#2a5bd7' : /Police/.test(l.n) ? '#1b2a55' : '#d99a1c'; g.fill(); g.lineWidth = 1.5; g.strokeStyle = '#fff'; g.stroke(); }
       g.translate(mx(p.x), mz(p.z)); g.rotate(Math.PI - pl.heading); g.beginPath(); g.moveTo(0, -9); g.lineTo(6, 7); g.lineTo(0, 3.5); g.lineTo(-6, 7); g.closePath(); g.fillStyle = '#c0261c'; g.fill(); g.lineWidth = 1.6; g.strokeStyle = '#fff'; g.stroke();
       g.restore();
       g.fillStyle = '#1b1b1b'; g.beginPath(); g.arc(100 + 86 * Math.sin(pl.yaw), 100 - 86 * Math.cos(pl.yaw), 9, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '700 11px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', 100 + 86 * Math.sin(pl.yaw), 100.5 - 86 * Math.cos(pl.yaw));
@@ -48,7 +50,7 @@ export class Hud {
       const c = this.big, s = Math.min(innerHeight * .9 / this.base.height, innerWidth * .9 / this.base.width), g = c.getContext('2d');
       c.width = this.base.width * s; c.height = this.base.height * s; g.drawImage(this.base, 0, 0, c.width, c.height);
       // places: gold = landmarks, blue square = metro, navy = police; labels skip spots that would overlap
-      const kind = l => /Metro$/.test(l.n) ? 1 : /Police/.test(l.n) ? 2 : 0, pts = LM.map(l => ({ l, k: kind(l), x: mx(l.x) * s, y: mz(l.z) * s })), boxes = [];
+      const kind = l => /Metro$/.test(l.n) ? 1 : /Police/.test(l.n) ? 2 : 0, pts = LM.filter(l => Score.found.has(l.n)).map(l => ({ l, k: kind(l), x: mx(l.x) * s, y: mz(l.z) * s })), boxes = [];
       for (const q of pts) { g.beginPath(); if (q.k === 1) g.rect(q.x - 4, q.y - 4, 8, 8); else g.arc(q.x, q.y, q.k ? 3.5 : 4.5, 0, 7); g.fillStyle = ['#d99a1c', '#2a5bd7', '#1b2a55'][q.k]; g.fill(); g.lineWidth = 1.5; g.strokeStyle = '#fff'; g.stroke(); boxes.push([q.x - 5, q.y - 5, q.x + 5, q.y + 5]); }
       g.lineJoin = 'round'; g.textBaseline = 'middle';
       for (const q of [...pts].sort((a, b) => a.k - b.k)) {
@@ -61,6 +63,7 @@ export class Hud {
         }
       }
       g.textAlign = 'left'; g.font = '600 11px system-ui'; const lg = [['#d99a1c', 'Landmark'], ['#2a5bd7', 'Metro'], ['#1b2a55', 'Police']]; g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(8, c.height - 26, 230, 20);
+      { const t = `খুঁজে পেয়েছ ${Score.BN(pts.length)} / ${Score.BN(LM.length)}`; g.font = '700 14px "Baloo Da 2",system-ui'; const w = g.measureText(t).width + 16; g.fillStyle = 'rgba(23,19,15,.85)'; g.fillRect(c.width - w - 8, c.height - 30, w, 24); g.fillStyle = '#f2c118'; g.fillText(t, c.width - w, c.height - 17); g.font = '600 11px system-ui'; }
       lg.forEach(([col, t], i) => { g.fillStyle = col; g.beginPath(); g.arc(18 + i * 78, c.height - 16, 4.5, 0, 7); g.fill(); g.fillStyle = '#222'; g.fillText(t, 26 + i * 78, c.height - 16); });
       g.beginPath(); g.arc(mx(p.x) * s, mz(p.z) * s, 6, 0, 7); g.fillStyle = '#c0261c'; g.fill(); g.lineWidth = 2; g.strokeStyle = '#fff'; g.stroke();
     }
