@@ -20,7 +20,7 @@ const TOUCH = matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoin
 const renderer = new THREE.WebGLRenderer({ antialias: !TOUCH, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, TOUCH ? 1.25 : 1.5)); renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .6;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .82;
 document.body.prepend(renderer.domElement);
 const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, .3, 12000);
 
@@ -30,14 +30,14 @@ async function start() {
   initMats();
   // late-afternoon sun over the Hooghly, hazy Kolkata sky
   // evening: the sun about 7 degrees up in the west-south-west, setting over the Hooghly
-  const sunDir = new THREE.Vector3(-.92, .07, .37).normalize();
+  const sunDir = new THREE.Vector3(-.92, .13, .37).normalize();
   const mkSky = () => { const s = new Sky(); s.scale.setScalar(10000); const u = s.material.uniforms; u.turbidity.value = 14; u.rayleigh.value = 2.8; u.mieCoefficient.value = .018; u.mieDirectionalG.value = .93; u.sunPosition.value.copy(sunDir); return s; };
   scene.add(mkSky());
   const pm = new THREE.PMREMGenerator(renderer), es = new THREE.Scene(); es.add(mkSky());
-  scene.environment = pm.fromScene(es, 0, .1, 20000).texture; scene.environmentIntensity = .7;
+  scene.environment = pm.fromScene(es, 0, .1, 20000).texture; scene.environmentIntensity = 1.05;
   scene.fog = new THREE.FogExp2(0xd9b596, .00105); // dusty evening haze
-  scene.add(new THREE.HemisphereLight(0xb9c4e0, 0x7d5f48, .95));
-  const sun = new THREE.DirectionalLight(0xffa766, 2.6); sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
+  scene.add(new THREE.HemisphereLight(0xdfe4f2, 0x9a7c62, 1.5));
+  const sun = new THREE.DirectionalLight(0xffb985, 3.2); sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
   Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, near: 1, far: 900 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .4;
   scene.add(sun, sun.target);
   // the sun's disc and glow, kept far away along the sun direction
