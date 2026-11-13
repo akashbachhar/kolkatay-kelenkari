@@ -549,21 +549,23 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
     k.cyl(M.steel, .2, .25, 9, 1.5, 0, W0 - 3, 8); k.box(M.blue, 2.6, 2.6, .4, 1.5, 9, W0 - 3); k.sign('HP', 1.9, 1.3, 1.5, 10.5, W0 - 2.78, PI, '#27408f', '#ffffff'); k.sign('PETROL · DIESEL', 2.4, .5, 1.5, 9.4, W0 - 2.78, PI, '#c4261c', '#ffffff'); c.circ(1.5, W0 - 3, .3, 9);
     c.person(-14, W0 - 8.6, PI, false, 'stand', { top: '#27408f', bottom: '#27408f' }); c.person(-6, W0 - 11.5, 0, false, 'stand', { top: '#27408f', bottom: '#27408f' });
     // the gully: a narrow lane running west from beside the pump, between tall old walls, wires overhead
-    const GX = -27, G0 = W0, G1 = W0 - 42; k.box(M.apron, 3.4, .1, G0 - G1, GX, 0, (G0 + G1) / 2);
+    const GX = -27, G0 = W0, G1 = W0 - 46; k.box(M.apron, 3.4, .1, G0 - G1, GX, 0, (G0 + G1) / 2);
     for (const s of [-1, 1]) { const x = GX + s * 4.2; k.box(pick([M.cream, M.moss, M.sand]), 5, 13, G0 - G1, x, 0, (G0 + G1) / 2); k.wins(M.green, x - s * 2.52, G0 - 3, x - s * 2.52, G1 + 3, 6, 1.2, 2.2, 4.6); k.wins(M.green, x - s * 2.52, G0 - 3, x - s * 2.52, G1 + 3, 6, 1.2, 2.2, 8.8); c.box(x, (G0 + G1) / 2, 5, G0 - G1, 14); }
     for (let i = 0; i < 9; i++) { const z = G0 - 3 - i * 4.4; k.beam(M.dark, [GX - 1.7, 6.6 + (i % 3) * .5, z], [GX + 1.7, 6.3 + ((i + 1) % 3) * .5, z - 1.5], .03); }
     k.cyl(M.steel, .05, .05, 1, GX - 1.6, 4.6, G0 - 18, 5); k.box(M.lamp, .5, .15, .25, GX - 1.3, 5.6, G0 - 18);
     // the gate: an old arched doorway with a closed double door, the board above
-    const DZ = G1 - .4; k.box(M.redOx, 5.2, 7, 1.2, GX - 3.4, 0, DZ); k.box(M.redOx, 5.2, 7, 1.2, GX + 3.4, 0, DZ); k.box(M.redOx, 3.4, 2.4, 1.2, GX, 4.6, DZ); k.add(M.redOx, new THREE.CylinderGeometry(1.7, 1.7, 1.2, 16, 1, false, 0, PI).rotateZ(PI / 2).rotateY(PI / 2), GX, 4.6, DZ);
+    const DZ = G1; k.box(M.redOx, 5.2, 7, 1.2, GX - 3.4, 0, DZ); k.box(M.redOx, 5.2, 7, 1.2, GX + 3.4, 0, DZ); k.box(M.redOx, 3.4, 2.4, 1.2, GX, 4.6, DZ); k.add(M.redOx, new THREE.CylinderGeometry(1.7, 1.7, 1.2, 16, 1, false, 0, PI).rotateZ(PI / 2).rotateY(PI / 2), GX, 4.6, DZ);
     k.box(M.wood, 1.62, 4.5, .2, GX - .83, .1, DZ + .4); k.box(M.wood, 1.62, 4.5, .2, GX + .83, .1, DZ + .4); for (const y of [1, 2.2, 3.4]) k.box(M.iron, 3.3, .08, .06, GX, y, DZ + .52);
     k.box(M.iron, .5, .18, .08, GX, 2.2, DZ + .55); k.cyl(M.gold, .05, .05, .14, GX - .15, 2.2, DZ + .6, 6); k.cyl(M.gold, .05, .05, .14, GX + .15, 2.2, DZ + .6, 6);
-    k.sign('সোনাগাছি · নিষিদ্ধপল্লী\nSONAGACHI', 4.6, 1.5, GX, 6.1, DZ + .62, 0, '#5a1022', '#ffd9a0');
-    for (let i = 0; i < 9; i++) k.add([M.red, M.pink, M.yellow][i % 3], new THREE.SphereGeometry(.08, 6, 4), GX - 2 + i * .5, 5.1 + Math.sin(i / 8 * PI) * -.35, DZ + .66); // a string of coloured bulbs over the arch
+    k.sign('সোনাগাছি · নিষিদ্ধপল্লী\nSONAGACHI', 3.3, 1.25, GX, 5.25, DZ + .66, 0, '#5a1022', '#ffd9a0');
+    k.sign('সোনাগাছি →', 2.6, .8, GX - 1.72, 3.4, W0 - 2, -PI / 2, '#5a1022', '#ffd9a0'); // a pointer at the gully mouth, on the wall facing the lane
+    for (let i = 0; i < 9; i++) k.add([M.red, M.pink, M.yellow][i % 3], new THREE.SphereGeometry(.08, 6, 4), GX - 2 + i * .5, 6.3 - Math.sin(i / 8 * PI) * .3, DZ + .66); // a string of coloured bulbs over the arch
     c.box(GX, DZ, 3.4, 1, 6); c.box(GX - 3.4, DZ, 5.2, 1.2, 8); c.box(GX + 3.4, DZ, 5.2, 1.2, 8);
     { const p = c.W(GX, DZ + 2); LOCKED.push({ x: p[0], z: p[1], r: 4.5, html: 'সোনাগাছি · নিষিদ্ধপল্লী<small>Keep playing to unlock · খেলা চালিয়ে যান, শীঘ্রই খুলবে</small>' }); }
     // Sonagachi itself: a walled block of tall, brightly painted houses, every door and window shut, no way in
     const BX = -30, BZ = W0 - 88, BW = 80, BD = 84, wall = M.redOx;
-    for (const [x, z, w, d] of [[BX, BZ + BD / 2, BW, 1.2], [BX, BZ - BD / 2, BW, 1.2], [BX - BW / 2, BZ, 1.2, BD], [BX + BW / 2, BZ, 1.2, BD]]) { k.box(wall, w, 4.5, d, x, 0, z); k.box(M.white, w + .2, .3, d + .2, x, 4.5, z); }
+    const NL = (GX - 1.7) - (BX - BW / 2), NR = (BX + BW / 2) - (GX + 1.7);
+    for (const [x, z, w, d] of [[BX - BW / 2 + NL / 2, BZ + BD / 2, NL, 1.2], [GX + 1.7 + NR / 2, BZ + BD / 2, NR, 1.2], [BX, BZ - BD / 2, BW, 1.2], [BX - BW / 2, BZ, 1.2, BD], [BX + BW / 2, BZ, 1.2, BD]]) { k.box(wall, w, 4.5, d, x, 0, z); k.box(M.white, w + .2, .3, d + .2, x, 4.5, z); }
     c.box(BX, BZ, BW, BD, 30); // closed: nobody gets in
     const COL = ['#e8558a', '#3fb6a8', '#f2c53a', '#9a7ad8', '#f08a3c', '#7ed08f', '#5aa8e8', '#e04a4a', '#f3a6c8', '#c9e86a'].map(h => new THREE.MeshStandardMaterial({ color: h, roughness: .7 }));
     const SH = [M.green, M.blue, M.red, M.wood, M.white], TRIM = [M.white, M.cream, M.yellow, M.pink];
