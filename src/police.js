@@ -32,13 +32,13 @@ export class Police {
     if (this.busted || this.pl.ride || this.cool > 0) return;
     if (!this.o.some(o => Math.hypot(o.x - x, o.z - z) < reach)) return;
     this.cool = 1.5; this.cases++; if (this.cases === 1) this.origin = [x, z];
-    if (this.cases === 3) Score.add(PTS.case3, '৩টে কেস!'); else Score.add(PTS.case, 'কেস খেলে');
+    Score.add(PTS.case, 'কেস খেলে');
     if (this.cases >= 3 && !this.hot) this.hot = HOT;
     this.wanted = true; this.snd.whistle(); this.stars();
     this.hud.toast(`<small>${['', 'CASE 1', 'CASE 2', 'CASE 3'][Math.min(3, this.cases)]} · পুলিশ দেখে ফেলেছে!</small>${what === 'steal' ? 'Police saw you steal a car' : what === 'officer' ? 'You hit a police officer!' : `Police saw you hit a ${what}`}`);
   }
   stars() { const n = Math.min(3, this.cases); document.querySelectorAll('#wanted i').forEach((e, i) => e.classList.toggle('on', i < n)); }
-  clear(msg) { this.wanted = false; this.cases = 0; this.hot = 0; this.stars(); for (const o of this.o) if (o.chase) { o.chase = false; o.back = true; } if (msg) this.hud.toast(msg); }
+  clear(msg) { if (msg && this.cases > 0) Score.add(PTS.dropped, 'কেস খারিজ'); this.wanted = false; this.cases = 0; this.hot = 0; this.stars(); for (const o of this.o) if (o.chase) { o.chase = false; o.back = true; } if (msg) this.hud.toast(msg); }
   arrest(o) {
     this.busted = true; this.clear(); if (this.pl.car) this.dr.toggle(true); this.pl.held = true; this.pl.keys = {}; this.pl.vel.set(0, 0, 0); this.snd.whistle();
     document.exitPointerLock?.();

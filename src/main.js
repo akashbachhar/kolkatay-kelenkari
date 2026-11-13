@@ -59,7 +59,7 @@ async function start() {
   let police; player.onStep = fast => sound.step(fast);
   player.onPunch = (x, z, fx, fz) => { // a person or an officer within reach falls; any officer within 50 m makes it a case
     const who = people.hitAt(x, z, fx, fz, sound), cop = who ? null : police.hitAt(x, z, fx, fz); sound.punch(!!(who || cop));
-    if (who) { Score.add(PTS.person, 'পাবলিক মারা'); police.offence(who.x, who.z, 'person'); }
+    if (who) { Score.add(PTS.person, 'পাবলিক ক্যালানো'); police.offence(who.x, who.z, 'person'); }
   };
   const ferry = new Ferry(scene, player, hud, sound); if (Q.get('zone') === 'dak') ferry.jump('dak');
   for (const k of ['x', 'z']) if (Q.has(k)) player.pos[k] = +Q.get(k);

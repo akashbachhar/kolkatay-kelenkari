@@ -131,7 +131,7 @@ export class Drive {
     }
     // --- people
     if (this.police?.carHit(v)) { v.sp *= .93; this.shake = Math.max(this.shake, .15); }
-    { const n = this.pp.carHit(v, this.snd); if (n) Score.add(PTS.person * n, 'পাবলিক মারা'); if (n) { this.police?.offence(v.x, v.z, 'person'); v.sp *= .93; this.shake = Math.max(this.shake, .15); } }
+    { const n = this.pp.carHit(v, this.snd); if (n) Score.add(PTS.person * n, 'পাবলিক ক্যালানো'); if (n) { this.police?.offence(v.x, v.z, 'person'); v.sp *= .93; this.shake = Math.max(this.shake, .15); } }
     pl.pos.set(v.x, 0, v.z); pl.heading = Math.atan2(fx, fz);
     // the chase camera swings round behind the car unless you are looking about
     { const behind = Math.atan2(-fx, -fz); let off = wrap(pl.yaw - (this.behind ?? behind)); if ((pl.lookT = (pl.lookT || 0) - dt) <= 0) off *= Math.exp(-dt * 4); pl.yaw = behind + off; this.behind = behind; } // turns with the car; only a look-around offset eases back
