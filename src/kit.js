@@ -144,6 +144,8 @@ export function initMats() {
     flag: tri('#d6ccb6', mbl, .2), white: tri('#efebe1', pt, .07), cream: tri('#e6d6ad', pt, .07), marble: tri('#f4f1ea', mbl, .12, { roughness: .45 }), stone: tri('#9a948a', mbl, .2) });
   M.books = m('#ffffff', { map: booksTex() }); M.iron = m('#1c1e20', { metalness: .5, roughness: .6 });
   M.moss = tri('#8d917a', pt, .09); M.tower = tri('#9dbfd3', curtainTex(), 1 / 3.6, { roughness: .12, metalness: .6 });
+  const flat = (c, o) => { const mt = m(c, { polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }); mt.userData.order = o; return mt; };
+  M.apron = flat('#3b3b3d', 40); M.paint = flat('#ece8de', 41);
   T.fac = [0, 1, 2, 3, 4, 5].map(facade); T.shops = shops(); T.road = road();
   T.grass = plain('#5f7b3c', 9000, .12, 512); T.ground = plain('#8f877a', 7000, .1, 512); T.pave = plain('#aaa69c', 4000, .1);
   M.grass = m('#ffffff', { map: T.grass.clone() }); M.grass.map.repeat.set(6, 6);
@@ -219,7 +221,7 @@ export class Kit {
   }
   build(shadow = true) {
     const g = new THREE.Group();
-    for (const [mat, list] of this.parts) { const me = new THREE.Mesh(mergeGeometries(list), mat); me.castShadow = shadow; me.receiveShadow = true; g.add(me); }
+    for (const [mat, list] of this.parts) { const me = new THREE.Mesh(mergeGeometries(list), mat); me.castShadow = shadow && !mat.userData.order; me.receiveShadow = true; me.renderOrder = mat.userData.order || 0; g.add(me); }
     for (const e of this.extras) g.add(e);
     return g;
   }

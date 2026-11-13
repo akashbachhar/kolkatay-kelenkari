@@ -433,39 +433,46 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
   thana('New Market', 'নিউ মার্কেট', 'Free School Street', 255, 1); thana('Jorasanko', 'জোড়াসাঁকো', 'Chittaranjan Avenue', 1050, 1); thana('Taltala', 'তালতলা', 'S.N. Banerjee Road', 430, 1);
   thana('Hare Street', 'হেয়ার স্ট্রিট', 'Council House Street', 150, -1); thana('Amherst Street', 'আমহার্স্ট স্ট্রিট', 'Mahatma Gandhi Road', 780, -1);
 
-  // ───────── Dharmatala (Esplanade) bus terminus, beside Shaheed Minar
-  site('Dharmatala Bus Stand', 'ধর্মতলা বাস স্ট্যান্ড', [-66, 70], 0, 45, (k, c) => {
-    c.clear(60, 46); k.box(M.asph, 54, .06, 42, 0, 0, 0);
-    for (const s of [-1, 1]) for (let i = 0; i <= 6; i++) k.box(M.white, .12, .02, 9.6, -13.8 + i * 4.6, .06, s * 9.2); // bays
-    k.box(M.conc, 34, .3, 5, 0, 0, 0); k.box(M.tin, 34, .2, 7, 0, 3.4, 0); // the island and its tin canopy
-    for (let i = 0; i < 8; i++) for (const s of [-1, 1]) { const x = -15 + i * 30 / 7; k.cyl(M.steel, .08, .08, 3.2, x, .3, s * 2.2, 6); c.circ(x, s * 2.2, .2, 4); }
-    for (let i = 0; i < 6; i++) k.box(M.wood, 3, .45, .5, -12.5 + i * 5, .3, 0);
-    k.sign('ধর্মতলা বাস স্ট্যান্ড\nESPLANADE BUS TERMINUS', 11, 1.9, 0, 4.6, .05, 0, '#12356b', '#fff'); k.sign('ধর্মতলা বাস স্ট্যান্ড\nESPLANADE BUS TERMINUS', 11, 1.9, 0, 4.6, -.05, PI, '#12356b', '#fff');
+  // ───────── Dharmatala (Esplanade) bus terminus and taxi stand, on Chowringhee right beside the Esplanade metro.
+  // Site-local x runs east towards Chowringhee, z south. The apron is paved and joins the road at two gates.
+  site('Dharmatala Bus Stand', 'ধর্মতলা বাস স্ট্যান্ড', [6, 65], 0, 40, (k, c) => {
+    const IX = -8; // the island's centre line
+    c.clear(48, 74, -3, 0); k.box(M.apron, 36, .1, 70, -4, 0, 0);
+    k.box(M.apron, 5, .1, 72, 14.05, 0, 0, -.0614); // pave up to the pavement, which runs at a slight angle with Chowringhee
+    for (const [z, x1] of [[-29, 22.6], [29, 19]]) { const w = x1 - 13; k.box(M.apron, w, .1, 9, 13 + w / 2, 0, z); k.box(M.paint, w, .02, .15, 13 + w / 2, .1, z); } // gates to Chowringhee
+    for (let z = -26; z <= 26; z += 6) k.box(M.paint, .15, .02, 2.6, 9, .1, z); // the drive-through lane
+    // island, canopy, benches, booths
+    k.box(M.conc, 4, .3, 40, IX, 0, 0); k.box(M.tin, 10.4, .2, 42, IX, 3.6, 0); k.box(M.steel, 10.6, .3, .2, IX, 3.4, -21); k.box(M.steel, 10.6, .3, .2, IX, 3.4, 21);
+    for (let i = 0; i < 9; i++) for (const s of [-1, 1]) { const z = -20 + i * 5; k.cyl(M.steel, .08, .08, 3.3, IX + s * 1.7, .3, z, 6); c.circ(IX + s * 1.7, z, .2, 4); }
+    for (let i = 0; i < 7; i++) k.box(M.wood, .5, .45, 3.4, IX, .3, -15 + i * 5);
+    for (const z of [-23.5, 23.5]) { k.box(M.cream, 4, 3, 3, IX, 0, z); k.box(M.dark, .1, 1, 2.2, IX + 2.01, 1.3, z); c.box(IX, z, 4, 3, 4); }
+    k.sign('অনুসন্ধান · ENQUIRY', 3.6, .6, IX + 2.06, 3.3, -23.5, PI / 2, '#b3261e', '#fff'); k.sign('টিকিট · TICKETS', 3.6, .6, IX + 2.06, 3.3, 23.5, PI / 2, '#b3261e', '#fff');
     const all = BUS_ROUTES.map(r => r[0]).join(' · ');
-    k.sign(all, 15, .7, 0, 2.6, 2.32, 0, '#efc12e', '#1d3b6b'); k.sign(all, 15, .7, 0, 2.6, -2.32, PI, '#efc12e', '#1d3b6b');
-    BUS_ROUTES.forEach((r, i) => { // one bus for every route, noses to the island; D28B in the first bay
-      const s = i < 6 ? -1 : 1, x = -11.5 + (i % 6) * 4.6, z = s * 9.2, p = c.W(x, z); PARKED.push({ k: 1, x: p[0], z: p[1], a: s < 0 ? -PI / 2 : PI / 2, route: r[0] });
-      k.sign(r[0], 1.6, .5, x, 2.2, s * 2.55, s < 0 ? PI : 0, '#1c1c1c', '#ff6a3c'); // bay number on the canopy edge
-    });
-    for (let i = 0; i < 16; i++) c.person(rr(-15, 15), rr(-1.7, 1.7), rr(0, 6), R() < .4);
-    for (let i = 0; i < 5; i++) c.person(-12.5 + i * 5 + rr(-.8, .8), .1, pick([0, PI]), R() < .5, 'sit', undefined, .3);
-    c.roam(30, 3, 0, 0, 5);
-    k.box(M.cream, 4.4, 3, 3.4, -24, 0, 0); k.box(M.dark, 2.4, 1, .1, -24, 1.3, 1.72); k.sign('অনুসন্ধান · ENQUIRY', 4, .6, -24, 3.4, 1.75, 0, '#b3261e', '#fff'); c.box(-24, 0, 4.4, 3.4, 4);
-    for (let i = 0; i < 4; i++) stall(k, c, 25, -12 + i * 6, PI / 2, pick(['tea', 'fruit', 'phuchka', 'tea']));
-    for (const z of [13, 19]) { k.cyl(M.steel, .12, .14, 5, 24.5, 0, z, 8); c.circ(24.5, z, .2, 5); }
-    k.sign('ধর্মতলা বাস স্ট্যান্ড · ESPLANADE', 6.4, 1.2, 24.6, 4.1, 16, PI / 2, '#12356b', '#fff');
-    post(c, 19, 3.6); post(c, -21, -5);
+    for (const s of [-1, 1]) { k.sign(all, 18, .7, IX + s * 1.9, 2.75, 0, s * PI / 2, '#efc12e', '#1d3b6b'); k.sign('ধর্মতলা বাস স্ট্যান্ড · ESPLANADE BUS TERMINUS', 14, 1, IX + s * 5.25, 3.25, 0, s * PI / 2, '#12356b', '#fff'); }
+    // sixteen buses in bays, noses to the island; D28B in the first bay
+    for (let i = 0; i < 16; i++) {
+      const s = i < 8 ? 1 : -1, z = -16.1 + (i % 8) * 4.6, x = IX + s * 7.3, p = c.W(x, z), r = BUS_ROUTES[i % BUS_ROUTES.length][0];
+      PARKED.push({ k: 1, x: p[0], z: p[1], a: s > 0 ? PI : 0, route: r });
+      k.box(M.paint, 9.6, .02, .12, x, .1, z - 2.3); k.sign(r, 1.6, .5, IX + s * 3, 3.05, z, s * PI / 2, '#1c1c1c', '#ff6a3c');
+    }
+    // passengers, hawkers, police, lights, the gate signs
+    for (let i = 0; i < 18; i++) c.person(IX + rr(-1.5, 1.5), rr(-19, 19), rr(0, 6), R() < .4, 'stand', undefined, .3);
+    for (let i = 0; i < 6; i++) c.person(IX + pick([-.35, .35]), -15 + i * 5 + rr(-1, 1), pick([PI / 2, -PI / 2]), R() < .5, 'sit', undefined, .3);
+    c.roam(3, 36, IX, 0, 5);
+    for (let i = 0; i < 4; i++) stall(k, c, -18 + i * 6, 32.5, PI, pick(['tea', 'fruit', 'phuchka', 'tea']));
+    for (const [x, z] of [[-21, -26], [-21, 26], [11, -20], [11, 20]]) { k.cyl(M.steel, .14, .2, 9, x, 0, z, 8); k.box(M.lamp, 1.2, .3, .6, x, 9, z); c.circ(x, z, .25, 9); }
+    for (const z of [-29, 29]) { for (const dz of [-4.8, 4.8]) { k.cyl(M.steel, .14, .16, 5.6, 21, 0, z + dz, 8); c.circ(21, z + dz, .22, 6); } k.box(M.steel, .2, .2, 9.8, 21, 5.5, z);
+      k.sign(z < 0 ? 'ধর্মতলা বাস স্ট্যান্ড · ENTRY' : 'ধর্মতলা বাস স্ট্যান্ড · EXIT', 8, 1.2, 21.12, 4.7, z, PI / 2, '#12356b', '#fff'); }
+    post(c, 14, -24); post(c, 14, 24); post(c, IX + 2.6, -21);
   });
 
-  // ───────── Dharmatala taxi stand: a rank of yellow Ambassadors
-  site('Dharmatala Taxi Stand', 'ধর্মতলা ট্যাক্সি স্ট্যান্ড', [-66, 38], 0, 25, (k, c) => {
-    c.clear(36, 14); k.box(M.asph, 32, .06, 9, 0, 0, 0);
-    for (let i = 0; i <= 8; i++) k.box(M.white, .1, .02, 5.2, -12 + i * 3, .06, 0);
-    for (let i = 0; i < 8; i++) { const p = c.W(-10.5 + i * 3, 0); PARKED.push({ k: 0, x: p[0], z: p[1], a: -PI / 2 }); }
-    k.cyl(M.steel, .06, .06, 3.4, -15, 0, -4.6, 6); c.circ(-15, -4.6, .15, 4);
-    for (const r of [0, PI]) k.sign('TAXI STAND · ট্যাক্সি স্ট্যান্ড\nমিটারে চলুন · NO REFUSAL', 3.6, 1.2, -15, 2.8, -4.6 + (r ? -.03 : .03), r, '#f2c118', '#141414');
+  // ───────── Dharmatala taxi stand: a rank of yellow Ambassadors along the terminus's north edge
+  site('Dharmatala Taxi Stand', 'ধর্মতলা ট্যাক্সি স্ট্যান্ড', [-4, 36], 0, 20, (k, c) => {
+    for (let i = 0; i <= 8; i++) k.box(M.paint, .1, .02, 5.2, -11.2 + i * 2.8, .1, 0);
+    for (let i = 0; i < 8; i++) { const p = c.W(-9.8 + i * 2.8, 0); PARKED.push({ k: 0, x: p[0], z: p[1], a: PI / 2 }); }
+    k.cyl(M.steel, .06, .06, 3.4, -13.4, 0, -2.6, 6); c.circ(-13.4, -2.6, .15, 4);
+    for (const r of [0, PI]) k.sign('TAXI STAND · ট্যাক্সি স্ট্যান্ড\nমিটারে চলুন · NO REFUSAL', 3.6, 1.2, -13.4, 2.8, -2.6 + (r ? -.03 : .03), r, '#f2c118', '#141414');
     const drv = { top: '#b9a77a', bottom: '#3d3a33', full: true };
-    c.person(-9, -4.4, .3, false, 'stand', drv); c.person(-7.6, -4.8, -2.6, false, 'stand', drv); c.person(3, -4.5, .2, false, 'stand', drv); c.person(9, -4.2, PI, false, 'sit', drv, .1);
-    stall(k, c, 13, -6.2, PI, 'tea');
+    c.person(-12, 1.6, -2.6, false, 'stand', drv); c.person(-11.2, 2.5, -.4, false, 'stand', drv); c.person(13.2, -1, -PI / 2, false, 'sit', drv, .1); c.person(12.3, 1.2, 2.2, false, 'stand', drv);
   });
 }
