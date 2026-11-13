@@ -65,7 +65,8 @@ export class Hud {
       g.beginPath(); g.arc(mx(p.x) * s, mz(p.z) * s, 6, 0, 7); g.fillStyle = '#c0261c'; g.fill(); g.lineWidth = 2; g.strokeStyle = '#fff'; g.stroke();
     }
   }
-  toast(html, quiet) {
+  toast() { } // pop-up messages are switched off
+  _toast(html, quiet) {
     const t = $('toast'); if (quiet && t.classList.contains('on')) return;
     t.innerHTML = html; t.classList.add('on'); clearTimeout(this.tt); this.tt = setTimeout(() => t.classList.remove('on'), 3800);
   }
