@@ -27,7 +27,7 @@ export class Puja {
     const k = new Kit(), kali = new THREE.MeshStandardMaterial({ color: '#141a2c', roughness: .3, metalness: .3 }), sph = r => new THREE.SphereGeometry(r, 10, 8);
     // the sanctum: marble floor, cream walls, a silver-framed doorway to the light outside
     k.box(M.marble, 12, .2, 16, 0, -.2, 0); k.box(M.cream, 12, 6.2, .3, 0, 0, -8); for (const s of [-1, 1]) k.box(M.cream, .3, 6.2, 16, s * 6, 0, 0);
-    k.box(M.cream, 4.5, 6.2, .3, -3.75, 0, 8); k.box(M.cream, 4.5, 6.2, .3, 3.75, 0, 8); k.box(M.cream, 3, 2.8, .3, 0, 3.4, 8); k.box(M.redOx, 12, .3, 16, 0, 6.2, 0); k.beam(M.steel, [.38, 3.65, -2.55], [.38, 6.2, -2.55], .03);
+    k.box(M.cream, 4.5, 6.2, .3, -3.75, 0, 8); k.box(M.cream, 4.5, 6.2, .3, 3.75, 0, 8); k.box(M.cream, 3, 2.8, .3, 0, 3.4, 8); k.box(M.redOx, 12, .3, 16, 0, 6.2, 0);
     k.box(M.chrome, 3.4, .25, .45, 0, 3.4, 7.95); for (const s of [-1, 1]) k.box(M.chrome, .25, 3.4, .45, s * 1.6, 0, 7.95);
     for (const s of [-1, 1]) k.box(M.red, .1, 1.2, 15.6, s * 5.83, 3.6, 0); k.box(M.red, 2.2, .02, 9, 0, 0, 2.4);
     // ── the altar, after the Bhavatarini idol as dressed at Dakshineswar
