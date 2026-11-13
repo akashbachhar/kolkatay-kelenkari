@@ -53,7 +53,7 @@ export class Puja {
       for (let i = 0; i < 15; i++) { const x = 16 + i * 34, gr = g.createLinearGradient(x - 18, 0, x + 18, 0); gr.addColorStop(0, 'rgba(10,10,60,.4)'); gr.addColorStop(.55, 'rgba(255,255,255,.1)'); gr.addColorStop(1, 'rgba(10,10,60,.4)'); g.fillStyle = gr; g.beginPath(); g.moveTo(256 + (x - 256) * .35, 0); g.lineTo(x - 18, h); g.lineTo(x + 18, h); g.closePath(); g.fill(); }
       for (let r = 0; r < 9; r++) for (let c = 0; c < 13; c++) { const x = 22 + c * 39 + (r % 2) * 19, y = 26 + r * 42; rosette(g, x, y, 13, '#f6f6fa', ['#e8873a', '#d6337a', '#3aa060'][(r + c) % 3]); circ(g, x + 19, y + 21, 2.6, '#f6f6fa'); }
       g.restore(); g.save(); shape(); g.lineWidth = 22; g.strokeStyle = '#f0f0f4'; g.stroke(); g.lineWidth = 8; g.setLineDash([6, 8]); g.strokeStyle = '#2c3fb2'; g.stroke(); g.restore();
-    }), 5.4, 2.55, 0, 3.0, -6.5);
+    }), 3.4, 1.7, 0, 3.32, -6.5);
     // long black hair behind the shoulders
     plane(T(128, 160, (g) => { g.fillStyle = '#0a0a0c'; g.beginPath(); g.moveTo(40, 0); g.lineTo(88, 0); g.bezierCurveTo(128, 30, 124, 120, 112, 160); g.lineTo(16, 160); g.bezierCurveTo(4, 120, 0, 30, 40, 0); g.fill(); }), 1.75, 2.2, 0, 3.75, -6.42);
     // the body under the jewellery: gold necklaces, pearls, the heart pendant, and the mundamala
@@ -97,15 +97,39 @@ export class Puja {
     plane(T(96, 256, (g) => { g.fillStyle = '#e8b63a'; g.beginPath(); g.moveTo(40, 196); g.bezierCurveTo(20, 120, 30, 50, 70, 6); g.bezierCurveTo(78, 60, 70, 130, 58, 196); g.closePath(); g.fill(); g.fillStyle = '#c9302a'; g.fillRect(36, 196, 26, 14); g.fillStyle = '#e8b63a'; g.fillRect(42, 210, 14, 44); }), .5, 1.3, -1.32, 5.25, -5.98);
     // silver pillars, a silver trishul, red and white tassels across the top
     for (const s of [-1, 1]) { k.box(M.chrome, .5, .3, .5, s * 2.45, 1.5, -6.6); k.cyl(M.chrome, .13, .15, 3.8, s * 2.45, 1.8, -6.6, 12); k.box(M.chrome, .5, .24, .5, s * 2.45, 5.6, -6.6); for (const y of [2.4, 3.4, 4.4, 5.2]) k.cyl(M.chrome, .17, .17, .08, s * 2.45, y, -6.6, 12); }
-    k.cyl(M.chrome, .035, .035, 2.6, 2.05, 1.5, -6.0, 6); k.box(M.chrome, .5, .05, .05, 2.05, 4.1, -6.0); for (const x of [-.25, 0, .25]) k.cone(M.chrome, .05, x ? .35 : .45, 2.05 + x, 4.1, -6.0, 6); k.cyl(M.chrome, .09, .09, .3, 2.05, 3.5, -6.0, 8);
     for (let i = 0; i < 30; i++) k.add(i % 2 ? M.white : M.red, new THREE.ConeGeometry(.09, .34, 6).rotateX(PI), -2.9 + i * .2, 5.88, -7.3);
     k.box(M.gold, 6.2, .1, .08, 0, 6.0, -7.3);
     // the altar, dressed in yellow, with Shiva lying beneath her feet
     const cloth = new THREE.MeshStandardMaterial({ map: T(256, 64, (g, w, h) => { g.fillStyle = '#f0c63a'; g.fillRect(0, 0, w, h); for (let x = 8; x < w; x += 20) { g.fillStyle = ['#c9302a', '#2f8f4a', '#e8873a'][(x / 20 | 0) % 3]; g.beginPath(); g.ellipse(x, 34, 5, 11, .3, 0, 7); g.fill(); } }), roughness: .8, emissive: '#3a2a08' });
     k.box(cloth, 5.4, 1.5, 3, 0, 0, -6.3);
-    k.add(M.white, new THREE.CapsuleGeometry(.3, 1.9, 4, 12).rotateZ(PI / 2), 0, 1.8, -5.95); k.add(M.white, new THREE.SphereGeometry(.27, 12, 10), -1.32, 1.85, -5.95); k.cyl(M.gold, .2, .24, .2, -1.32, 2.06, -5.95, 10);
-    for (const x of [-.16, .16]) k.add(red, new THREE.SphereGeometry(.1, 8, 6).scale(1.3, .6, 1.8), x, 2.1, -5.85);
-    for (let i = 0; i < 22; i++) k.add([M.red, M.orange, M.yellow, M.pink][i % 4], new THREE.SphereGeometry(.09, 8, 6), -2.2 + (i % 11) * .44, 1.56, -5.1 + (i > 10 ? -.25 : 0));
+    const ash = new THREE.MeshStandardMaterial({ color: '#eef0f2', roughness: .6, emissive: '#2a2c30' }), dark = new THREE.MeshStandardMaterial({ color: '#16161b', roughness: .35, metalness: .2, emissive: '#060608' });
+    // Shiva, white with ash, lying on his back with his head towards the doorway
+    k.add(ash, new THREE.CapsuleGeometry(.3, 1.9, 4, 12).rotateX(PI / 2), 0, 1.82, -6.25);
+    for (const s of [-1, 1]) k.add(ash, new THREE.CapsuleGeometry(.09, .95, 4, 8).rotateX(PI / 2), s * .38, 1.78, -5.75); // arms by his sides
+    k.add(M.orange, new THREE.CylinderGeometry(.315, .315, .5, 14).rotateX(PI / 2), 0, 1.82, -6.9);
+    for (const z of [-7.05, -6.9, -6.75]) k.add(M.dark, new THREE.TorusGeometry(.315, .02, 4, 14), 0, 1.82, z);
+    k.add(ash, new THREE.SphereGeometry(.27, 14, 12), 0, 1.86, -4.82); k.add(M.dark, new THREE.SphereGeometry(.24, 12, 8, 0, PI * 2, 0, PI / 2).rotateX(PI / 2), 0, 1.88, -4.72); // matted hair towards us
+    k.add(M.dark, new THREE.SphereGeometry(.13, 10, 8), 0, 1.95, -4.5); k.add(M.gold, new THREE.TorusGeometry(.13, .025, 5, 14), 0, 1.98, -4.5); // the jata bun with a gold band
+    k.add(new THREE.MeshStandardMaterial({ color: '#2f7a46', roughness: .5 }), new THREE.TorusGeometry(.2, .035, 6, 16).rotateX(PI / 2), 0, 1.82, -5.1); // the serpent at his neck
+    for (let i = 0; i < 12; i++) k.add(i % 2 ? M.dark : M.clay, new THREE.SphereGeometry(.032, 6, 4), Math.cos(i / 11 * PI) * .17, 2.08, -5.3 - Math.sin(i / 11 * PI) * .12); // rudraksha
+    // his face, looking up, forehead towards us: closed eyes, the third eye, three lines of ash
+    { const t = T(128, 128, (g) => { g.fillStyle = '#eef0f2'; g.beginPath(); g.ellipse(64, 64, 52, 60, 0, 0, 7); g.fill();
+        g.strokeStyle = '#2a2a2e'; g.lineWidth = 4; for (const s of [-1, 1]) { g.beginPath(); g.arc(64 + s * 20, 58, 11, .3, PI - .3); g.stroke(); }
+        g.strokeStyle = '#b3261e'; g.lineWidth = 3; for (const y of [82, 90, 98]) { g.beginPath(); g.moveTo(36, y); g.lineTo(92, y); g.stroke(); }
+        g.fillStyle = '#b3261e'; g.beginPath(); g.ellipse(64, 74, 4, 9, 0, 0, 7); g.fill(); g.strokeStyle = '#b3261e'; g.lineWidth = 3; g.beginPath(); g.arc(64, 30, 8, .2, PI - .2); g.stroke(); });
+      const f = plane(t, .4, .4, 0, 2.1, -4.86); f.rotation.x = -PI / 2; f.rotation.z = PI; }
+    // her legs coming down from under the saree, the right foot on his chest, the left on his body
+    for (const [x, z, y0] of [[-.15, -5.55, 2.13], [.16, -5.95, 2.13]]) {
+      k.beam(dark, [x * .9, 2.55, -6.3], [x, y0 + .08, z - .08], .16);
+      k.add(dark, new THREE.BoxGeometry(.13, .07, .3), x, y0 + .03, z); k.add(M.red, new THREE.BoxGeometry(.135, .02, .31), x, y0, z); // alta on the soles
+      k.add(M.chrome, new THREE.TorusGeometry(.085, .022, 5, 12).rotateX(PI / 2), x, y0 + .14, z - .1); // silver anklets
+      k.add(M.red, new THREE.SphereGeometry(.07, 8, 6).scale(1.2, .5, 1.2), x + .02, y0 + .08, z + .05); k.add(M.yellow, new THREE.SphereGeometry(.02, 6, 4), x + .02, y0 + .12, z + .05); // a hibiscus on each foot
+    }
+    // the arati plate, a conch, incense, and hibiscus at her feet
+    for (const s of [-1, 1]) { k.cyl(M.gold, .26, .22, .04, s * 1.35, 1.5, -5.1, 18); for (let i = 0; i < 5; i++) { const a = i * 1.26; k.cyl(M.clay, .05, .04, .05, s * 1.35 + Math.cos(a) * .15, 1.54, -5.1 + Math.sin(a) * .15, 8); } }
+    k.add(M.white, new THREE.ConeGeometry(.08, .3, 8).rotateZ(PI / 2), 1.9, 1.58, -5.3); k.cyl(M.dark, .008, .008, .5, -1.9, 1.5, -5.3, 4); k.cyl(M.dark, .008, .008, .5, -1.84, 1.5, -5.32, 4);
+    for (let i = 0; i < 14; i++) { const a = i / 13 * PI; k.add(M.red, new THREE.SphereGeometry(.07, 8, 6).scale(1.2, .5, 1.2), Math.cos(a) * .75, 1.53, -4.5 - Math.sin(a) * .25); }
+    for (let i = 0; i < 22; i++) { const x = -2.4 + (i % 11) * .48; if (Math.abs(x) > .7) k.add([M.red, M.orange, M.yellow, M.pink][i % 4], new THREE.SphereGeometry(.09, 8, 6), x, 1.56, -5.6 + (i > 10 ? -.3 : 0)); }
     for (const s of [-1, 1]) { k.cyl(M.gold, .05, .09, 1.1, s * 2.6, 0, -4.6, 8); k.cyl(M.gold, .2, .12, .12, s * 2.6, 1.1, -4.6, 12); }
     k.box(M.gold, 6, .07, .07, 0, 1, -3.45); for (let x = -3; x <= 3; x += 1.5) k.cyl(M.gold, .04, .04, 1, x, 0, -3.45, 6);
     const room = k.build(); room.position.set(SX, 0, SZ); scene.add(room);
@@ -152,7 +176,7 @@ export class Puja {
     const bt = this.bt ?? -9; this.bell.rotation.z = T >= bt ? .4 * Math.sin((T - bt) * 9) * Math.exp(-(T - bt) * 1.4) : 0;
     // the camera: following him in, beside him at the altar, low on the bell, then watching him walk out into the light
     const c = this.cam, at = (cx, cy, cz, lx, ly, lz) => { c.position.set(SX + cx, cy, SZ + cz); c.lookAt(SX + lx, ly, SZ + lz); };
-    if (T < 5) at(0, 2.6, 7.4, 0, 2.2, -5); else if (T < 9.6) at(-1.3, 2.3, .3, .1, 3.55, -6.3); else if (T < 12.4) at(-1.7, 1.45, -.2, .35, 2.7, -2.6); else at(0, 2.3, -3.7, 0, 1.6, 7);
+    if (T < 5) at(0, 2.6, 7.4, 0, 2.2, -5); else if (T < 9.6) at(-1.3, 2.9, .3, .1, 3.25, -6.3); else if (T < 12.4) at(-1.7, 1.45, -.2, .35, 2.7, -2.6); else at(0, 2.3, -3.7, 0, 1.6, 7);
     // out again: the temple closes behind him
     this.once('dark', T, 15.3, () => $('fade').classList.add('on'));
     if (T >= 16.1) {
