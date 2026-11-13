@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { Kit, M, PI, R, rr } from './kit.js';
-import { ROADS, TRAM } from './data.js';
+import { Kit, M, PI, R, rr, FONT } from './kit.js';
+import { ROADS, TRAM, BUS_ROUTES, PARKED } from './data.js';
 import { bake, look } from './human.js';
 
 const route = p => { const cum = [0]; for (let i = 1; i < p.length; i++) cum.push(cum[i - 1] + Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1])); return { p, cum, len: cum.at(-1) }; };
@@ -81,10 +81,24 @@ function busKit() { // Kolkata route bus: sky-blue Tata body, yellow waist band,
   k.box(M.dark, .04, .32, .62, 4.745, .62, 0); for (let i = 0; i < 5; i++) k.box(S, .045, .02, .62, 4.75, .65 + i * .07, 0);
   for (const s of [-1, 1]) { k.add(S, new THREE.CylinderGeometry(.17, .17, .06, 14).rotateZ(PI / 2), 4.74, .82, s * .82); k.add(M.lamp, new THREE.SphereGeometry(.14, 10, 6).scale(.35, 1, 1), 4.77, .82, s * .82); k.box(M.orange, .05, .08, .18, 4.75, 1.24, s * .7); k.box(M.red, .05, .2, .3, -4.72, .9, s * .9); }
   k.box(S, .14, .16, 2.5, 4.8, .42, 0); k.sign('WBS 2513', .42, .2, 4.88, .42, .7, PI / 2, '#f2c118', '#141414');
-  k.box(M.dark, .06, .3, 1.15, 4.76, 2.5, 0); k.sign('34A · ধর্মতলা', 1.05, .24, 4.8, 2.65, 0, PI / 2, '#1c1c1c', '#ff5a3c');
-  for (const s of [-1, 1]) k.sign('ধর্মতলা · হাওড়া · শ্যামবাজার', 3.4, .3, -1.6, 1.21, s * 1.272, s > 0 ? 0 : PI, '#efc12e', '#1d3b6b');
+  k.box(M.dark, .06, .3, 1.15, 4.76, 2.5, 0); // route board: each bus gets its own (busTag)
   wheels(k, [-2.9, 3.15], 1.1, .55);
   return k;
+}
+// a bus's own route boards (front and both sides), small canvases so twenty buses stay light
+function tagSign(text, w, h, bg, fg) {
+  const H = 64, W = Math.round(H * w / h), c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  g.fillStyle = bg; g.fillRect(0, 0, W, H); g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle';
+  let fs = H * .68; for (; fs > 8; fs -= 2) { g.font = `700 ${fs}px ${FONT}`; if (g.measureText(text).width < W * .92) break; }
+  g.fillText(text, W / 2, H / 2 + 2); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: t, roughness: .7 }));
+}
+function busTag(no) {
+  const r = BUS_ROUTES.find(q => q[0] === no) || BUS_ROUTES[0], g = new THREE.Group(); g.rotation.order = 'YXZ';
+  const f = tagSign(`${r[0]} · ${r[2]}`, 1.05, .24, '#1c1c1c', '#ff6a3c'); f.position.set(4.8, 2.65, 0); f.rotation.y = PI / 2; g.add(f);
+  const sm = tagSign(`${r[0]}   ধর্মতলা ⇄ ${r[2]}`, 3.4, .3, '#efc12e', '#1d3b6b');
+  for (const s of [-1, 1]) { const m = s > 0 ? sm : sm.clone(); m.position.set(-1.6, 1.21, s * 1.274); m.rotation.y = s > 0 ? 0 : PI; g.add(m); }
+  return g;
 }
 function ddKit() { // the red Calcutta double-decker
   const k = new Kit(), Rd = M.ddred, band = (y0, y1, n, mat) => k.loft(mat, [[-4.72, 1.12, y0 + .06, y1 - .04], [-4.5, 1.25, y0, y1], [4.5, 1.25, y0, y1], [4.72, 1.12, y0 + .06, y1 - .04]], n, 16);
@@ -129,19 +143,23 @@ export class Traffic {
       for (let i = 0; i < n; i++) this.v.push({ set, idx: i, hl, hw, a: 0, sp: 0, x: 0, z: 0, nop: i % 3 === 0, ...fn(i) });
     };
     const car = (k, lo, hi) => () => { const e = pe(); return { k, e, s: R() * e.len, vmax: rr(lo, hi) }; }, rows = [-3.7, -2.5, -1.3, -.1, 1.1, 2.3];
-    mk(taxiKit(), 46, 2.3, .95, car(0, 8.5, 11.5), { drv: bust(DRV(), .2, .78, .4), boy: bust(BOY, .2, .78, .4), pas: bust(look(R), -.72, .76, -.32) });
-    mk(busKit(), 9, 4.8, 1.35, car(1, 7, 9), { drv: bust(DRV(), 3.95, 1.4, .7), boy: bust(BOY, 3.95, 1.4, .7), pas: mergeGeometries(crowd(rows.slice(0, 5), [-.8, .8], 1.45)) });
+    const PB = PARKED.filter(q => q.k === 1), PT = PARKED.filter(q => q.k === 0); // standing at the terminus and the taxi stand: drivable, no driver aboard
+    const park = (list, gen) => i => { const q = list[i]; return q ? { k: q.k, own: true, park: true, live: 1, x: q.x, z: q.z, a: q.a, route: q.route, e: pe(), s: 0, vmax: 9 } : gen(i); };
+    mk(taxiKit(), 46 + PT.length, 2.3, .95, park(PT, car(0, 8.5, 11.5)), { drv: bust(DRV(), .2, .78, .4), boy: bust(BOY, .2, .78, .4), pas: bust(look(R), -.72, .76, -.32) });
+    mk(busKit(), 9 + PB.length, 4.8, 1.35, park(PB, i => ({ ...car(1, 7, 9)(), route: BUS_ROUTES[i % BUS_ROUTES.length][0] })), { drv: bust(DRV(), 3.95, 1.4, .7), boy: bust(BOY, 3.95, 1.4, .7), pas: mergeGeometries(crowd(rows.slice(0, 5), [-.8, .8], 1.45)) });
     mk(ddKit(), 5, 4.8, 1.35, car(4, 6, 7.5), { drv: bust(DRV(), 3.95, 1.33, .7), boy: bust(BOY, 3.95, 1.33, .7), pas: mergeGeometries([...crowd(rows.slice(0, 5), [-.8, .8], 1.33), ...crowd([...rows, 3.5], [-.8, .8], 2.66, .7)]) });
     // the puller walks: a cycle of baked strides, one shown at a time
     const po = { ...look(R, false), top: '#d9d2c0', bottom: '#6a5a48', full: false, s: .95 }, rider = bake({ ...look(R, false), s: .95 }, 'sit').rotateY(PI / 2).translate(-.55, .6, 0);
     const frames = Array.from({ length: 8 }, (_, i) => bake(po, 'pull', i / 8 * PI * 2).rotateY(PI / 2).translate(1.75, 0, 0));
     mk(rickKit(), 14, 2.2, .55, car(3, 2.1, 2.9), { fixed: rider, frames });
     mk(tramKit(), 4, 9, 1.25, i => ({ k: 2, r: tr, i: 0, s: tr.len * (.1 + i * .22), dir: i % 2 ? 1 : -1, side: i % 2 ? 1 : -1, vmax: 6.5 }));
+    for (const v of this.v) if (v.k === 1) { v.tag = busTag(v.route); scene.add(v.tag); }
     this.m = new THREE.Object3D(); this.m.rotation.order = 'YXZ'; this.update(0, { x: 1e6, z: 1e6 });
   }
   put(v) {
     const m = this.m, s = v.set; m.position.set(v.x, 0, v.z); m.rotation.set(v.roll || 0, v.a, 0); m.updateMatrix();
     for (const im of s.ims) im.setMatrixAt(v.idx, m.matrix);
+    if (v.tag) { v.tag.position.set(v.x, 0, v.z); v.tag.rotation.set(v.roll || 0, v.a, 0); }
     if (s.drv) s.drv.setMatrixAt(v.idx, v.own ? ZERO : m.matrix); if (s.boy) s.boy.setMatrixAt(v.idx, v.me ? m.matrix : ZERO);
     if (s.fr) { const f = Math.floor(((v.ph || 0) / (PI * 2)) * s.fr.length) % s.fr.length; s.fr.forEach((im, i) => im.setMatrixAt(v.idx, i === f ? m.matrix : ZERO)); }
     if (s.pas) s.pas.setMatrixAt(v.idx, v.k === 0 && (v.own || v.nop) ? ZERO : m.matrix);

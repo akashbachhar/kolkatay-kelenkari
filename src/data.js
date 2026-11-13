@@ -56,6 +56,10 @@ export const AREAS = [['Esplanade', 22.564, 88.351], ['Maidan', 22.557, 88.345],
 
 // Kolkata Police: officer posts (filled in as the city is built), the release point outside Lalbazar, the uniform
 export const COPS = { posts: [], hq: null, look: { top: '#f5f5f1', bottom: '#f1f1ec', shoe: '#111111', hair: '#111111', cap: '#1b2a55', full: true, skin: '#8d5a3b' } };
+// bus routes that start or end at Esplanade (Dharmatala): [number, far end, far end in Bengali]
+export const BUS_ROUTES = [['D28B', 'ESPLANADE', 'ধর্মতলা'], ['43', 'DAKSHINESWAR', 'দক্ষিণেশ্বর'], ['34B', 'DUNLOP', 'ডানলপ'], ['46', 'AIRPORT', 'এয়ারপোর্ট'], ['46B', 'MOONBEAM', 'মুনবিম'], ['34C', 'NOAPARA', 'নোয়াপাড়া'],
+  ['30A', 'SINTHEE', 'সিঁথি'], ['214A', 'SODEPUR', 'সোদপুর'], ['RT-18', 'KONA MORE', 'কোনা মোড়'], ['RT-11', 'BELUR MATH', 'বেলুড় মঠ'], ['RT-3', 'KADAMTALA', 'কদমতলা'], ['12 SHUTTLE', 'BADARTALA', 'বাদারতলা']];
+export const PARKED = []; // vehicles standing at the bus terminus and taxi stand: {k, x, z, a, route}
 export const SPAWN = ll(22.5629, 88.3503);
 
 // Dakshineswar: a separate area upriver, reached by ferry from Babughat
