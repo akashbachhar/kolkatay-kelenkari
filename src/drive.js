@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { resolve, solid } from './collide.js';
 import { bankX, BRIDGE as B, X1, Z0, Z1 } from './data.js';
 import { POLES } from './world.js';
+import { M } from './kit.js';
 import { makeFigure, look } from './human.js';
 import { ICON } from './touch.js';
 
@@ -22,8 +23,33 @@ function confine(p) { // the same limits as on foot: river, bridge deck, city ed
   return hit;
 }
 
+// cockpits for first-person driving, in vehicle space (x forward, z to the driver's right side)
+function cockpits(scene) {
+  const out = {}, mk = (k, o) => {
+    const g = new THREE.Group(), add = (mat, geo, x, y, z) => { const me = new THREE.Mesh(geo, mat); me.position.set(x, y, z); g.add(me); return me; }, box = (mat, w, h, d, x, y, z) => add(mat, new THREE.BoxGeometry(w, h, d), x, y, z);
+    box(M.dark, o.dash[3], o.dash[4], o.dash[5], o.dash[0], o.dash[1], o.dash[2]); box(M.seatr, o.dash[3] * .7, .05, o.dash[5], o.dash[0] - o.dash[3] * .15, o.dash[1] + o.dash[4] / 2 + .02, o.dash[2]);
+    box(M.cream, o.roof[3], .03, o.roof[5], o.roof[0], o.roof[1], o.roof[2]);
+    for (const s of [-1, 1]) box(o.door, o.side[3], o.side[4], .04, o.side[0], o.side[1], s * o.side[2]);
+    if (o.hump) box(M.khaki, ...o.hump);
+    const gauge = add(new THREE.MeshStandardMaterial({ color: '#f3ecd8', roughness: .5 }), new THREE.CircleGeometry(o.r * .32, 20), o.wheel[0] + .16, o.dash[1] + o.dash[4] / 2 - .04, o.wheel[2]); gauge.rotation.y = -Math.PI / 2;
+    const tilt = new THREE.Group(); tilt.position.set(...o.wheel); tilt.rotation.z = -o.tilt; g.add(tilt);
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(.03, .04, .6, 8).rotateZ(Math.PI / 2).translate(.3, 0, 0), M.dark); tilt.add(col);
+    const spin = new THREE.Group(); tilt.add(spin);
+    spin.add(new THREE.Mesh(new THREE.TorusGeometry(o.r, o.r * .1, 8, 32).rotateY(Math.PI / 2), M.dark));
+    spin.add(new THREE.Mesh(new THREE.CylinderGeometry(o.r * .22, o.r * .22, .06, 14).rotateZ(Math.PI / 2), M.chrome));
+    for (const a of [0, 2.1, 4.2]) { const sp = new THREE.Mesh(new THREE.BoxGeometry(.025, o.r, .03).translate(0, o.r / 2, 0), M.dark); sp.rotation.x = a; spin.add(sp); }
+    g.visible = false; scene.add(g); out[k] = { g, spin, eye: o.eye, down: o.down };
+  };
+  // [x, y, z, w, h, d] boxes; wheel = centre; tilt = how far the wheel leans back towards horizontal
+  mk(0, { eye: [-.04, 1.3, .4], down: .14, dash: [.84, .96, 0, .32, .2, 1.52], roof: [-.25, 1.53, 0, 1.9, 0, 1.46], side: [-.2, .82, .79, 2, .44], door: M.seatr, wheel: [.56, 1.06, .4], r: .16, tilt: .45 });
+  mk(1, { eye: [3.55, 2.1, .7], down: .2, dash: [4.5, 1.32, 0, .32, .26, 2.3], roof: [3.5, 2.47, 0, 2.6, 0, 2.4], side: [3.5, 1.0, 1.2, 2.6, .86], door: M.sky, hump: [.9, .55, .7, 4.15, .8, -.15], wheel: [4.0, 1.78, .7], r: .27, tilt: 1.05 });
+  mk(4, { eye: [3.55, 1.98, .7], down: .18, dash: [4.5, 1.22, 0, .32, .24, 2.3], roof: [3.5, 2.33, 0, 2.6, 0, 2.4], side: [3.5, .92, 1.2, 2.6, .76], door: M.ddred, hump: [.9, .55, .7, 4.15, .78, -.15], wheel: [4.0, 1.66, .7], r: .27, tilt: 1.05 });
+  return out;
+}
+
 export class Drive {
   constructor(player, traffic, sound, hud, camera, people) {
+    this.cock = cockpits(player.root.parent);
     this.pl = player; this.tr = traffic; this.snd = sound; this.hud = hud; this.cam = camera; this.pp = people; this.v = null; this.near = null; this.fp = false; this.st = 0; this.look = 0; this.n = 0; this.playing = false; this.shake = 0;
     // the drivers who get turned out of their cabs
     this.dr = []; this.di = 0; for (let i = 0; i < 4; i++) { const r = makeFigure({ ...look(Math.random, false), top: '#b9a77a', bottom: '#3d3a33', full: true }); r.g.visible = false; player.root.parent.add(r.g); this.dr.push(r); }
@@ -31,7 +57,7 @@ export class Drive {
     const btn = (id, fn) => $(id)?.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
     btn('bCar', () => this.toggle()); btn('bView', () => this.view());
   }
-  view() { if (this.v) { this.fp = !this.fp; this.hud.toast(this.fp ? '<small>VIEW</small>First person' : '<small>VIEW</small>Third person'); } }
+  view() { if (this.v) { this.fp = !this.fp; this.cam.near = this.fp ? .05 : .3; this.cam.updateProjectionMatrix(); if (!this.fp) for (const c of Object.values(this.cock)) c.g.visible = false; this.hud.toast(this.fp ? '<small>VIEW</small>First person' : '<small>VIEW</small>Third person'); } }
   find() { // nearest taxi or bus within reach
     const p = this.pl.pos; let best = null, bd = 2.4;
     for (const v of this.tr.v) {
@@ -57,7 +83,7 @@ export class Drive {
       const fx = Math.cos(v.a), fz = -Math.sin(v.a); let ex = null;
       for (const s of [1, -1]) { const x = v.x - fz * s * (v.hw + .9), z = v.z + fx * s * (v.hw + .9); if (!solid(x, 1, z)) { ex = [x, z]; break; } }
       if (!ex) ex = [v.x - fx * (v.hl + .9), v.z - fz * (v.hl + .9)];
-      v.sp = 0; v.me = false; v.roll = 0; this.v = null; pl.car = null; pl.pos.set(ex[0], 0, ex[1]); pl.vel.set(0, 0, 0); pl.root.visible = true; pl.dist = this.d0; pl.heading = Math.atan2(fx, fz); this.fp = false;
+      v.sp = 0; v.me = false; v.roll = 0; this.v = null; for (const c of Object.values(this.cock)) c.g.visible = false; this.cam.near = .3; this.cam.updateProjectionMatrix(); pl.car = null; pl.pos.set(ex[0], 0, ex[1]); pl.vel.set(0, 0, 0); pl.root.visible = true; pl.dist = this.d0; pl.heading = Math.atan2(fx, fz); this.fp = false;
       document.body.classList.remove('driving'); if ($('bJump')) $('bJump').innerHTML = ICON.jump; this.snd.engine(false); $('speed').textContent = '';
     }
   }
@@ -110,10 +136,13 @@ export class Drive {
   }
   camera() {
     const v = this.v, c = this.cam; if (!v) return;
-    if (this.fp) { // first person: from the driver's seat, looking where the mouse or thumb points
-      const pl = this.pl, fx = Math.cos(v.a), fz = -Math.sin(v.a), o = v.k ? 5 : 1.08, h = v.k ? 2.2 : 1.46;
-      c.position.set(v.x + fx * o, h, v.z + fz * o); const cp = Math.cos(pl.pitch - .2);
-      c.lookAt(c.position.x - Math.sin(pl.yaw) * cp * 10, h - Math.sin(pl.pitch - .2) * 10, c.position.z - Math.cos(pl.yaw) * cp * 10);
+    v.me = !this.fp; // the boy's own head would block the view
+    for (const [k, ck] of Object.entries(this.cock)) ck.g.visible = this.fp && +k === v.k;
+    if (this.fp) { // first person from the driver's seat (right-hand drive), wheel turning with the steering
+      const pl = this.pl, ck = this.cock[v.k], ca = Math.cos(v.a), sa = Math.sin(v.a), [ex, ey, ez] = ck.eye;
+      ck.g.position.set(v.x, 0, v.z); ck.g.rotation.set(v.roll || 0, v.a, 0, 'YXZ'); ck.spin.rotation.x = this.st * 2.4;
+      c.position.set(v.x + ex * ca + ez * sa, ey, v.z - ex * sa + ez * ca); const pt = pl.pitch - .2 + ck.down, cp = Math.cos(pt);
+      c.lookAt(c.position.x - Math.sin(pl.yaw) * cp * 10, ey - Math.sin(pt) * 10, c.position.z - Math.cos(pl.yaw) * cp * 10);
     }
     if (this.shake > .01) { c.position.x += (Math.random() - .5) * this.shake; c.position.y += (Math.random() - .5) * this.shake * .6; c.position.z += (Math.random() - .5) * this.shake; this.shake *= .86; }
   }

@@ -56,22 +56,34 @@ function taxiKit() { // Hindustan Ambassador, the Kolkata yellow cab
   k.loft(M.cglass, [[-1.5, .6, .8, 1.08], [-1.12, .715, .8, 1.5], [-.6, .74, .8, 1.57], [.3, .74, .8, 1.57], [.72, .715, .8, 1.5], [1.1, .64, .8, 1.06]], 4, 20);
   k.loft(Y, [[-1.22, .6, 1.42, 1.5], [-1.06, .715, 1.45, 1.56], [-.6, .755, 1.5, 1.6], [.3, .755, 1.5, 1.6], [.68, .72, 1.45, 1.56], [.82, .6, 1.42, 1.5]], 3, 20);
   k.box(M.dark, 2.35, .03, 1.42, -.2, 1.035, 0); k.box(M.seatr, .12, .34, 1.34, -.08, 1.03, 0); k.box(M.seatr, .14, .36, 1.34, -1.02, 1.03, 0); k.box(M.dark, .22, .1, 1.3, .86, 1.03, 0);
-  k.add(M.dark, new THREE.TorusGeometry(.15, .018, 5, 12).rotateY(PI / 2), .62, 1.17, .4, 0, 0, -.35);
   k.box(Y, .34, .13, .15, .1, 1.6, 0); k.sign('WB 04 F 1947', .5, .13, 2.315, .415, 0, PI / 2, '#f4f1e8', '#141414'); k.sign('WB 04 F 1947', .5, .13, -2.325, .435, 0, -PI / 2, '#f4f1e8', '#141414');
   return k;
 }
 const wheels = (k, xs, z, r) => { for (const x of xs) for (const s of [-1, 1]) { k.add(M.tyre, cz(r, .3), x, r, s * z); k.add(M.chrome, cz(r * .45, .32), x, r, s * z); } };
-function busKit() { // Kolkata private bus
-  const k = new Kit(), B = M.bus;
-  k.loft(B, [[-4.7, 1.1, .6, 1.68], [-4.55, 1.25, .48, 1.74], [4.5, 1.25, .48, 1.74], [4.7, 1.12, .58, 1.68]], 7, 16);
-  k.box(M.yellow, 9.1, .16, 2.53, 0, 1.3, 0); k.box(M.yellow, 9.1, .08, 2.53, 0, .75, 0);
-  k.loft(M.cglass, [[-4.62, 1.2, 1.4, 2.8], [4.66, 1.2, 1.4, 2.8]], 9, 16);
-  k.loft(M.tram, [[-4.72, 1.12, 2.7, 2.9], [-4.5, 1.26, 2.72, 3.02], [4.5, 1.26, 2.72, 3.02], [4.72, 1.12, 2.7, 2.9]], 5, 16);
-  for (let x = -4.6; x <= 4.61; x += 1.15) for (const s of [-1, 1]) k.box(B, .12, 1.02, .07, x, 1.72, s * 1.215);
-  k.box(M.dark, 9.1, .03, 2.36, 0, 1.745, 0); wheels(k, [-3, 3], 1.1, .5);
-  k.box(M.chrome, .12, .14, 2.4, 4.74, .5, 0); for (const s of [-1, 1]) { k.add(M.lamp, new THREE.SphereGeometry(.14, 10, 6).scale(.5, 1, 1), 4.72, .9, s * .85); k.box(M.red, .05, .2, .3, -4.72, .9, s * .9); }
-  k.sign('ESPLANADE · HOWRAH', 1.9, .3, 4.73, 2.55, 0, PI / 2, '#141414', '#f2c118'); k.box(M.dark, .95, 1.95, .04, 3.3, .5, -1.25);
-  for (const s of [-1, 1]) k.sign('হাওড়া · শিয়ালদহ · পার্ক সার্কাস', 4.2, .3, -.6, 1.52, s * 1.262, s > 0 ? 0 : PI, '#f2c118', '#27408f');
+function busKit() { // Kolkata route bus: sky-blue Tata body, yellow waist band, open barred windows, three-pane windscreen
+  const k = new Kit(), B = M.sky, Y = M.ybus, S = M.chrome, band = (mat, y0, y1, n = 8) => k.loft(mat, [[-4.72, 1.16, y0 + .04, y1 - .02], [-4.58, 1.26, y0, y1], [4.6, 1.26, y0, y1], [4.72, 1.2, y0 + .03, y1 - .02]], n, 16);
+  band(B, .5, 1.02); band(Y, 1.0, 1.43); band(B, 2.38, 2.6);
+  k.loft(B, [[-4.78, 1.05, 2.45, 2.86], [-4.6, 1.28, 2.5, 3.0], [4.45, 1.28, 2.5, 3.0], [4.78, 1.16, 2.45, 2.88]], 2.4, 20); // rounded tin roof
+  for (let x = -4.2; x <= 4.2; x += .7) k.box(B, .05, .04, 2.6, x, 2.98, 0, 0);
+  // side windows: no glass, blue pillars, a silver sill, a frame and two guard bars
+  for (const s of [-1, 1]) {
+    for (let x = -4.55; x <= 2.75; x += .73) k.box(B, .13, .96, .07, x, 1.43, s * 1.23);
+    k.box(S, 7.4, .06, .09, -.9, 1.43, s * 1.25); k.box(S, 7.4, .05, .08, -.9, 2.36, s * 1.25); k.box(S, 7.4, .035, .05, -.9, 1.72, s * 1.27); k.box(S, 7.4, .035, .05, -.9, 1.92, s * 1.27);
+    if (s < 0) k.box(B, .9, .96, .07, 4.27, 1.43, s * 1.23); // left cab panel by the door; the driver's side stays an open window
+    k.box(M.dark, .06, .22, .06, 4.4, 1.7, s * 1.3); // mirror arm
+  }
+  k.wins(M.cglass, 3.0, 1.231, 4.5, 1.231, 1, 1.2, .82, 1.5, .03); // driver's side window (right)
+  k.box(M.dark, .95, 1.88, .05, 3.2, .52, -1.265); k.box(S, .06, 1.9, .07, 2.72, .5, -1.27); k.box(S, .06, 1.9, .07, 3.68, .5, -1.27); // the open front door (left, kerb side)
+  for (let i = 0; i < 3; i++) k.box(M.stone, .9, .06, .5, 3.2, .5 - i * .17, -1.15 - i * .12);
+  // front: three-pane windscreen in silver frames, yellow panel with a grille, blue lower front, round lamps, bumper, route board
+  k.box(M.cglass, .04, .9, 2.3, 4.74, 1.47, 0); for (const z of [-1.15, -.38, .38, 1.15]) k.box(S, .07, .94, .06, 4.76, 1.45, z); k.box(S, .08, .08, 2.42, 4.76, 2.35, 0); k.box(S, .1, .1, 2.48, 4.77, 1.4, 0);
+  k.box(M.dark, .04, .26, .62, 4.745, 1.07, 0); k.sign('TATA', .3, .07, 4.77, 1.33, 0, PI / 2, '#efc12e', '#141414'); for (const z of [-.92, .92]) k.box(M.dark, .04, .3, .3, 4.745, 1.05, z);
+  k.box(M.dark, .04, .32, .62, 4.745, .62, 0); for (let i = 0; i < 5; i++) k.box(S, .045, .02, .62, 4.75, .65 + i * .07, 0);
+  for (const s of [-1, 1]) { k.add(S, new THREE.CylinderGeometry(.17, .17, .06, 14).rotateZ(PI / 2), 4.74, .82, s * .82); k.add(M.lamp, new THREE.SphereGeometry(.14, 10, 6).scale(.35, 1, 1), 4.77, .82, s * .82); k.box(M.orange, .05, .08, .18, 4.75, 1.24, s * .7); k.box(M.red, .05, .2, .3, -4.72, .9, s * .9); }
+  k.box(S, .14, .16, 2.5, 4.8, .42, 0); k.sign('WBS 2513', .42, .2, 4.88, .42, .7, PI / 2, '#f2c118', '#141414');
+  k.box(M.dark, .06, .3, 1.15, 4.76, 2.5, 0); k.sign('34A · ধর্মতলা', 1.05, .24, 4.8, 2.65, 0, PI / 2, '#1c1c1c', '#ff5a3c');
+  for (const s of [-1, 1]) k.sign('ধর্মতলা · হাওড়া · শ্যামবাজার', 3.4, .3, -1.6, 1.21, s * 1.272, s > 0 ? 0 : PI, '#efc12e', '#1d3b6b');
+  wheels(k, [-2.9, 3.15], 1.1, .55);
   return k;
 }
 function ddKit() { // the red Calcutta double-decker
@@ -118,7 +130,7 @@ export class Traffic {
     };
     const car = (k, lo, hi) => () => { const e = pe(); return { k, e, s: R() * e.len, vmax: rr(lo, hi) }; }, rows = [-3.7, -2.5, -1.3, -.1, 1.1, 2.3];
     mk(taxiKit(), 46, 2.3, .95, car(0, 8.5, 11.5), { drv: bust(DRV(), .2, .78, .4), boy: bust(BOY, .2, .78, .4), pas: bust(look(R), -.72, .76, -.32) });
-    mk(busKit(), 9, 4.8, 1.35, car(1, 7, 9), { drv: bust(DRV(), 3.95, 1.4, .7), boy: bust(BOY, 3.95, 1.4, .7), pas: mergeGeometries(crowd(rows, [-.8, .8], 1.45)) });
+    mk(busKit(), 9, 4.8, 1.35, car(1, 7, 9), { drv: bust(DRV(), 3.95, 1.4, .7), boy: bust(BOY, 3.95, 1.4, .7), pas: mergeGeometries(crowd(rows.slice(0, 5), [-.8, .8], 1.45)) });
     mk(ddKit(), 5, 4.8, 1.35, car(4, 6, 7.5), { drv: bust(DRV(), 3.95, 1.33, .7), boy: bust(BOY, 3.95, 1.33, .7), pas: mergeGeometries([...crowd(rows.slice(0, 5), [-.8, .8], 1.33), ...crowd([...rows, 3.5], [-.8, .8], 2.66, .7)]) });
     // the puller walks: a cycle of baked strides, one shown at a time
     const po = { ...look(R, false), top: '#d9d2c0', bottom: '#6a5a48', full: false, s: .95 }, rider = bake({ ...look(R, false), s: .95 }, 'sit').rotateY(PI / 2).translate(-.55, .6, 0);
