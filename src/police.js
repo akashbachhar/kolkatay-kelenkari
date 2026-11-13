@@ -40,7 +40,7 @@ export class Police {
   stars() { const n = Math.min(3, this.cases); document.querySelectorAll('#wanted i').forEach((e, i) => e.classList.toggle('on', i < n)); }
   clear(msg) { if (msg && this.cases > 0) Score.add(PTS.dropped, 'কেস খারিজ'); this.wanted = false; this.cases = 0; this.hot = 0; this.stars(); for (const o of this.o) if (o.chase) { o.chase = false; o.back = true; } if (msg) this.hud.toast(msg); }
   arrest(o) {
-    this.busted = true; this.clear(); if (this.pl.car) this.dr.toggle(true); this.pl.held = true; this.pl.keys = {}; this.pl.vel.set(0, 0, 0); this.snd.whistle();
+    this.busted = true; this.clear(); Score.add(-PTS.busted, 'ধরা পড়লে'); if (this.pl.car) this.dr.toggle(true); this.pl.held = true; this.pl.keys = {}; this.pl.vel.set(0, 0, 0); this.snd.whistle();
     document.exitPointerLock?.();
     if (!o?.rig) { let bd = 1e9; for (const q of this.o) if (q.rig && !(q.down > 0)) { const d = Math.hypot(q.x - this.pl.pos.x, q.z - this.pl.pos.z); if (d < bd) { bd = d; o = q; } } }
     if (!o?.rig) { document.exitPointerLock?.(); $('busted').classList.add('on'); return; }
@@ -116,10 +116,13 @@ export class Police {
       g.position.set(o.x, 0, o.z);
     }
     if (this.wanted) {
-      if (pl.ride) this.clear('<small>ফেরি · FERRY</small>The police lost you');
+      const away = !!(pl.ride || pl.zone); // on the ferry or at Dakshineswar the cases stay: only the puja (or the hidden rules, back in the city) clears them
+      if (away) { for (const o of this.o) if (o.chase) { o.chase = false; o.back = true; } } else if (this.was) this.origin = [p.x, p.z];
+      this.was = away;
+      if (away) { if (this.hot && (this.hot -= dt) <= 0) this.clear('x'); }
       else if (this.hot) { if ((this.hot -= dt) <= 0) this.clear('<small>মামলা খারিজ</small>The police gave up'); }
       else if (Math.hypot(p.x - this.origin[0], p.z - this.origin[1]) > ESCAPE) this.clear('<small>মামলা খারিজ</small>The police lost you');
-      if (this.wanted && (this.sir -= dt) < 0) { this.sir = .5; this.snd.siren(); }
+      if (this.wanted && !away && (this.sir -= dt) < 0) { this.sir = .5; this.snd.siren(); }
     }
   }
 }

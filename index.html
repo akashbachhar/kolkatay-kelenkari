@@ -138,7 +138,7 @@ body.cine #points,body.cine #ptsWhy{opacity:0}
 #intro .pg{display:none;overflow:auto;min-height:0}#intro .pg.on{display:block}
 #intro ol{margin:0;padding:0;list-style:none;font-size:clamp(14px,min(2.6vw,3.5vh),21px);font-weight:600}
 #intro ol li{display:flex;justify-content:space-between;gap:18px;padding:min(5px,.6vh) 2px;border-bottom:1px solid rgba(255,255,255,.12)}#intro ol li b{color:var(--taxi);white-space:nowrap}
-@media (max-height:440px){#intro ol{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}#intro ol li:last-child{grid-column:1/3}#intro h3{margin-bottom:4px}}
+@media (max-height:440px){#intro ol{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}#intro ol li:first-child{grid-column:1/3}#intro h3{margin-bottom:4px}}
 #places{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:3px 16px;font-size:15px;font-weight:600}
 #places span{opacity:.75}#places span::before{content:"○ ";color:var(--taxi)}#places span.ok{opacity:1;color:var(--taxi)}#places span.ok::before{content:"✓ "}
 #intro .note{font-size:14px;opacity:.75;text-align:center;margin:8px 0 0}
@@ -184,7 +184,7 @@ body.touch #where{top:44px}body.touch #ptsWhy{top:100px;right:14px;font-size:14p
   <button id="play">PLAY</button>
   <div id="intro">
     <div class="pg on"><h3>কীসে কত পয়েন্ট</h3><ol>
-      <li><span>পাবলিক ক্যালালে</span><b>১০</b></li><li><span>ট্যাক্সি চুরি করলে</span><b>২০</b></li><li><span>বাস চুরি করলে</span><b>৩০</b></li><li><span>রাস্তার পোল ফেললে</span><b>৩০</b></li><li><span>গাড়িতে ধাক্কা মারলে</span><b>৫০</b></li><li><span>পুলিশ ক্যালালে</span><b>১০০</b></li><li><span>কেস প্রতি</span><b>২০০</b></li><li><span>নতুন জায়গা খুঁজে পেলে</span><b>৩০০</b></li><li><span>কেস খারিজ হলে</span><b>৩০০</b></li><li><span>দক্ষিণেশ্বরে পুজো দিলে</span><b>সব কেস মুকুব + ১০০০</b></li></ol></div>
+      <li><span>ধরা পড়লে</span><b style="color:#ff8a7a">−৫০০</b></li><li><span>পাবলিক ক্যালালে</span><b>১০</b></li><li><span>ট্যাক্সি চুরি করলে</span><b>২০</b></li><li><span>বাস চুরি করলে</span><b>৩০</b></li><li><span>রাস্তার পোল ফেললে</span><b>৩০</b></li><li><span>গাড়িতে ধাক্কা মারলে</span><b>৫০</b></li><li><span>পুলিশ ক্যালালে</span><b>১০০</b></li><li><span>কেস প্রতি</span><b>২০০</b></li><li><span>নতুন জায়গা খুঁজে পেলে</span><b>৩০০</b></li><li><span>কেস খারিজ হলে</span><b>৩০০</b></li><li><span>দক্ষিণেশ্বরে পুজো দিলে</span><b>সব কেস মুকুব + ১০০০</b></li></ol></div>
     <div class="pg"><h3>যে জায়গাগুলো খুঁজে বের করতে হবে</h3><div id="places"></div><p class="note">খুঁজে পেলে তবেই ম্যাপে দেখা যাবে · প্রতিটায় ৩০০ পয়েন্ট</p></div>
     <div class="pg"><h3>কন্ট্রোল</h3><div id="ctl" class="kb"></div><div id="ctl2"></div></div>
     <div id="inav"><span id="pgno"></span><button id="next"></button></div>
