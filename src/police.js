@@ -25,7 +25,7 @@ export class Police {
     }
     this.o = COPS.posts.map(p => ({ x: p.x, z: p.z, hx: p.x, hz: p.z, ry: p.ry ?? R() * 6, rig: null, chase: false, back: false }));
     this.pool = []; for (let i = 0; i < 14; i++) { const r = makeFigure({ ...COPS.look, skin: ['#8d5a3b', '#a36f48', '#7a4a2e'][i % 3], s: .98 + (i % 3) * .03 }); r.g.visible = false; scene.add(r.g); this.pool.push(r); }
-    $('retry').addEventListener('click', () => this.release());
+    $('retry').addEventListener('click', e => { e.stopPropagation(); this.release(); window.kkLock?.(); });
   }
   offence(x, z, what, reach = SEE) { // the player's car hit someone or something, or a car was stolen
     if (this.busted || this.pl.ride || this.cool > 0) return;
@@ -41,7 +41,7 @@ export class Police {
     this.busted = true; this.clear(); if (this.pl.car) this.dr.toggle(true); this.pl.held = true; this.pl.keys = {}; this.pl.vel.set(0, 0, 0); this.snd.whistle();
     document.exitPointerLock?.();
     if (!o?.rig) { let bd = 1e9; for (const q of this.o) if (q.rig && !(q.down > 0)) { const d = Math.hypot(q.x - this.pl.pos.x, q.z - this.pl.pos.z); if (d < bd) { bd = d; o = q; } } }
-    if (!o?.rig) { $('busted').classList.add('on'); return; }
+    if (!o?.rig) { document.exitPointerLock?.(); $('busted').classList.add('on'); return; }
     o.chase = false; o.back = false; o.rig.armL.add(this.stick); this.beat = { o, t: 0, hits: 0 }; // the lathi comes out
   }
   burst(x, y, z, n) { // a few 💥 of different sizes around the point
@@ -61,7 +61,7 @@ export class Police {
     }
     const r = pl.rig; r.body.rotation.x = b.fall ? 0 : (ph > .7 && ph < .9 ? -.25 : 0);
     if (b.fall) { const k = Math.min(1, (b.t - b.fall) / .4); r.g.rotation.x = -Math.PI / 2 * k; r.g.position.y = .14 * k; o.rig.armL.rotation.x = -.4; o.rig.body.rotation.x = 0; }
-    if (b.fall && b.t - b.fall > 1.4 && !b.shown) { b.shown = true; $('busted').classList.add('on'); }
+    if (b.fall && b.t - b.fall > 1.4 && !b.shown) { b.shown = true; document.exitPointerLock?.(); $('busted').classList.add('on'); }
   }
 
   knock(o, fx, fz) { o.down = 6; o.fx = fx; o.fz = fz; this.snd.yelp(o.x, o.z); this.offence(o.x, o.z, 'officer'); }

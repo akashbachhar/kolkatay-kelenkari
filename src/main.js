@@ -74,8 +74,9 @@ async function start() {
   if (TOUCH) initTouch(player, dom, { map: () => hud.toggleMap(), sound: () => sound.toggle() });
   $('load').style.display = 'none'; $('play').style.display = 'inline-block';
   $('bHelp').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.toggleHelp(); }); $('keys').addEventListener('pointerdown', () => hud.toggleHelp(false));
-  $('play').onclick = go; dom.addEventListener('click', () => { if (playing && document.pointerLockElement !== dom) lock(); });
-  document.addEventListener('pointerlockchange', () => { if (playing && !TOUCH && document.pointerLockElement !== dom) $('paused').classList.add('on'); else $('paused').classList.remove('on'); });
+  $('play').onclick = go; dom.addEventListener('click', () => { if (playing && !police.busted && document.pointerLockElement !== dom) lock(); });
+  window.kkLock = lock;
+  document.addEventListener('pointerlockchange', () => { if (playing && !TOUCH && !police.busted && document.pointerLockElement !== dom) $('paused').classList.add('on'); else $('paused').classList.remove('on'); });
   addEventListener('keydown', e => { if (e.code === 'KeyM' && playing) hud.toggleMap(); if (e.code === 'KeyC' && playing) hud.toggleHelp(); if (e.code === 'KeyN' && playing) hud.toast(sound.toggle() ? '<small>SOUND</small>Off' : '<small>SOUND</small>On'); if (e.code === 'Enter' && !playing) go(); });
   const fit = () => { camera.aspect = innerWidth / innerHeight; camera.fov = innerWidth < innerHeight ? 72 : 58; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
   addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 250)); fit();
