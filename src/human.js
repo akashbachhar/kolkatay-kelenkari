@@ -72,6 +72,11 @@ export function animate(r, speed, dt) {
 export function bake(o, pose, ph = 0) {
   const r = makeFigure(o);
   r.armL.rotation.x = -.45; r.armR.rotation.x = -.3;
+  if (pose === 'tea' || pose === 'teasit') { // a clay cup of cha raised in the right hand
+    r.armL.rotation.x = -2.2; r.armL.rotation.z = .45; r.body.rotation.x = -.04;
+    const cup = new THREE.Mesh(P(cyl(.042, .03, .08, 8), '#a8623c', 0, -.6, .07), MAT); r.armL.add(cup);
+    if (pose === 'teasit' && !r.saree) { r.legL.rotation.x = r.legR.rotation.x = -1.45; r.shinL.rotation.x = r.shinR.rotation.x = 1.4; r.g.position.y = -.42; }
+  }
   if (!r.saree) {
     if (pose === 'pull') { r.ph = ph; animate(r, 2.6, 0); r.armL.rotation.x = r.armR.rotation.x = .12; r.body.rotation.x = .2; }
     if (pose === 'bat') { r.armL.rotation.x = r.armR.rotation.x = -.75; r.armL.rotation.z = .3; r.armR.rotation.z = -.3; r.body.rotation.x = .25; r.legL.rotation.x = -.2; r.legR.rotation.x = .2; }

@@ -475,4 +475,54 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
     const drv = { top: '#b9a77a', bottom: '#3d3a33', full: true };
     c.person(-12, 1.6, -2.6, false, 'stand', drv); c.person(-11.2, 2.5, -.4, false, 'stand', drv); c.person(13.2, -1, -PI / 2, false, 'sit', drv, .1); c.person(12.3, 1.2, 2.2, false, 'stand', drv);
   });
+
+  // ───────── Cha: pavement tea stalls with people drinking from clay cups
+  const teaStall = (k, c, hw, x0, s) => {
+    const Z = o => s * (hw + o), face = s > 0 ? PI : 0, toStall = s > 0 ? 0 : PI;
+    k.box(M.wood, 2.6, .9, .8, x0, 0, Z(3.9)); k.box(M.tin, 3.4, .08, 2.2, x0, 2.4, Z(3.55));
+    for (const dx of [-1.6, 1.6]) { k.cyl(M.steel, .04, .04, 2.4, x0 + dx, 0, Z(2.55), 5); c.circ(x0 + dx, Z(2.55), .1, 3); }
+    k.cyl(M.dark, .22, .26, .34, x0 - .7, .9, Z(3.9), 10); k.cyl(M.steel, .16, .18, .3, x0 - .7, 1.24, Z(3.9), 10); k.cone(M.steel, .1, .14, x0 - .7, 1.54, Z(3.9), 8);
+    for (let i = 0; i < 8; i++) k.cyl(M.clay, .045, .033, .085, x0 + .2 + (i % 4) * .14, .9 + (i / 4 | 0) * .085, Z(3.8 + (i % 2) * .1), 7);
+    for (const dx of [-.15, .1]) k.cyl(M.glass, .1, .1, .28, x0 + dx, .9, Z(3.95), 8);
+    k.sign('চা · CHA · TEA', 1.8, .5, x0, 2.05, Z(3.0), face, '#b3261e', '#fff');
+    c.person(x0 - .2, Z(4.35), face, false, 'stand', { top: '#e9e4d8', bottom: '#2f6249' });
+    k.box(M.wood, 2.6, .45, .42, x0, 0, Z(1.15)); c.box(x0, Z(3.9), 2.6, .8, 1.2); c.box(x0, Z(1.15), 2.6, .42, .5);
+    c.person(x0 - .7, Z(1.15), toStall, false, 'teasit'); c.person(x0 + .6, Z(1.15), toStall, false, 'teasit');
+    for (const [dx, o] of [[-1.3, 2.4], [.1, 2.7], [1.4, 2.3]]) c.person(x0 + dx, Z(o), toStall + rr(-.4, .4), R() < .3, 'tea');
+  };
+  for (const [road, d, s] of [['Lenin Sarani', 60, 1], ['B.B. Ganguly Street, Bowbazar', 250, -1], ['Mahatma Gandhi Road', 420, 1], ['S.N. Banerjee Road', 200, -1], ['Rabindra Sarani', 300, 1],
+    ['Bidhan Sarani', 150, -1], ['A.P.C. Road', 200, 1], ['Free School Street', 120, -1], ['Brabourne Road', 200, 1], ['A.J.C. Bose Road', 900, -1]])
+    onRoad(null, null, road, d, 0, (k, c, hw) => teaStall(k, c, hw, 0, s));
+
+  // ───────── E-Mall, the electronics mall at Chandni Chowk
+  onRoad('E-Mall', 'ই-মল', 'Chittaranjan Avenue', 195, 40, (k, c, hw) => {
+    const z0 = -(hw + 4.5), zc = z0 - 13; c.clear(40, 32, 0, zc);
+    k.box(M.tower, 34, 24, 26, 0, 0, zc); k.box(M.white, 34.6, .8, 26.6, 0, 24, zc); k.box(M.white, 34.4, 1.2, 26.4, 0, 4.4, zc);
+    k.box(M.glass, 32, 4.1, .3, 0, .2, z0 + .05); for (let x = -16; x <= 16; x += 4) k.box(M.white, .3, 4.4, .4, x, 0, z0 + .1);
+    k.box(M.dark, 6, 3.6, .2, 0, .2, z0 + .25); k.box(M.steel, 12, .3, 4, 0, 4.4, z0 + 2); for (const x of [-5.6, 5.6]) { k.cyl(M.steel, .1, .1, 4.4, x, 0, z0 + 3.8, 6); c.circ(x, z0 + 3.8, .15, 5); }
+    k.sign('E-MALL', 13, 3.4, 0, 18.5, z0 + .25, 0, '#b3261e', '#fff');
+    k.sign('ই-মল · MOBILES · LAPTOPS · CAMERAS · ACCESSORIES', 22, 1.3, 0, 6.4, z0 + .25, 0, '#12356b', '#fff');
+    for (const [x, t, bg] of [[-14.5, 'SALE\nUPTO\n50%', '#f2c118'], [14.5, 'NEW\nPHONES\nHERE', '#1d6b46']]) k.sign(t, 3, 7, x, 9, z0 + .25, 0, bg, bg === '#f2c118' ? '#141414' : '#fff');
+    for (let i = 0; i < 10; i++) c.person(rr(-12, 12), z0 + rr(1.5, 3.6), rr(0, 6), R() < .4);
+    c.roam(26, 2.4, 0, z0 + 2.6, 4); c.box(0, zc, 34, 26, 30);
+  });
+
+  // ───────── Park Street fairy lights: strings of bulbs across the road, Christmas-style
+  site(null, null, [0, 0], 0, 0, (k, c) => {
+    const road = ROADS.find(r => r.n === 'Park Street'), q = road.p, hw = road.w / 2 + 3.2, pts = [], cols = [];
+    const PAL = ['#fff3c4', '#ffd36b', '#ff5a4e', '#ffcf3a', '#7fe08a', '#6fb6ff', '#ff8ad8', '#fff3c4'].map(h => new THREE.Color(h));
+    const string = (a, b, sag, n) => { for (let j = 0; j <= n; j++) { const t = j / n, u = t * 2 - 1; pts.push([a[0] + (b[0] - a[0]) * t, 6.8 - sag * (1 - u * u), a[1] + (b[1] - a[1]) * t]); cols.push(PAL[(Math.random() * PAL.length) | 0]); } };
+    for (let i = 0; i < q.length - 1; i++) {
+      const L = Math.hypot(q[i + 1][0] - q[i][0], q[i + 1][1] - q[i][1]), tx = (q[i + 1][0] - q[i][0]) / L, tz = (q[i + 1][1] - q[i][1]) / L, nx = tz, nz = -tx;
+      const P = (d, s) => [q[i][0] + tx * d + nx * s * hw, q[i][1] + tz * d + nz * s * hw];
+      for (let d = 6; d < L - 4; d += 11) {
+        for (const s of [-1, 1]) { const p = P(d, s); k.cyl(M.steel, .05, .06, 7, p[0], 0, p[1], 6); addBox(p[0], p[1], .12, .12, 0, 7); }
+        string(P(d, -1), P(d, 1), 1.1, 26); if (d + 11 < L - 4) { string(P(d, -1), P(d + 11, 1), 1.4, 30); string(P(d, -1), P(d + 11, -1), .5, 10); string(P(d, 1), P(d + 11, 1), .5, 10); }
+      }
+    }
+    const im = new THREE.InstancedMesh(new THREE.SphereGeometry(.09, 6, 4), new THREE.MeshBasicMaterial({ toneMapped: false }), pts.length), m4 = new THREE.Matrix4(), dim = new THREE.Color();
+    pts.forEach((p, i) => { im.setMatrixAt(i, m4.makeTranslation(p[0], p[1], p[2])); im.setColorAt(i, cols[i]); }); im.frustumCulled = false; k.extras.push(im);
+    let last = 0;
+    anims.push(t => { if (t - last < .12) return; last = t; for (let j = 0; j < 40; j++) { const i = (Math.random() * pts.length) | 0; im.setColorAt(i, Math.random() < .35 ? dim.copy(cols[i]).multiplyScalar(.2) : cols[i]); } im.instanceColor.needsUpdate = true; }); // twinkle
+  });
 }

@@ -20,7 +20,7 @@ const TOUCH = matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoin
 const renderer = new THREE.WebGLRenderer({ antialias: !TOUCH, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, TOUCH ? 1.25 : 1.5)); renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .5;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .6;
 document.body.prepend(renderer.domElement);
 const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, .3, 12000);
 
@@ -29,16 +29,28 @@ async function start() {
   await new Promise(r => setTimeout(r, 30));
   initMats();
   // late-afternoon sun over the Hooghly, hazy Kolkata sky
-  const sunDir = new THREE.Vector3(-.62, .5, .42).normalize();
-  const mkSky = () => { const s = new Sky(); s.scale.setScalar(10000); const u = s.material.uniforms; u.turbidity.value = 9; u.rayleigh.value = 1.5; u.mieCoefficient.value = .012; u.mieDirectionalG.value = .85; u.sunPosition.value.copy(sunDir); return s; };
+  // evening: the sun about 7 degrees up in the west-south-west, setting over the Hooghly
+  const sunDir = new THREE.Vector3(-.92, .07, .37).normalize();
+  const mkSky = () => { const s = new Sky(); s.scale.setScalar(10000); const u = s.material.uniforms; u.turbidity.value = 14; u.rayleigh.value = 2.8; u.mieCoefficient.value = .018; u.mieDirectionalG.value = .93; u.sunPosition.value.copy(sunDir); return s; };
   scene.add(mkSky());
   const pm = new THREE.PMREMGenerator(renderer), es = new THREE.Scene(); es.add(mkSky());
-  scene.environment = pm.fromScene(es, 0, .1, 20000).texture; scene.environmentIntensity = .55;
-  scene.fog = new THREE.FogExp2(0xc6cacb, .00095);
-  scene.add(new THREE.HemisphereLight(0xcfe2ff, 0x8d7c62, .75));
-  const sun = new THREE.DirectionalLight(0xffe3bd, 2.9); sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
+  scene.environment = pm.fromScene(es, 0, .1, 20000).texture; scene.environmentIntensity = .7;
+  scene.fog = new THREE.FogExp2(0xd9b596, .00105); // dusty evening haze
+  scene.add(new THREE.HemisphereLight(0xb9c4e0, 0x7d5f48, .95));
+  const sun = new THREE.DirectionalLight(0xffa766, 2.6); sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
   Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, near: 1, far: 900 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .4;
   scene.add(sun, sun.target);
+  // the sun's disc and glow, kept far away along the sun direction
+  const glow = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gr.addColorStop(0, 'rgba(255,248,225,1)'); gr.addColorStop(.09, 'rgba(255,236,190,1)'); gr.addColorStop(.12, 'rgba(255,170,90,.75)'); gr.addColorStop(.35, 'rgba(255,120,60,.22)'); gr.addColorStop(1, 'rgba(255,90,40,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, fog: false, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.scale.setScalar(2600); scene.add(sp); return sp; })();
+  // the orange-pink band along the western horizon around the setting sun
+  const band = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gr.addColorStop(0, 'rgba(255,125,40,.95)'); gr.addColorStop(.4, 'rgba(255,95,60,.5)'); gr.addColorStop(.75, 'rgba(225,80,105,.16)'); gr.addColorStop(1, 'rgba(200,80,120,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, fog: false, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.scale.set(15000, 3200, 1); scene.add(sp); return sp; })();
+  const bandDir = new THREE.Vector3(sunDir.x, .015, sunDir.z).normalize();
 
   const world = buildWorld(scene), traffic = new Traffic(scene), player = new Player(scene, camera, renderer.domElement), hud = new Hud(), people = new People(scene, folk, roams, TOUCH ? 26 : 48, TOUCH), sound = new Sound();
   let police; player.onStep = fast => sound.step(fast);
@@ -75,7 +87,7 @@ async function start() {
     ferry.update(dt, t, playing); for (const f of anims) f(t);
     drive.playing = playing; drive.update(dt); if (playing) police.update(dt);
     if (playing) { player.update(dt, traffic, people); drive.camera(); } else { player.yaw += dt * .05; player.update(0, traffic); }
-    sun.position.copy(player.pos).addScaledVector(sunDir, 420); sun.target.position.copy(player.pos);
+    sun.position.copy(player.pos).addScaledVector(sunDir, 420); sun.target.position.copy(player.pos); glow.position.copy(camera.position).addScaledVector(sunDir, 8000); band.position.copy(camera.position).addScaledVector(bandDir, 8000);
     world.update(t); if (playing) hud.update(player);
     renderer.render(scene, camera);
   });
