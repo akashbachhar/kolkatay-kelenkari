@@ -140,7 +140,9 @@ export class Puja {
     const bk = new Kit(); bk.beam(M.steel, [0, 0, 0], [0, -.25, 0], .03);
     bk.add(M.gold, new THREE.LatheGeometry([[0, 0], [.1, 0], [.14, -.05], [.16, -.24], [.23, -.42], [.26, -.46]].map(([x, y]) => new THREE.Vector2(x, y)), 18).translate(0, -.25, 0));
     bk.add(M.gold, sph(.05), 0, -.66, 0); bk.cyl(M.red, .015, .015, .9, 0, -1.55, 0, 5);
-    this.bell = bk.build(); this.bell.position.set(SX + .38, 3.65, SZ - 2.55); scene.add(this.bell);
+    this.bell = bk.build(); this.bell.position.set(SX + 1.05, 3.65, SZ - 2.0); scene.add(this.bell);
+    const rk = new Kit(); rk.beam(M.steel, [5.85, 4.05, -2.0], [1.05, 4.05, -2.0], .06); rk.beam(M.steel, [1.05, 4.08, -2.0], [1.05, 3.62, -2.0], .04); rk.beam(M.steel, [5.85, 3.3, -2.0], [4.6, 4.05, -2.0], .05); rk.box(M.steel, .1, .3, .3, 5.8, 3.95, -2.0);
+    const rod = rk.build(); rod.position.set(SX, 0, SZ); scene.add(rod);
   }
   start() {
     const pl = this.pl; this.t = 0; this.fired.clear(); pl.held = true; pl.keys = {}; pl.vel.set(0, 0, 0);
@@ -162,21 +164,22 @@ export class Puja {
     // where the boy is and what he is doing
     let sp = 0, x = 0, z = -2.4, hd = PI;
     if (T < 5) { z = L(6.5, -2.4, (T - 1) / 4); sp = T > 1 ? 2.2 : 0; }
-    else if (T > 12.4 && T < 13) hd = L(PI, 2 * PI, (T - 12.4) / .6);
-    else if (T >= 13) { hd = 0; z = L(-2.4, 6.8, (T - 13) / 3); sp = 3; }
+    else if (T >= 9.6 && T <= 12.4) { const f = (T - 9.6) / .6; x = L(0, .8, f); z = L(-2.4, -1.9, f); sp = f < 1 ? 1.6 : 0; }
+    else if (T > 12.4 && T < 13) { x = .8; z = -1.9; hd = L(PI, 2 * PI, (T - 12.4) / .6); }
+    else if (T >= 13) { hd = 0; const f = (T - 13) / 3; x = L(.8, 0, f * 2); z = L(-1.9, 6.8, f); sp = 3; }
     if (T >= .8) { p.set(SX + x, 0, SZ + z); pl.heading = hd; pl.root.position.copy(p); pl.root.rotation.y = hd; }
     animate(r, sp, dt);
     const fold = T >= 5 && T < 9.6, ring = T >= 9.6 && T < 12.4;
     if (fold) { const k = Math.min(1, (T - 5) * 2.5); r.armL.rotation.set(-.78 * k, 0, .66 * k); r.armR.rotation.set(-.78 * k, 0, -.66 * k); r.body.rotation.x = T > 6 && T < 8.6 ? .22 * Math.sin(Math.min(1, (T - 6) / .6) * PI / 2) : 0; } // folded hands, a bow
-    else if (ring) { r.armL.rotation.set(-2.85 * Math.min(1, (T - 9.6) * 3), 0, .15); r.armR.rotation.set(0, 0, .07); r.body.rotation.x = 0; } // the right hand up to the bell rope
+    else if (ring) { r.armL.rotation.set(-2.85 * Math.min(1, Math.max(0, T - 10) * 3), 0, .15); r.armR.rotation.set(0, 0, .07); r.body.rotation.x = 0; } // the right hand up to the bell rope
     else if (T >= 12.4) { r.armL.rotation.z = -.07; r.armR.rotation.z = .07; }
     // sounds: the conch, temple bells, three rings of the big bell
     this.once('conch', T, 5.4, () => this.snd.shankha()); this.once('bells', T, 7, () => this.snd.temple());
-    for (const at of [10.1, 10.9, 11.7]) this.once('b' + at, T, at, () => { this.snd.bigBell(); this.bt = at; });
+    for (const at of [10.35, 11.1, 11.85]) this.once('b' + at, T, at, () => { this.snd.bigBell(); this.bt = at; });
     const bt = this.bt ?? -9; this.bell.rotation.z = T >= bt ? .4 * Math.sin((T - bt) * 9) * Math.exp(-(T - bt) * 1.4) : 0;
     // the camera: following him in, beside him at the altar, low on the bell, then watching him walk out into the light
     const c = this.cam, at = (cx, cy, cz, lx, ly, lz) => { c.position.set(SX + cx, cy, SZ + cz); c.lookAt(SX + lx, ly, SZ + lz); };
-    if (T < 5) at(0, 2.6, 7.4, 0, 2.2, -5); else if (T < 9.6) at(-1.3, 2.9, .3, .1, 3.25, -6.3); else if (T < 12.4) at(-1.7, 1.45, -.2, .35, 2.7, -2.6); else at(0, 2.3, -3.7, 0, 1.6, 7);
+    if (T < 5) at(0, 2.6, 7.4, 0, 2.2, -5); else if (T < 9.6) at(-1.3, 2.9, .3, .1, 3.25, -6.3); else if (T < 12.4) at(-1.0, 1.6, .8, .95, 3.05, -2.3); else at(0, 2.3, -3.7, 0, 1.6, 7);
     // out again: the temple closes behind him
     this.once('dark', T, 15.3, () => $('fade').classList.add('on'));
     if (T >= 16.1) {
