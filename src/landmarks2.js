@@ -43,29 +43,35 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
     c.clear(x - x0 + 6, 24, (x + x0) / 2, side * (hw + 14)); return x;
   };
 
-  // ───────── Park Street: restaurants, bars and the bookshop
+  // ───────── Park Street: laid out after the real map, heading east from Chowringhee.
+  // side -1 = left (north): The Park first, Oxford, Trincas … Mocambo at the Free School Street corner.
+  // side 1 = right (south): Park Street Social, Flurys, Russel Street gap, Queens Mansion, Peter Cat …
   onRoad(null, null, 'Park Street', 0, 0, (k, c, hw) => {
-    row(k, c, hw, 50, 1, [
+    row(k, c, hw, 16, -1, [
+      { name: 'THE PARK', sub: 'Hotel · Someplace Else Pub', w: 34, d: 18, fl: 7, wall: M.white, bg: '#141414', fg: '#fff', awn: M.dark, ppl: 3, lm: ['The Park Hotel', 'দ্য পার্ক হোটেল', 22] },
       { name: 'OXFORD BOOKSTORE', sub: 'Books · Cha Bar · since 1919', w: 22, bg: '#1d3b2a', fg: '#f3e9c8', awn: M.green, lm: ['Oxford Bookstore', 'অক্সফোর্ড বুকস্টোর'] },
-      { name: 'FLURYS', sub: 'Tearoom · Confectionery · 1927', w: 18, sb: 4.5, tables: 3, bg: '#f3d9e0', fg: '#7a1f4a', awn: M.pink, wall: M.white, lm: ['Flurys', 'ফ্লুরিজ'] },
-      { name: 'PETER CAT', sub: 'Chelo Kebab · Restaurant & Bar', w: 18, bg: '#141414', fg: '#f2c118', awn: M.dark, lm: ['Peter Cat', 'পিটার ক্যাট'] },
-      { name: 'KFC', w: 15, fl: 1, bg: '#f4f1e8', fg: '#7a1f1a', awn: M.white },
       { name: 'TRINCAS', sub: 'Restaurant & Bar · Live Music', w: 18, bg: '#27408f', fg: '#fff', awn: M.blue },
-      { name: 'OLYPUB', sub: 'Bar · Steak', w: 13, bg: '#5a2a1a', fg: '#f1e2b0', awn: M.wood, wall: M.redOx },
-      { name: 'BAR-B-Q', sub: 'Chinese · Indian · Bar', w: 18, bg: '#b3261e', fg: '#fff', awn: M.red },
       { name: 'KWALITY', sub: 'Restaurant · since 1952', w: 15, bg: '#0f3d2e', fg: '#f1e2b0', awn: M.green },
-      { name: 'THE PARK', sub: 'Hotel · Someplace Else Pub', w: 30, d: 16, fl: 6, wall: M.white, bg: '#141414', fg: '#fff', awn: M.dark, ppl: 3 },
-    ]);
-    row(k, c, hw, 50, -1, [
-      { name: "McDonald's", w: 17, fl: 1, bg: '#f4f1e8', fg: '#1d3b2a', awn: M.white },
+      { name: 'OLYPUB', sub: 'Bar · Steak', w: 13, bg: '#5a2a1a', fg: '#f1e2b0', awn: M.wood, wall: M.redOx },
+      { gapTo: 144 },
       { name: 'MOCAMBO', sub: 'Restaurant & Bar · since 1956', w: 20, bg: '#7a1f1a', fg: '#f6e7c0', awn: M.red, ppl: 3, lm: ['Mocambo', 'মোক্যাম্বো'] },
+      { gapTo: 184 },
       { name: 'MOULIN ROUGE', sub: 'Restaurant · Bar', w: 16, bg: '#b3261e', fg: '#fff', awn: M.red, wall: M.white },
+      { name: 'BAR-B-Q', sub: 'Chinese · Indian · Bar', w: 18, bg: '#b3261e', fg: '#fff', awn: M.red },
       { name: 'SILVER GRILL', sub: 'Bar & Restaurant', w: 15, bg: '#3a3a3a', fg: '#e8e8e8', awn: M.dark },
+    ]);
+    row(k, c, hw, 16, 1, [
+      { name: 'PARK STREET SOCIAL', sub: 'Café · Bar', w: 18, bg: '#e8742a', fg: '#141414', awn: M.orange },
+      { name: 'FLURYS', sub: 'Tearoom · Confectionery · 1927', w: 18, sb: 4.5, tables: 3, bg: '#f3d9e0', fg: '#7a1f4a', awn: M.pink, wall: M.white, lm: ['Flurys', 'ফ্লুরিজ'] },
+      { gapTo: 76 },
+      { name: 'QUEENS MANSION', sub: 'Shops · Offices · Apartments', w: 36, d: 16, fl: 4, wall: M.redOx, bg: '#f1ecdc', fg: '#3a2a1a', awn: M.green, ppl: 3 },
+      { name: 'PETER CAT', sub: 'Chelo Kebab · Restaurant & Bar', w: 18, bg: '#141414', fg: '#f2c118', awn: M.dark, lm: ['Peter Cat', 'পিটার ক্যাট'] },
       { name: 'MUSIC WORLD', w: 14, fl: 1, bg: '#f2c118', fg: '#141414', awn: M.yellow },
-      { name: 'MAGNOLIA', sub: 'Ice Cream · Restaurant', w: 13, bg: '#f4f1e8', fg: '#27408f', awn: M.blue },
-      { gapTo: 186 },
+      { gapTo: 184 },
+      { name: "McDonald's", w: 17, fl: 1, bg: '#f4f1e8', fg: '#1d3b2a', awn: M.white },
+      { name: 'KFC', w: 15, fl: 1, bg: '#f4f1e8', fg: '#7a1f1a', awn: M.white },
       { name: 'MARCO POLO', sub: 'Multi-cuisine · Bar', w: 18, bg: '#12356b', fg: '#fff', awn: M.blue },
-      { name: 'QUEENS MANSION', sub: 'Shops · Offices · Apartments', w: 34, d: 16, fl: 4, wall: M.redOx, bg: '#f1ecdc', fg: '#3a2a1a', awn: M.green, ppl: 3 },
+      { name: 'MAGNOLIA', sub: 'Ice Cream · Restaurant', w: 13, bg: '#f4f1e8', fg: '#27408f', awn: M.blue },
     ]);
   });
 
