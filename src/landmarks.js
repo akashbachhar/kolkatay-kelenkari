@@ -300,12 +300,33 @@ export function buildLandmarks(scene) {
     c.box(0, -12, 52, 14); for (const s of [-1, 1]) c.box(s * 19.5, 8, 13, 26); c.circ(0, 10, 1.2, 4);
   });
 
-  // ───────── Mishti shop on Lenin Sarani
-  site('Rosogolla Shop', 'রসগোল্লার দোকান', ll(22.5652, 88.354), 0, 32, (k, c) => {
+  // ───────── K.C. Das, the rosogolla shop at Esplanade: the long red banner over a glass-fronted sweet counter
+  const kcBanner = (w, h, small) => {
+    const H = 256, Wd = Math.round(H * w / h), cv = document.createElement('canvas'); cv.width = Wd; cv.height = H; const g = cv.getContext('2d');
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#d81e24'); gr.addColorStop(1, '#a8141a'); g.fillStyle = gr; g.fillRect(0, 0, Wd, H);
+    g.strokeStyle = '#f6d24a'; g.lineWidth = 7; g.strokeRect(10, 10, Wd - 20, H - 20); g.lineWidth = 2; g.strokeRect(22, 22, Wd - 44, H - 44);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowOffsetY = 4; g.shadowBlur = 6;
+    if (small) { g.font = `900 ${H * .5}px Georgia, 'Times New Roman', serif`; g.fillText('K.C. DAS', Wd / 2, H * .55); }
+    else {
+      g.font = `900 ${H * .52}px Georgia, 'Times New Roman', serif`; g.fillText('K.C. DAS', Wd * .55, H * .4);
+      g.font = `700 ${H * .3}px 'Noto Sans Bengali', sans-serif`; g.fillText('কে. সি. দাস', Wd * .17, H * .4);
+      g.font = `italic 700 ${H * .15}px Georgia, serif`; g.fillText('PVT. LTD.', Wd * .87, H * .47);
+      g.fillStyle = '#f6d24a'; g.font = `700 ${H * .15}px sans-serif`; g.fillText('ROSSOGOLLA  ·  RASMALAI  ·  SANDESH  ·  MISHTI DOI', Wd / 2, H * .78);
+    }
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: t, roughness: .6, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: .35 }));
+  };
+  site('K.C. Das', 'কে. সি. দাস', ll(22.5652, 88.354), 0, 32, (k, c) => {
     c.clear(22, 20, 0, 2); const W = M.cream;
-    k.box(W, 16, 7.6, 10, 0, 0, -1); k.box(M.white, 16.6, .5, 10.6, 0, 7.6, -1); k.box(M.dark, 14.4, 3.3, .3, 0, 0, 4); k.box(M.white, .5, 3.4, .5, 0, 0, 4.1);
-    k.sign('রসগোল্লা ভাণ্ডার\nROSOGOLLA · SANDESH · MISHTI DOI', 15, 2.1, 0, 4.45, 4.2, 0, '#b3261e', '#fff6d8'); k.wins(M.green, -6.5, 4.05, 6.5, 4.05, 4, 1.3, 1, 6.2, .1);
-    k.box(M.red, 15.6, .12, 2.6, 0, 3.35, 5.2); for (let i = -7; i <= 7; i += 2) k.box(M.white, .9, .13, 2.62, i, 3.35, 5.2);
+    k.box(W, 16, 7.6, 10, 0, 0, -1); k.box(M.white, 16.6, .5, 10.6, 0, 7.6, -1);
+    // bright shop front: glass doors and a lit interior
+    k.box(M.lamp, 14.4, 3.3, .3, 0, 0, 3.95); k.box(M.glass, 14.4, 3.3, .1, 0, 0, 4.15); for (const x of [-7.1, -3.6, 0, 3.6, 7.1]) k.box(M.steel, .12, 3.3, .2, x, 0, 4.2);
+    // the long red banner across the whole front, framed in red
+    k.box(M.red, 16.4, 3, .5, 0, 3.3, 4.1); const b = kcBanner(15.8, 2.7); b.position.set(0, 4.8, 4.37); k.extras.push(b);
+    k.wins(M.green, -6.5, 4.05, 6.5, 4.05, 4, 1.3, 1, 6.6, .1);
+    // a red blade sign on the corner, readable from up and down the street
+    k.box(M.dark, .12, .12, 2.2, -7.6, 7.2, 5); for (const ry of [PI / 2, -PI / 2]) { const bl = kcBanner(3, 1.1, true); bl.position.set(-7.6 + (ry > 0 ? .06 : -.06), 6.6, 5.6); bl.rotation.y = ry; k.extras.push(bl); }
+    k.box(M.red, 15.6, .12, 2.4, 0, 3.15, 5.25); k.box(M.red, 15.6, .4, .08, 0, 2.8, 6.45);
     k.box(M.white, 13.4, 1, 1.3, 0, 0, 5.7); k.box(M.steel, 13.4, .05, 1.34, 0, 1.55, 5.7); for (const x of [-6.65, 0, 6.65]) k.box(M.steel, .06, .55, 1.3, x, 1, 5.7);
     for (let t = 0; t < 6; t++) { const x = -5.5 + t * 2.2; k.box(M.steel, 1.8, .05, 1, x, 1, 5.7);
       for (let i = 0; i < 15; i++) { const px = x - .64 + (i % 5) * .32, pz = 5.4 + (i / 5 | 0) * .3; t % 3 === 1 ? k.box(M.cream, .22, .12, .2, px, 1.05, pz) : t % 3 === 2 ? k.add(M.orange, new THREE.SphereGeometry(.11, 8, 6), px, 1.16, pz) : k.add(M.rosh, new THREE.SphereGeometry(.13, 10, 8), px, 1.18, pz); } }
