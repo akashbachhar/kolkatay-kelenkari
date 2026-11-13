@@ -60,6 +60,8 @@ export const COPS = { posts: [], hq: null, look: { top: '#f5f5f1', bottom: '#f1f
 export const BUS_ROUTES = [['D28B', 'ESPLANADE', 'ধর্মতলা'], ['43', 'DAKSHINESWAR', 'দক্ষিণেশ্বর'], ['34B', 'DUNLOP', 'ডানলপ'], ['46', 'AIRPORT', 'এয়ারপোর্ট'], ['46B', 'MOONBEAM', 'মুনবিম'], ['34C', 'NOAPARA', 'নোয়াপাড়া'],
   ['30A', 'SINTHEE', 'সিঁথি'], ['214A', 'SODEPUR', 'সোদপুর'], ['RT-18', 'KONA MORE', 'কোনা মোড়'], ['RT-11', 'BELUR MATH', 'বেলুড় মঠ'], ['RT-3', 'KADAMTALA', 'কদমতলা'], ['12 SHUTTLE', 'BADARTALA', 'বাদারতলা']];
 export const PARKED = []; // vehicles standing at the bus terminus and taxi stand: {k, x, z, a, route}
+// the race course: centre and the ellipse cars may not enter (filled in when it is built); the running horses
+export const RACE = { x: 0, z: 0, a: 0, b: 0, horses: [] };
 export const SPAWN = [-8, 41.6]; // at the north end of the Dharmatala bus stand, by the Esplanade metro
 
 // Dakshineswar: a separate area upriver, reached by ferry from Babughat

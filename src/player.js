@@ -21,13 +21,17 @@ export class Player {
     addEventListener('mousemove', e => { if (document.pointerLockElement === dom || drag) { this.lookT = 1.2; this.yaw -= e.movementX * .0026; this.pitch = Math.max(-.3, Math.min(1.35, this.pitch + e.movementY * .0022)); } });
     dom.addEventListener('wheel', e => { this.dist = Math.max(2.5, Math.min(22, this.dist * (e.deltaY > 0 ? 1.1 : .9))); e.preventDefault(); }, { passive: false });
   }
+  knock(fx, fz) { if (this.car || this.ride || this.held || this.down > 0) return false; this.down = 3.6; this.vel.set(fx * 5, 0, fz * 5); this.keys = {}; return true; }
   hit() { // a punch, straight ahead
-    if (this.car || this.ride || this.held || this.punchT > 0) return; this.punchT = .32;
+    if (this.car || this.ride || this.held || this.down > 0 || this.punchT > 0) return; this.punchT = .32;
     const fx = Math.sin(this.heading), fz = Math.cos(this.heading); this.onPunch?.(this.pos.x + fx * .9, this.pos.z + fz * .9, fx, fz);
   }
   update(dt, traffic, people) {
     const p = this.pos, k = this.keys;
-    if (this.ride || this.car || this.held) { this.vel.set(0, 0, 0); this.vy = 0; this.edge = 0; if (this.car) p.y = 0; }
+    if (this.down > 0) { // knocked over: flung, lies a while, then gets up
+      this.down -= dt; p.x += this.vel.x * dt; p.z += this.vel.z * dt; this.vel.multiplyScalar(1 - Math.min(1, 3 * dt)); resolve(p, .45); this.vy = 0; p.y = 0;
+      const k = this.down <= 0 ? 0 : this.down < 1 ? this.down : Math.min(1, (3.6 - this.down) * 5); this.rig.g.rotation.x = -Math.PI / 2 * k; this.rig.g.position.y = .14 * k;
+    } else if (this.ride || this.car || this.held) { this.vel.set(0, 0, 0); this.vy = 0; this.edge = 0; if (this.car) p.y = 0; }
     else {
       const jm = Math.hypot(this.joy.x, this.joy.y), f = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) - this.joy.y, s = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + this.joy.x;
       const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw); let mx = fx * f - fz * s, mz = fz * f + fx * s; const ml = Math.hypot(mx, mz);
@@ -53,7 +57,7 @@ export class Player {
         if (p.x > X1 - 120) { p.x = X1 - 120; this.edge = 1; } if (p.z < Z0 + 60) { p.z = Z0 + 60; this.edge = 1; } if (p.z > Z1 - 50) { p.z = Z1 - 50; this.edge = 1; }
       }
     }
-    this.speed = Math.hypot(this.vel.x, this.vel.z);
+    this.speed = this.down > 0 ? 0 : Math.hypot(this.vel.x, this.vel.z);
     this.root.position.copy(p); this.root.rotation.y = this.heading;
     animate(this.rig, this.speed, dt);
     if (this.punchT > 0) { this.punchT -= dt; const k = Math.sin(Math.max(0, this.punchT) / .32 * Math.PI); this.rig.armL.rotation.x = -1.65 * k; this.rig.body.rotation.y = .35 * k; } else this.rig.body.rotation.y = 0; // punch with the right hand (armL: the figure faces +z, so its right is -x), right shoulder forward

@@ -145,7 +145,7 @@ export function initMats() {
   M.books = m('#ffffff', { map: booksTex() }); M.iron = m('#1c1e20', { metalness: .5, roughness: .6 });
   M.moss = tri('#8d917a', pt, .09); M.tower = tri('#9dbfd3', curtainTex(), 1 / 3.6, { roughness: .12, metalness: .6 });
   const flat = (c, o) => { const mt = m(c, { polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }); mt.userData.order = o; return mt; };
-  M.apron = flat('#3b3b3d', 40); M.paint = flat('#ece8de', 41);
+  M.apron = flat('#3b3b3d', 40); M.clayT = flat('#b8693d', 40); M.clayT.side = THREE.DoubleSide; M.lineT = flat('#ece8de', 41); M.lineT.side = THREE.DoubleSide; M.paint = flat('#ece8de', 41);
   T.fac = [0, 1, 2, 3, 4, 5].map(facade); T.shops = shops(); T.road = road();
   T.grass = plain('#5f7b3c', 9000, .12, 512); T.ground = plain('#8f877a', 7000, .1, 512); T.pave = plain('#aaa69c', 4000, .1);
   M.grass = m('#ffffff', { map: T.grass.clone() }); M.grass.map.repeat.set(6, 6);

@@ -14,6 +14,7 @@ import { Drive } from './drive.js';
 import { Puja } from './puja.js';
 import { Police } from './police.js';
 import { nearestRoad } from './world.js';
+import { RACE } from './data.js';
 
 const $ = id => document.getElementById(id), Q = new URLSearchParams(location.search);
 // phones and tablets: touch controls, lighter rendering
@@ -65,7 +66,7 @@ async function start() {
   const drive = new Drive(player, traffic, sound, hud, camera, people);
   police = new Police(scene, player, drive, hud, sound); player.police = police; drive.police = police;
   const puja = new Puja(scene, player, sound, camera);
-  window.kk = { drive, puja, police, player, scene, camera, renderer, hud, sound, people, traffic, ferry };
+  window.kk = { race: RACE, drive, puja, police, player, scene, camera, renderer, hud, sound, people, traffic, ferry };
 
   let playing = false; const dom = renderer.domElement, ov = $('overlay');
   const lock = () => { if (!TOUCH) dom.requestPointerLock?.()?.catch?.(() => { }); };
@@ -87,6 +88,14 @@ async function start() {
     if (playing && (oc -= dt) < 0) { oc = 1; open = !!player.zone || player.ride || nearestRoad(player.pos.x, player.pos.z).d > 45; }
     if (playing) sound.tick(dt, open, !!player.zone && !player.ride);
     ferry.update(dt, t, playing); for (const f of anims) f(t);
+    if (playing && RACE.horses.length && Math.hypot(player.pos.x - RACE.x, player.pos.z - RACE.z) < RACE.a + 30) for (const h of RACE.horses) { // a galloping horse knocks people over
+      const hx = RACE.x + h.g.position.x, hz = RACE.z + h.g.position.z, fx = Math.cos(h.g.rotation.y), fz = -Math.sin(h.g.rotation.y);
+      for (const d of [1.1, 0, -.9]) {
+        const px = hx + fx * d, pz = hz + fz * d;
+        if (Math.hypot(player.pos.x - px, player.pos.z - pz) < .85) { const sx = player.pos.x - px, sz = player.pos.z - pz, l = Math.hypot(sx, sz) || 1; if (player.knock(fx * .8 + sx / l * .6, fz * .8 + sz / l * .6)) { sound.yelp(player.pos.x, player.pos.z); sound.punch(true); } }
+        people.hitAt(px, pz, fx, fz, sound);
+      }
+    }
     drive.playing = playing; drive.update(dt); if (playing) police.update(dt);
     if (playing) { player.update(dt, traffic, people); drive.camera(); puja.update(dt, t); } else { player.yaw += dt * .05; player.update(0, traffic); }
     sun.position.copy(player.pos).addScaledVector(sunDir, 420); sun.target.position.copy(player.pos); glow.position.copy(camera.position).addScaledVector(sunDir, 8000); band.position.copy(camera.position).addScaledVector(bandDir, 8000);

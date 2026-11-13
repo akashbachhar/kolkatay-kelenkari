@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Kit, M, PI, R, rr, pick } from './kit.js';
-import { ll, ROADS, DAK, RIVER_W, COPS, BUS_ROUTES, PARKED } from './data.js';
+import { ll, ROADS, DAK, RIVER_W, COPS, BUS_ROUTES, PARKED, RACE } from './data.js';
 import { addBox } from './collide.js';
 
 // Second batch of places: Park Street, the markets, metro entrances, College Street, gully cricket, Dakshineswar.
@@ -347,8 +347,15 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
   // ───────── Race Course: the track, the stand, horses racing and the betting ring
   site('Race Course', 'রেস কোর্স', ll(22.545, 88.3368), 0, 125, (k, c) => {
     c.clear(266, 136, 30, 0);
-    k.add(M.track, new THREE.RingGeometry(.87, 1, 72).rotateX(-PI / 2).scale(90, 1, 56), 0, .12, 0);
-    for (const s of [.86, 1.01]) k.add(M.white, new THREE.TorusGeometry(1, .004, 4, 72).rotateX(PI / 2).scale(90 * s, 70, 56 * s), 0, 1, 0);
+    const A = 84.2, B = 52.4, N = 144, at = (th, o) => { const cx = A * Math.cos(th), cz = B * Math.sin(th), nx = B * Math.cos(th), nz = A * Math.sin(th), l = Math.hypot(nx, nz); return [cx + nx / l * o, cz + nz / l * o]; };
+    const strip = (mat, o0, o1, dash = 0) => { const p = [], ix = [];
+      for (let i = 0; i <= N; i++) { const th = i / N * PI * 2, a = at(th, o0), b = at(th, o1); p.push(a[0], .02, a[1], b[0], .02, b[1]); if (i && (!dash || i % 2)) { const q = 2 * i - 2; ix.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); } }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.setIndex(ix); g.computeVertexNormals(); g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(p.length / 3 * 2), 2)); k.add(mat, g); };
+    strip(M.clayT, -5.8, 5.8); strip(M.lineT, -5.8, -5.5); strip(M.lineT, 5.5, 5.8); strip(M.lineT, -.08, .08, 1); // clay, white edges, a dashed centre line
+    for (let i = 0; i < 96; i++) { const t0 = i / 96 * PI * 2, t1 = (i + 1) / 96 * PI * 2; // white running rails on posts, inside and out
+      for (const o of [-6.4, 6.4]) { const a = at(t0, o), b = at(t1, o); k.beam(M.white, [a[0], 1.05, a[1]], [b[0], 1.05, b[1]], .08); k.beam(M.white, [a[0], .6, a[1]], [b[0], .6, b[1]], .05); k.cyl(M.white, .05, .05, 1.1, a[0], 0, a[1], 5); } }
+    { const a = at(0, -5.8), b = at(0, 5.8); k.beam(M.lineT, [a[0], .03, a[1] - .15], [b[0], .03, b[1] - .15], .05); } // the finishing line
+    { const p = c.W(0, 0); Object.assign(RACE, { x: p[0], z: p[1], a: A + 7.4, b: B + 7.4 }); }
     k.cyl(M.white, .1, .1, 5, 92.6, 0, 0, 6); k.add(M.red, new THREE.CylinderGeometry(.6, .6, .08, 14).rotateX(PI / 2), 92.6, 4.6, 0);
     for (let i = 0; i < 6; i++) k.box(M.conc, 2.2, 1 + i * 1.2, 76, 98 + i * 2.2, 0, 0);
     k.box(M.white, 2.4, 13, 78, 112.4, 0, 0); k.box(M.tin, 19, .4, 80, 104.4, 13, 0); k.box(M.white, .5, 1.7, 80, 95.2, 12.1, 0); k.cols(M.steel, 96, -38, 96, 38, 9, .18, 13, 0);
@@ -375,7 +382,7 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
       h.add(Bd, new THREE.SphereGeometry(1, 10, 8).scale(.82, .36, .3), 0, 1.5, 0); h.beam(Bd, [.6, 1.6, 0], [1.05, 2.15, 0], .26); h.add(Bd, new THREE.BoxGeometry(.5, .2, .18), 1.27, 2.2, 0, 0, 0, -.5); h.beam(M.dark, [-.78, 1.6, 0], [-1.2, 1.15, 0], .08);
       h.add(Sk, new THREE.BoxGeometry(.5, .3, .28), .12, 1.98, 0, 0, 0, .35); h.add(M.skin, new THREE.SphereGeometry(.11, 8, 6), .42, 2.22, 0); h.dome(Sk, .12, .42, 2.24, 0, 1, 8); h.add(M.white, new THREE.BoxGeometry(.16, .4, .46), 0, 1.72, 0);
       const g = h.build(), legs = [[.55, .13], [.55, -.13], [-.55, .13], [-.55, -.13]].map(([x, z]) => { const m = new THREE.Mesh(legG, Bd); m.position.set(x, 1.3, z); m.castShadow = true; g.add(m); return m; });
-      k.extras.push(g); return { g, legs, th: i * .03, lane: (i % 4) * 1.5 - 2.2, v: 15 + (i * 37 % 10) * .22, ph: i * 1.7 };
+      k.extras.push(g); const hr = { g, legs, th: i * .03, lane: (i % 4) * 1.5 - 2.2, v: 15 + (i * 37 % 10) * .22, ph: i * 1.7 }; RACE.horses.push(hr); return hr;
     });
     let last = 0;
     anims.push(t => {

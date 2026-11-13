@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { resolve, solid } from './collide.js';
-import { bankX, BRIDGE as B, X1, Z0, Z1 } from './data.js';
+import { bankX, BRIDGE as B, X1, Z0, Z1, RACE } from './data.js';
 import { POLES } from './world.js';
 import { M } from './kit.js';
 import { makeFigure, look } from './human.js';
@@ -10,8 +10,9 @@ import { ICON } from './touch.js';
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), $ = id => document.getElementById(id), UP = new THREE.Vector3(0, 1, 0), O3 = new THREE.Object3D(), V3 = new THREE.Vector3();
 const NAME = { 0: 'Yellow taxi', 1: 'Bus', 4: 'Double-decker bus' };
 
-function confine(p) { // the same limits as on foot: river, bridge deck, city edge
-  let hit = false; const bx = bankX(p.z) + 2;
+function confine(p) { // the same limits as on foot: river, bridge deck, city edge; and no cars inside the race course
+  let hit = false;
+  if (RACE.a) { const ex = (p.x - RACE.x) / RACE.a, ez = (p.z - RACE.z) / RACE.b, r = Math.hypot(ex, ez); if (r < 1 && r > 1e-4) { p.x = RACE.x + ex / r * RACE.a; p.z = RACE.z + ez / r * RACE.b; hit = true; } } const bx = bankX(p.z) + 2;
   if (p.x < bx) {
     const ax = p.x - B.x, az = p.z - B.z, sn = Math.sin(B.ry), cs = Math.cos(B.ry), a = ax * B.dx + az * B.dz, l = ax * sn + az * cs;
     if (a > -4 && a < B.end + 1 && Math.abs(l) < 9) {
