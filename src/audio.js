@@ -62,6 +62,8 @@ export class Sound {
     this.noise(900, 1.1, .08, .12); // the swish
     setTimeout(() => { this.noise(2600, 1.4, .5, .05); this.noise(320, .8, .5, .16); this.voice([110], 0, .18, .45, 0, 'sine', 900, .45); }, 70); // crack and thud
   }
+  shankha() { if (!this.ctx || this.muted) return; this.voice([311, 622, 933], 0, 2.4, .05, 0, 'sawtooth', 1400, 1.03); }
+  bigBell() { if (!this.ctx || this.muted) return; this.voice([660, 1320, 1990, 2650], 0, 2.6, .07, 0, 'sine', 7000); }
   step(fast) {
     if (!this.ctx || this.muted) return; const c = this.ctx, s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime; s.buffer = this.white;
     f.type = 'bandpass'; f.frequency.value = 500 + Math.random() * 300; f.Q.value = .8; g.gain.setValueAtTime(fast ? .1 : .06, t); g.gain.exponentialRampToValueAtTime(.0001, t + .09);

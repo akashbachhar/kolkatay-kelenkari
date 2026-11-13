@@ -11,6 +11,7 @@ import { initTouch } from './touch.js';
 import { folk, roams, anims } from './landmarks.js';
 import { Ferry } from './ferry.js';
 import { Drive } from './drive.js';
+import { Puja } from './puja.js';
 import { Police } from './police.js';
 import { nearestRoad } from './world.js';
 
@@ -63,7 +64,8 @@ async function start() {
   for (const k of ['yaw', 'pitch', 'dist', 'heading']) if (Q.has(k)) player[k] = +Q.get(k);
   const drive = new Drive(player, traffic, sound, hud, camera, people);
   police = new Police(scene, player, drive, hud, sound); player.police = police; drive.police = police;
-  window.kk = { drive, police, player, scene, camera, renderer, hud, sound, people, traffic, ferry };
+  const puja = new Puja(scene, player, sound, camera);
+  window.kk = { drive, puja, police, player, scene, camera, renderer, hud, sound, people, traffic, ferry };
 
   let playing = false; const dom = renderer.domElement, ov = $('overlay');
   const lock = () => { if (!TOUCH) dom.requestPointerLock?.()?.catch?.(() => { }); };
@@ -86,7 +88,7 @@ async function start() {
     if (playing) sound.tick(dt, open, !!player.zone && !player.ride);
     ferry.update(dt, t, playing); for (const f of anims) f(t);
     drive.playing = playing; drive.update(dt); if (playing) police.update(dt);
-    if (playing) { player.update(dt, traffic, people); drive.camera(); } else { player.yaw += dt * .05; player.update(0, traffic); }
+    if (playing) { player.update(dt, traffic, people); drive.camera(); puja.update(dt, t); } else { player.yaw += dt * .05; player.update(0, traffic); }
     sun.position.copy(player.pos).addScaledVector(sunDir, 420); sun.target.position.copy(player.pos); glow.position.copy(camera.position).addScaledVector(sunDir, 8000); band.position.copy(camera.position).addScaledVector(bandDir, 8000);
     world.update(t); if (playing) hud.update(player);
     renderer.render(scene, camera);
