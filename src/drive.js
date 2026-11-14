@@ -127,7 +127,7 @@ export class Drive {
     for (let i = 0; i < L.length; i++) {
       const p = L[i]; if (p.down) continue; const dx = p.x - v.x, dz = p.z - v.z; if (dx * dx + dz * dz > 40) continue;
       if (Math.abs(dx * ca - dz * sa) > v.hl + .15 || Math.abs(dx * sa + dz * ca) > v.hw + .15) continue;
-      if (Math.abs(v.sp) > 4) { p.down = true; Score.add(PTS.pole, 'পোল ফেলা'); O3.position.set(p.x, .12, p.z); O3.quaternion.setFromUnitVectors(UP, V3.set(fx * dir + (Math.random() - .5) * .5, .06, fz * dir + (Math.random() - .5) * .5).normalize()); O3.updateMatrix(); POLES.im.setMatrixAt(i, O3.matrix); POLES.im.instanceMatrix.needsUpdate = true; this.snd.clang(); this.snd.crash(.4, true); this.shake = .3; v.sp *= .7; }
+      if (Math.abs(v.sp) > 4) { p.down = true; Score.add(PTS.pole, 'পোল ফেলা'); O3.position.set(p.x, .12, p.z); O3.quaternion.setFromUnitVectors(UP, V3.set(fx * dir + (Math.random() - .5) * .5, .06, fz * dir + (Math.random() - .5) * .5).normalize()); O3.updateMatrix(); POLES.im.setMatrixAt(i, O3.matrix); POLES.im.instanceMatrix.needsUpdate = true; if (POLES.head) { POLES.head.setMatrixAt(i, O3.matrix.clone().scale(V3.set(0, 0, 0))); POLES.head.instanceMatrix.needsUpdate = true; POLES.glow.setMatrixAt(i, O3.matrix.clone().scale(V3.set(0, 0, 0))); POLES.glow.instanceMatrix.needsUpdate = true; } this.snd.clang(); this.snd.crash(.4, true); this.shake = .3; v.sp *= .7; }
       else { v.x -= fx * dir * .12; v.z -= fz * dir * .12; v.sp = 0; }
     }
     // --- people

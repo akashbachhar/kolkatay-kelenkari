@@ -14,6 +14,7 @@ import { Drive } from './drive.js';
 import { Puja } from './puja.js';
 import { Police } from './police.js';
 import { Score, PTS } from './score.js';
+import { makeFx } from './fx.js';
 import { nearestRoad } from './world.js';
 import { RACE, LOCKED, ROADS, BRIDGE, DAK, COPS } from './data.js';
 
@@ -34,7 +35,7 @@ async function start() {
   // late-afternoon sun over the Hooghly, hazy Kolkata sky
   // evening: the sun about 7 degrees up in the west-south-west, setting over the Hooghly
   const sunDir = new THREE.Vector3(-.92, .13, .37).normalize();
-  const mkSky = () => { const s = new Sky(); s.scale.setScalar(10000); const u = s.material.uniforms; u.turbidity.value = 14; u.rayleigh.value = 2.8; u.mieCoefficient.value = .018; u.mieDirectionalG.value = .93; u.sunPosition.value.copy(sunDir); return s; };
+  const mkSky = () => { const s = new Sky(); s.userData.noAO = true; s.scale.setScalar(10000); const u = s.material.uniforms; u.turbidity.value = 14; u.rayleigh.value = 2.8; u.mieCoefficient.value = .018; u.mieDirectionalG.value = .93; u.sunPosition.value.copy(sunDir); return s; };
   scene.add(mkSky());
   const pm = new THREE.PMREMGenerator(renderer), es = new THREE.Scene(); es.add(mkSky());
   scene.environment = pm.fromScene(es, 0, .1, 20000).texture; scene.environmentIntensity = 1.05;
@@ -43,6 +44,10 @@ async function start() {
   const sun = new THREE.DirectionalLight(0xffb985, 3.2); sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
   Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, near: 1, far: 900 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .4;
   scene.add(sun, sun.target);
+  // picture quality: 2 High (ambient occlusion, bloom, grade), 1 Medium (bloom, grade), 0 Low (plain). G changes it; it steps down by itself if the frame rate is poor
+  const fx = makeFx(renderer, scene, camera, sun); fx.maxPR = TOUCH ? 1.25 : 9; fx.set(Q.has('gfx') ? +Q.get('gfx') : TOUCH ? 1 : 2);
+  const gfxNote = () => { const w = $('ptsWhy'); w.style.color = ''; w.textContent = 'Graphics · ' + fx.names[fx.tier]; w.classList.add('on'); clearTimeout(fx.nt); fx.nt = setTimeout(() => w.classList.remove('on'), 2200); };
+  addEventListener('keydown', e => { if (e.code === 'KeyG' && !e.repeat) { fx.set((fx.tier + 2) % 3); fx.auto = false; gfxNote(); } });
   // the sun's disc and glow, kept far away along the sun direction
   const glow = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
     gr.addColorStop(0, 'rgba(255,248,225,1)'); gr.addColorStop(.09, 'rgba(255,236,190,1)'); gr.addColorStop(.12, 'rgba(255,170,90,.75)'); gr.addColorStop(.35, 'rgba(255,120,60,.22)'); gr.addColorStop(1, 'rgba(255,90,40,0)');
@@ -86,7 +91,7 @@ async function start() {
   window.kkLock = lock;
   document.addEventListener('pointerlockchange', () => { if (playing && !TOUCH && !police.busted && document.pointerLockElement !== dom) $('paused').classList.add('on'); else $('paused').classList.remove('on'); });
   addEventListener('keydown', e => { if (e.code === 'KeyM' && playing) hud.toggleMap(); if (e.code === 'KeyC' && playing) hud.toggleHelp(); if (e.code === 'KeyP' && playing) hud.togglePlaces(); if (e.code === 'KeyN' && playing) hud.toast(sound.toggle() ? '<small>SOUND</small>Off' : '<small>SOUND</small>On'); if (e.code === 'Enter' && !playing) window.kkPage(); });
-  const fit = () => { camera.aspect = innerWidth / innerHeight; camera.fov = innerWidth < innerHeight ? 72 : 58; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
+  const fit = () => { camera.aspect = innerWidth / innerHeight; camera.fov = innerWidth < innerHeight ? 72 : 58; camera.updateProjectionMatrix(); fx.size(); };
   addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 250)); fit();
   if (Q.has('auto')) go();
 
@@ -111,11 +116,13 @@ async function start() {
     drive.playing = playing; drive.update(dt); if (playing) police.update(dt);
     if (playing) { player.update(dt, traffic, people); drive.camera(); puja.update(dt, t); } else { player.yaw += dt * .05; player.update(0, traffic); }
     sun.position.copy(player.pos).addScaledVector(sunDir, 420); sun.target.position.copy(player.pos); glow.position.copy(camera.position).addScaledVector(sunDir, 8000); band.position.copy(camera.position).addScaledVector(bandDir, 8000);
-    world.update(t); if (playing) hud.update(player);
+    world.update(t, camera.position); if (playing) hud.update(player);
     if (window.kkCam) window.kkCam(camera, t, dt);
-    if (!skip) renderer.render(scene, camera);
+    if (!skip) fx.render(t);
   };
-  renderer.setAnimationLoop(() => { const dt = Math.min(.05, clock.getDelta()); if (!window.kkManual) frame(dt); });
-  Object.assign(window.kk, { step: (dt, skip) => frame(dt, skip), LM, ROADS, BRIDGE, DAK, COPS, go: () => go() });
+  let ft = 0, fn = 0, warm = 0; fx.auto = !Q.has('gfx');
+  renderer.setAnimationLoop(() => { const raw = clock.getDelta(), dt = Math.min(.05, raw); if (window.kkManual) return; frame(dt);
+    if (playing && fx.auto && fx.tier > 0 && document.visibilityState === 'visible' && raw < .5) { if ((warm += raw) > 3) { ft += raw; fn++; if (ft > 4) { if (fn / ft < 27) { fx.set(fx.tier - 1); gfxNote(); warm = 0; } ft = fn = 0; } } } });
+  Object.assign(window.kk, { fx, step: (dt, skip) => frame(dt, skip), LM, ROADS, BRIDGE, DAK, COPS, go: () => go() });
 }
 start().catch(e => { console.error(e); $('load').textContent = 'Could not start: ' + e.message; });
