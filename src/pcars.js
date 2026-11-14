@@ -52,6 +52,9 @@ export class PoliceCars {
       if (live.length > want) for (const c of live.slice(want)) { c.st = 'return'; this.recall(c); c.path = null; }
     }
     const pv = car ? Math.abs(car.sp) : pl.speed || 0, pfx = car ? Math.cos(car.a) : Math.sin(pl.heading), pfz = car ? -Math.sin(car.a) : Math.cos(pl.heading);
+    // how far he has really got in the last second and a half: ramming a road block or wriggling in a jam is not getting away
+    if ((this.smp = (this.smp || 0) - dt) <= 0) { this.smp = .5; (this.trail = this.trail || []).push([p.x, p.z]); if (this.trail.length > 4) this.trail.shift(); }
+    const t0 = this.trail[0], gone = Math.hypot(p.x - t0[0], p.z - t0[1]), pinned = this.trail.length >= 4 && gone < 7; this.pinned = pinned;
     let nearest = 1e9, chasing = 0;
     for (const c of this.cars) {
       if (c.st === 'off') continue;
@@ -68,11 +71,12 @@ export class PoliceCars {
       if (d > 460 || (c.jam >= 3 && d > 90)) { this.recall(c); this.place(c, true); c.jam = 0; continue; } // lost him, or wedged somewhere out of sight: come in again from nearer
       if (c.out) { // parked, officers on foot; if he gets away they pile back in
         c.sp *= 1 - Math.min(1, 6 * dt); c.roll = 0;
-        if (d > 55 || (car && pv > 9 && d > 22)) { this.recall(c); c.near = 0; c.re = 0; }
+        if (d > 55 || (car && pv > 9 && d > 26 && !pinned)) { this.recall(c); c.near = 0; c.re = 0; }
         continue;
       }
       // close and slow: stop and send the officers out
-      if (d < 13 && pv < 3.2 && Math.abs(c.sp) < 5) { c.sp *= 1 - Math.min(1, 6 * dt); if ((c.near += dt) > .7) this.deploy(c); continue; } else c.near = Math.max(0, c.near - dt);
+      // close, and he is on foot, stopped, or boxed in: brake and send the officers out
+      if (d < 15 && (!car || pv < 3.2 || pinned)) { c.sp *= 1 - Math.min(1, 8 * dt); c.roll = 0; if ((c.near += dt) > (car ? .6 : .3)) this.deploy(c); continue; } else c.near = Math.max(0, c.near - dt);
       // where to aim: straight at him when there is a clear run, otherwise along the roads
       let clear = d < 55; if (clear) for (let s = 4; s < d - 2; s += 4) if (solid(c.x + (p.x - c.x) * s / d, 1, c.z + (p.z - c.z) * s / d)) { clear = false; break; }
       let ax, az, vmax = 24;

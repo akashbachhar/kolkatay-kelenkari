@@ -112,7 +112,7 @@ export class Police {
         if ((!this.hot && d > 140) || pl.ride) { o.chase = false; o.back = true; }
         else {
           const sp = 8.3; o.x += dx / d * sp * dt; o.z += dz / d * sp * dt; resolve(o, .4); g.rotation.y = Math.atan2(dx, dz); animate(o.rig, sp, dt);
-          if (car) { const c = Math.cos(car.a), s = Math.sin(car.a), lx = -dx * c + dz * s, lz = -dx * s - dz * c; if (Math.abs(car.sp) < 6 && Math.abs(lx) < car.hl + 1 && Math.abs(lz) < car.hw + 1) this.arrest(o); }
+          if (car) { const c = Math.cos(car.a), s = Math.sin(car.a), lx = -dx * c + dz * s, lz = -dx * s - dz * c; if ((Math.abs(car.sp) < 6 || this.cars.pinned) && Math.abs(lx) < car.hl + 1 && Math.abs(lz) < car.hw + 1) this.arrest(o); }
           else if (d < 1.3) this.arrest(o);
         }
       } else if (o.back) {
