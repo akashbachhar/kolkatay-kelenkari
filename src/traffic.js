@@ -131,6 +131,32 @@ function rickKit() { // hand-pulled rickshaw
   return k;
 }
 
+// A motorbike (x forward). police = white Kolkata Police machine with windscreen, beacons and saddle boxes
+export function bikeKit(police, col = M.dark) {
+  const k = new Kit(), CH = M.chrome, B = police ? M.rosh : col, torus = (r, t) => new THREE.TorusGeometry(r, t, 8, 20);
+  for (const x of [-.66, .7]) { k.add(M.tyre, torus(.27, .075), x, .34, 0); k.add(CH, cz(.2, .03, 16), x, .34, 0); k.add(M.dark, cz(.06, .16, 8), x, .34, 0); }
+  k.add(B, new THREE.CylinderGeometry(.36, .36, .13, 14, 1, true, PI * .5, PI * .85).rotateX(PI / 2), .7, .34, 0); k.add(B, new THREE.CylinderGeometry(.37, .37, .15, 14, 1, true, PI * .95, PI * .7).rotateX(PI / 2), -.66, .34, 0); // mudguards
+  for (const z of [-.085, .085]) { k.beam(CH, [.7, .34, z], [.42, 1.02, z], .028); k.beam(CH, [-.66, .34, z * 1.3], [-.32, .74, z * 1.3], .022); k.beam(M.dark, [-.66, .34, z * 1.2], [-.05, .36, z * 1.2], .025); } // forks, shocks, swing arm
+  k.beam(M.dark, [.42, .98, 0], [.08, .42, 0], .035); k.beam(M.dark, [.4, .95, 0], [-.3, .74, 0], .035); k.beam(M.dark, [-.3, .74, 0], [-.05, .36, 0], .03); k.beam(M.dark, [-.3, .74, 0], [-.78, .7, 0], .03); // frame
+  k.add(B, new THREE.SphereGeometry(1, 14, 10).scale(.3, .14, .17), .12, .86, 0); k.box(CH, .06, .02, .08, .16, 1.0, 0); // tank and filler cap
+  k.box(M.seatr, .62, .09, .26, -.42, .8, 0); k.box(M.seatr, .2, .07, .24, -.68, .84, 0); // seat
+  k.box(M.steel, .3, .3, .24, .03, .5, 0); k.add(CH, cz(.11, .3, 10), .03, .42, 0); for (let i = 0; i < 4; i++) k.box(M.steel, .2, .012, .3, .06, .58 + i * .035, 0); // engine with cooling fins
+  k.beam(CH, [.1, .42, .14], [-.25, .3, .17], .028); k.beam(CH, [-.25, .3, .17], [-.95, .36, .17], .045); // exhaust
+  k.beam(M.dark, [.4, 1.06, -.36], [.4, 1.06, .36], .02); for (const z of [-.36, .36]) { k.add(M.tyre, cz(.028, .12, 8), .4, 1.06, z * .86); k.beam(CH, [.42, 1.08, z * .8], [.4, 1.26, z * .95], .012); k.add(CH, new THREE.SphereGeometry(.05, 8, 6).scale(.5, 1, 1.2), .4, 1.28, z * .95); } // handlebar, grips, mirrors
+  k.add(CH, cx(.1, .12, 14), .54, .92, 0); k.add(M.lamp, new THREE.SphereGeometry(.09, 10, 6).scale(.5, 1, 1), .6, .92, 0); k.box(CH, .08, .07, .12, .44, 1.08, 0); // headlamp, clocks
+  k.box(M.red, .05, .07, .12, -.93, .72, 0); for (const z of [-.13, .13]) { k.box(M.orange, .04, .04, .04, -.86, .74, z); k.box(M.orange, .04, .04, .04, .5, .86, z * 1.3); }
+  k.sign(police ? 'WB 01 P 0100' : 'WB 06 K 2026', .26, .1, -.99, .6, 0, -PI / 2, '#f4f1e8', '#141414');
+  k.beam(M.dark, [-.02, .3, .1], [-.2, .06, .26], .018); for (const z of [-.2, .2]) k.box(M.dark, .1, .03, .08, -.05, .33, z); // side stand, footpegs
+  if (police) {
+    k.box(M.cglass, .03, .4, .44, .56, 1.3, 0); k.box(M.rosh, .05, .2, .46, .55, 1.04, 0); k.sign('POLICE', .36, .1, .585, 1.04, 0, PI / 2, '#f4f1e8', '#27408f');
+    for (const z of [-.2, .2]) { k.box(M.rosh, .42, .26, .15, -.6, .58, z); k.sign('KOLKATA POLICE', .38, .09, -.6, .6, z + Math.sign(z) * .08, z > 0 ? 0 : PI, '#27408f', '#ffffff'); }
+    k.box(M.rosh, .3, .2, .3, -.82, .94, 0); k.beam(CH, [-.9, .9, 0], [-.9, 1.32, 0], .015); k.box(M.red, .07, .08, .07, -.9, 1.34, -.045); k.box(M.blue, .07, .08, .07, -.9, 1.34, .045); // top box and beacon mast
+    for (const z of [-.2, .2]) { k.beam(CH, [.3, .5, 0], [.3, .56, z], .016); k.box(z < 0 ? M.red : M.blue, .05, .07, .07, .52, .72, z * .9); } // crash bar, front flashers
+    k.box(M.blue, .5, .03, .345, .12, .86, 0);
+  }
+  return k;
+}
+
 export class Traffic {
   constructor(scene) {
     this.v = [];
@@ -152,6 +178,10 @@ export class Traffic {
     const po = { ...look(R, false), top: '#d9d2c0', bottom: '#6a5a48', full: false, s: .95 }, rider = bake({ ...look(R, false), s: .95 }, 'sit').rotateY(PI / 2).translate(-.55, .6, 0);
     const frames = Array.from({ length: 8 }, (_, i) => bake(po, 'pull', i / 8 * PI * 2).rotateY(PI / 2).translate(1.75, 0, 0));
     mk(rickKit(), 14, 2.2, .55, car(3, 2.1, 2.9), { fixed: rider, frames });
+    // motorbikes: a rider who can be turned off; the boy rides in his place
+    { const nu = g => { g = g.index ? g.toNonIndexed() : g; g.deleteAttribute('uv'); return g; }, rd = o => nu(bake(o, 'ride').rotateY(PI / 2).translate(-.36, .2, 0)), cols = [M.dark, M.red, M.blue, M.dark];
+      const helm = () => nu(tint(new THREE.SphereGeometry(.135, 9, 7).translate(-.3, 1.52, 0), '#22252b'));
+      cols.forEach((c, j) => mk(bikeKit(false, c), 5, .98, .34, car(5, 9.5, 13), { drv: mergeGeometries([rd({ ...look(R, false), s: .97 }), helm()]), boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96 }) })); }
     mk(tramKit(), 4, 9, 1.25, i => ({ k: 2, r: tr, i: 0, s: tr.len * (.1 + i * .22), dir: i % 2 ? 1 : -1, side: i % 2 ? 1 : -1, vmax: 6.5 }));
     for (const v of this.v) if (v.k === 1) { v.tag = busTag(v.route); scene.add(v.tag); }
     this.m = new THREE.Object3D(); this.m.rotation.order = 'YXZ'; this.update(0, { x: 1e6, z: 1e6 });
@@ -181,7 +211,7 @@ export class Traffic {
         v.hk = (v.hk || 0) - dt;
         if (v.k === 2) { if (v.hk < 0 && px * px + pz * pz < 2500) { snd.bell(v.x, v.z); v.hk = 5 + Math.random() * 6; } }
         else if (v.k === 3) { if (v.hk < 0 && (man || Math.random() < dt * .05)) { snd.ring(v.x, v.z); v.hk = 3 + Math.random() * 5; } }
-        else if (v.hk < 0 && (man || v.honk || Math.random() < dt * .03)) { snd.horn(v.x, v.z, v.k ? 1 : 0, man || v.honk ? 1.5 : 1); v.hk = man ? 2.2 : v.honk ? 1.2 : 6 + Math.random() * 10; v.honk = 0; }
+        else if (v.hk < 0 && (man || v.honk || Math.random() < dt * .03)) { snd.horn(v.x, v.z, v.k && v.k !== 5 ? 1 : 0, man || v.honk ? 1.5 : 1); v.hk = man ? 2.2 : v.honk ? 1.2 : 6 + Math.random() * 10; v.honk = 0; }
       }
       v.sp += ((stop ? 0 : v.vmax) - v.sp) * Math.min(1, dt * (stop ? 6 : 1.2));
       if (v.k === 3) v.ph = ((v.ph || 0) + v.sp * dt * 4.3) % (PI * 2);
@@ -195,7 +225,7 @@ export class Traffic {
       } else {
         v.s += v.sp * dt;
         while (v.s > v.e.len) { v.s -= v.e.len; const o = v.e.b.out.filter(q => q !== v.e.rev); v.e = o.length ? o[(Math.random() * o.length) | 0] : v.e.rev; }
-        const e = v.e, off = v.k === 3 ? e.w / 2 - 1.5 : e.w / 4;
+        const e = v.e, off = v.k === 3 ? e.w / 2 - 1.5 : v.k === 5 ? e.w / 2 - 2.9 : e.w / 4;
         tx = e.a.x + e.tx * v.s + e.tz * off; tz = e.a.z + e.tz * v.s - e.tx * off;
         if (!v.live) ta = Math.atan2(-e.tz, e.tx);
       }
@@ -232,7 +262,7 @@ export class Traffic {
         if (ex <= 0 || ez <= 0) continue;
         const nx = ex < ez ? Math.sign(lx || 1) : 0, nz = ex < ez ? 0 : Math.sign(lz || 1), pen = Math.min(ex, ez), wx = nx * co + nz * so, wz = -nx * so + nz * co;
         px += wx * pen; pz += wz * pen;
-        if (!o.own && o.k !== 2 && Math.abs(c.sp) > 2.5 && !(o.kt > 0)) { const m = o.k === 3 ? 1 : o.k === 0 ? .6 : .3, s = Math.abs(c.sp); o.kt = 1.2; o.kx = -wx * s * m; o.kz = -wz * s * m; o.ks = (Math.random() - .5) * s * .3 * m; o.hold = 3.5; o.sp = 0; o.honk = 1; o.hk = .3 + Math.random() * .5; }
+        if (!o.own && o.k !== 2 && Math.abs(c.sp) > 2.5 && !(o.kt > 0)) { const m = o.k === 3 || o.k === 5 ? 1 : o.k === 0 ? .6 : .3, s = Math.abs(c.sp); o.kt = 1.2; o.kx = -wx * s * m; o.kz = -wz * s * m; o.ks = (Math.random() - .5) * s * .3 * m; o.hold = 3.5; o.sp = 0; o.honk = 1; o.hk = .3 + Math.random() * .5; }
       }
     }
     return [px, pz];

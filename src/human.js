@@ -82,6 +82,7 @@ export function bake(o, pose, ph = 0) {
     if (pose === 'bat') { r.armL.rotation.x = r.armR.rotation.x = -.75; r.armL.rotation.z = .3; r.armR.rotation.z = -.3; r.body.rotation.x = .25; r.legL.rotation.x = -.2; r.legR.rotation.x = .2; }
     if (pose === 'bowl') { r.armR.rotation.x = -2.9; r.armL.rotation.x = -.9; r.legL.rotation.x = -.6; r.legR.rotation.x = .5; r.shinR.rotation.x = .7; r.body.rotation.x = .15; }
   }
+  if (pose === 'ride') { r.legL.rotation.x = r.legR.rotation.x = -1.2; r.shinL.rotation.x = r.shinR.rotation.x = 1.35; r.armL.rotation.x = r.armR.rotation.x = -1.2; r.armL.rotation.z = -.12; r.armR.rotation.z = .12; r.body.rotation.x = .16; r.g.position.y = -.3; } // astride a motorbike, hands on the bars
   if (pose === 'sit' && !r.saree) { r.legL.rotation.x = r.legR.rotation.x = -1.45; r.shinL.rotation.x = r.shinR.rotation.x = 1.4; r.g.position.y = -.42; }
   r.g.updateMatrixWorld(true); const list = [];
   r.g.traverse(m => { if (m.isMesh) { const g = m.geometry.clone(); g.applyMatrix4(m.matrixWorld); list.push(g); } });

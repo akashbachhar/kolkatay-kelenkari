@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Kit, M, PI, R, rr, pick } from './kit.js';
 import { ll, ROADS, DAK, RIVER_W, COPS, BUS_ROUTES, PARKED, RACE, LOCKED } from './data.js';
 import { addBox } from './collide.js';
+import { bikeKit } from './traffic.js';
 
 // Second batch of places: Park Street, the markets, metro entrances, College Street, gully cricket, Dakshineswar.
 export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims }) {
@@ -412,7 +413,7 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
     for (const s of [-1, 1]) { const p = at(van ? -.9 : .9, s * .925); k.sign('POLICE · পুলিশ', van ? 2.6 : 1.5, .34, p[0], van ? 1.5 : .98, p[1], r + (s > 0 ? 0 : PI), van ? '#27408f' : '#f4f1e8', van ? '#ffffff' : '#27408f'); }
     c.box(x, z, L, 1.8, H, r);
   };
-  const bike = (k, c, x, z) => { k.add(M.tyre, cz2(.32, .1), x, .32, z - .7).add(M.tyre, cz2(.32, .1), x, .32, z + .7); k.box(M.rosh, .3, .4, 1.1, x, .5, z); k.box(M.dark, .34, .12, .6, x, .9, z - .2); k.box(M.chrome, .6, .04, .04, x, 1.1, z + .5); k.box(M.blue, .06, .3, .3, x, .95, z + .62); c.box(x, z, .5, 1.9, 1.2); };
+  const bike = (k, c, x, z) => { const g = bikeKit(true).build(); g.position.set(x, 0, z); g.rotation.set(.1, -PI / 2, 0, 'YXZ'); k.extras.push(g); c.box(x, z, .7, 2, 1.2); }; // leaning on its side stand, facing the road
   const cop = (c, lx, lz, r = 0) => c.person(lx, lz, r, false, 'stand', { ...COPS.look, skin: pick(['#8d5a3b', '#a36f48', '#7a4a2e']) });
   const post = (c, lx, lz) => { const p = c.W(lx, lz); COPS.posts.push({ x: p[0], z: p[1] }); };
 

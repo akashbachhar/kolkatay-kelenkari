@@ -44,6 +44,7 @@ export class Ferry {
   jump(w) { const d = this.docks[w]; this.moor(w); this.pl.zone = w === 'dak' ? DAK : null; this.pl.pos.set(d.land[0], 0, d.land[1]); this.armed = false; }
   start() {
     const to = this.at === 'city' ? 'dak' : 'city'; this.run = { legs: to === 'dak' ? [this.P1, this.P2] : [this.R2, this.R1], i: 0, s: 0, el: 0, to };
+    { const pl = this.pl; this.c0 = [pl.dist, pl.pitch]; pl.dist = 13; pl.pitch = .5; } // a high view over the launch, clear of its awning and funnel
     this.pl.ride = true; this.snd.ship(); this.hud.toast(to === 'dak' ? '<small>FERRY</small>Babughat → Dakshineswar<i>বাবুঘাট → দক্ষিণেশ্বর</i>' : '<small>FERRY</small>Dakshineswar → Babughat<i>দক্ষিণেশ্বর → বাবুঘাট</i>');
   }
   update(dt, t, playing) {
@@ -53,7 +54,7 @@ export class Ferry {
       if (r.i === 0 && L.len - r.s < v) this.fade.classList.add('on');
       if (r.s >= L.len) {
         if (r.i === 0) { r.i = 1; r.s = 0; pl.zone = r.to === 'dak' ? DAK : null; const q = at(r.legs[1], 1); this.a = Math.atan2(-q[3], q[2]); setTimeout(() => this.fade.classList.remove('on'), 400); }
-        else { const d = this.docks[r.to]; this.run = null; this.at = r.to; pl.ride = false; pl.pos.set(d.land[0], 0, d.land[1]); pl.vel.set(0, 0, 0); this.armed = false; this.snd.ship(); this.x = d.boat[0]; this.z = d.boat[1]; }
+        else { const d = this.docks[r.to]; this.run = null; this.at = r.to; pl.ride = false; if (this.c0) { pl.dist = this.c0[0]; pl.pitch = this.c0[1]; } pl.pos.set(d.land[0], 0, d.land[1]); pl.vel.set(0, 0, 0); this.armed = false; this.snd.ship(); this.x = d.boat[0]; this.z = d.boat[1]; }
       }
       if (this.run) { const q = at(r.legs[r.i], r.s); this.x = q[0]; this.z = q[1]; this.a += wrap(Math.atan2(-q[3], q[2]) - this.a) * Math.min(1, dt * 1.5); }
     } else if (playing) {

@@ -9,7 +9,7 @@ import { Score, PTS } from './score.js';
 
 // Take any taxi or bus and drive it. E/F enter or leave, W/S throttle and reverse, A/D steer, Space brake, V view, H horn.
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), $ = id => document.getElementById(id), UP = new THREE.Vector3(0, 1, 0), O3 = new THREE.Object3D(), V3 = new THREE.Vector3();
-const NAME = { 0: 'Yellow taxi', 1: 'Bus', 4: 'Double-decker bus' };
+const NAME = { 0: 'Yellow taxi', 1: 'Bus', 4: 'Double-decker bus', 5: 'Motorbike' }, BIG = v => v.k === 1 || v.k === 4;
 
 function confine(p) { // the same limits as on foot: river, bridge deck, city edge; and no cars inside the race course
   let hit = false;
@@ -46,6 +46,7 @@ function cockpits(scene) {
   mk(0, { eye: [-.04, 1.3, .4], down: .14, dash: [.84, .96, 0, .32, .2, 1.52], roof: [-.25, 1.53, 0, 1.9, 0, 1.46], side: [-.2, .82, .79, 2, .44], door: M.seatr, wheel: [.56, 1.06, .4], r: .16, tilt: .45 });
   mk(1, { eye: [3.55, 2.1, .7], down: .2, dash: [4.5, 1.32, 0, .32, .26, 2.3], roof: [3.5, 2.47, 0, 2.6, 0, 2.4], side: [3.5, 1.0, 1.2, 2.6, .86], door: M.sky, hump: [.9, .55, .7, 4.15, .8, -.15], wheel: [4.0, 1.78, .7], r: .27, tilt: 1.05 });
   mk(4, { eye: [3.55, 1.98, .7], down: .18, dash: [4.5, 1.22, 0, .32, .24, 2.3], roof: [3.5, 2.33, 0, 2.6, 0, 2.4], side: [3.5, .92, 1.2, 2.6, .76], door: M.ddred, hump: [.9, .55, .7, 4.15, .78, -.15], wheel: [4.0, 1.66, .7], r: .27, tilt: 1.05 });
+  { const g = new THREE.Group(); g.visible = false; scene.add(g); out[5] = { g, spin: new THREE.Group(), eye: [.02, 1.6, 0], down: .22, bike: true }; } // on a motorbike you simply look over the bars
   return out;
 }
 
@@ -55,7 +56,7 @@ export class Drive {
     this.pl = player; this.tr = traffic; this.snd = sound; this.hud = hud; this.cam = camera; this.pp = people; this.v = null; this.near = null; this.fp = false; this.st = 0; this.look = 0; this.n = 0; this.playing = false; this.shake = 0;
     // the drivers who get turned out of their cabs
     this.dr = []; this.di = 0; for (let i = 0; i < 4; i++) { const r = makeFigure({ ...look(Math.random, false), top: '#b9a77a', bottom: '#3d3a33', full: true }); r.g.visible = false; player.root.parent.add(r.g); this.dr.push(r); }
-    addEventListener('keydown', e => { if (e.repeat || !this.playing) return; if (e.code === 'KeyE' || e.code === 'KeyF') this.toggle(); if (e.code === 'KeyV') this.view(); if (e.code === 'KeyH' && this.v) this.snd.horn(this.v.x, this.v.z, this.v.k ? 1 : 0, 1.6); });
+    addEventListener('keydown', e => { if (e.repeat || !this.playing) return; if (e.code === 'KeyE' || e.code === 'KeyF') this.toggle(); if (e.code === 'KeyV') this.view(); if (e.code === 'KeyH' && this.v) this.snd.horn(this.v.x, this.v.z, BIG(this.v) ? 1 : 0, 1.6); });
     const btn = (id, fn) => $(id)?.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
     btn('bCar', () => this.toggle()); btn('bView', () => this.view());
   }
@@ -75,11 +76,11 @@ export class Drive {
       const v = this.find(); if (!v) return;
       const fx = Math.cos(v.a), fz = -Math.sin(v.a), rx = Math.sin(v.a), rz = Math.cos(v.a), had = !v.own;
       if (had) { // the driver is turned out and stands by his door, shaking his fist
-        const r = this.dr[this.di++ % this.dr.length], off = v.hw + 1.1, fo = v.k ? 3.6 : .3; r.g.visible = true; r.g.position.set(v.x + rx * off + fx * fo, 0, v.z + rz * off + fz * fo); r.t = 0; r.car = v; this.snd.yelp(v.x, v.z); this.police?.offence(v.x, v.z, 'steal', 20);
+        const r = this.dr[this.di++ % this.dr.length], off = v.hw + 1.1, fo = BIG(v) ? 3.6 : .3; r.g.visible = true; r.g.position.set(v.x + rx * off + fx * fo, 0, v.z + rz * off + fz * fo); r.t = 0; r.car = v; this.snd.yelp(v.x, v.z); this.police?.offence(v.x, v.z, 'steal', 20);
       } else if (v.park && !v.taken) this.police?.offence(v.x, v.z, 'steal', 20);
-      if (had || (v.park && !v.taken)) v.k === 0 ? Score.add(PTS.taxi, 'ট্যাক্সি চুরি') : Score.add(PTS.bus, 'বাস চুরি');
+      if (had || (v.park && !v.taken)) v.k === 0 ? Score.add(PTS.taxi, 'ট্যাক্সি চুরি') : v.k === 5 ? Score.add(PTS.taxi, 'বাইক চুরি') : Score.add(PTS.bus, 'বাস চুরি');
       v.taken = true;
-      this.v = v; v.own = true; v.me = true; v.sp = Math.max(-2, Math.min(3, v.sp)); v.kt = 0; pl.car = v; pl.root.visible = false; this.d0 = pl.dist; pl.dist = Math.max(pl.dist, v.k ? 15 : 8.5); pl.pitch = Math.max(pl.pitch, v.k === 4 ? .3 : .2); this.st = 0; pl.lookT = 0; pl.yaw = this.behind = Math.atan2(-Math.cos(v.a), Math.sin(v.a));
+      this.v = v; v.own = true; v.me = true; v.sp = Math.max(-2, Math.min(3, v.sp)); v.kt = 0; pl.car = v; pl.root.visible = false; this.d0 = pl.dist; pl.dist = Math.max(pl.dist, BIG(v) ? 15 : v.k === 5 ? 6.5 : 8.5); pl.pitch = Math.max(pl.pitch, v.k === 4 ? .3 : .2); this.st = 0; pl.lookT = 0; pl.yaw = this.behind = Math.atan2(-Math.cos(v.a), Math.sin(v.a));
       document.body.classList.add('driving'); if ($('bJump')) $('bJump').innerHTML = ICON.brake;
       this.hud.toast(`<small>DRIVING · ${NAME[v.k].toUpperCase()}</small>${had ? 'এই! আমার গাড়ি!' : NAME[v.k]}${document.body.classList.contains('touch') ? '' : '<i>E exit · V view · Space brake · H horn</i>'}`);
     } else {
@@ -99,15 +100,15 @@ export class Drive {
     }
     if (!v) { if (this.n++ % 8 === 0) { const nr = this.playing && !pl.ride ? this.find() : null; if (nr !== this.near) { this.near = nr; document.body.classList.toggle('nearcar', !!nr); $('hint').textContent = nr ? `E — drive the ${NAME[nr.k].toLowerCase()}` : ''; } } return; }
     if (this.near) { this.near = null; document.body.classList.remove('nearcar'); $('hint').textContent = ''; }
-    const k = pl.keys, thr = Math.max(-1, Math.min(1, (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) - pl.joy.y)), sr = Math.max(-1, Math.min(1, (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + pl.joy.x)), brake = !!k.Space, max = v.k === 4 ? 13 : v.k ? 15 : 25;
+    const k = pl.keys, thr = Math.max(-1, Math.min(1, (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0) - pl.joy.y)), sr = Math.max(-1, Math.min(1, (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0) + pl.joy.x)), brake = !!k.Space, max = v.k === 4 ? 13 : v.k === 5 ? 28 : v.k ? 15 : 25;
     if (brake) { if (Math.abs(v.sp) > 9 && !this.sk) { this.sk = 1; this.snd.skid(); } v.sp -= Math.sign(v.sp) * Math.min(Math.abs(v.sp), 28 * dt); }
     else if (thr > .05) v.sp += (v.sp < 0 ? 24 : 9 * (1 - v.sp / max)) * thr * dt;
     else if (thr < -.05) v.sp += (v.sp > 0 ? 24 : 6 * (1 + v.sp / 7)) * thr * dt;
     if (!brake || Math.abs(v.sp) < 2) this.sk = 0;
     v.sp -= v.sp * (Math.abs(thr) > .05 ? .12 : .5) * dt; if (Math.abs(thr) < .05 && Math.abs(v.sp) < .25) v.sp = 0;
     this.st += (sr - this.st) * Math.min(1, dt * 7);
-    v.a -= this.st * (v.k ? 1.1 : 1.9) / (1 + Math.abs(v.sp) * .055) * Math.max(-1, Math.min(1, v.sp / 4)) * dt;
-    v.roll = this.st * Math.min(1, Math.abs(v.sp) / 14) * (v.k ? .035 : .06);
+    v.a -= this.st * (v.k === 5 ? 2.2 : v.k ? 1.1 : 1.9) / (1 + Math.abs(v.sp) * .055) * Math.max(-1, Math.min(1, v.sp / 4)) * dt;
+    v.roll = this.st * Math.min(1, Math.abs(v.sp) / 14) * (v.k === 5 ? -.42 : v.k ? .035 : .06); // a bike leans into the turn
     const fx = Math.cos(v.a), fz = -Math.sin(v.a), sp0 = v.sp, dir = Math.sign(sp0) || 1; v.x += fx * v.sp * dt; v.z += fz * v.sp * dt;
     // --- collisions: walls and trees, other vehicles, the river and city edge
     let px = 0, pz = 0;
@@ -140,7 +141,7 @@ export class Drive {
   }
   camera() {
     const v = this.v, c = this.cam; if (!v) return;
-    v.me = !this.fp; // the boy's own head would block the view
+    v.me = !this.fp || v.k === 5; // the boy's own head would block the view (on a bike he stays: you look over his shoulders)
     for (const [k, ck] of Object.entries(this.cock)) ck.g.visible = this.fp && +k === v.k;
     if (this.fp) { // first person from the driver's seat (right-hand drive), wheel turning with the steering
       const pl = this.pl, ck = this.cock[v.k], ca = Math.cos(v.a), sa = Math.sin(v.a), [ex, ey, ez] = ck.eye;
