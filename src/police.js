@@ -5,6 +5,7 @@ import { COPS } from './data.js';
 import * as THREE from 'three';
 import { R, M } from './kit.js';
 import { Score, PTS } from './score.js';
+import { PoliceCars } from './pcars.js';
 
 // Kolkata Police. Officers stand at posts all over the city. Hit a person or a vehicle in a car where an officer within 50 m
 // can see it, or steal a car within 20 m of one, and that is a case. The rules are not shown to the player:
@@ -26,6 +27,7 @@ export class Police {
     }
     this.o = COPS.posts.map(p => ({ x: p.x, z: p.z, hx: p.x, hz: p.z, ry: p.ry ?? R() * 6, rig: null, chase: false, back: false }));
     this.pool = []; for (let i = 0; i < 14; i++) { const r = makeFigure({ ...COPS.look, skin: ['#8d5a3b', '#a36f48', '#7a4a2e'][i % 3], s: .98 + (i % 3) * .03 }); r.g.visible = false; scene.add(r.g); this.pool.push(r); }
+    this.cars = new PoliceCars(drive.tr, player, this, sound);
     $('retry').addEventListener('click', e => { e.stopPropagation(); this.release(); window.kkLock?.(); });
   }
   offence(x, z, what, reach = SEE) { // the player's car hit someone or something, or a car was stolen
@@ -80,17 +82,20 @@ export class Police {
   push(p) { for (const o of this.o) { if (!o.rig || o.down > 0) continue; const dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .8 && d > 1e-3) { p.x = o.x + dx / d * .8; p.z = o.z + dz / d * .8; } } }
   release() { // start again outside Lalbazar
     if (this.beat) { const r = this.pl.rig; r.g.rotation.x = 0; r.g.position.y = 0; this.beat.o.rig?.armL.remove(this.stick); if (this.beat.o.rig) this.beat.o.rig.body.rotation.x = 0; this.beat = null; }
+    this.cars.reset();
     const h = COPS.hq || [this.pl.pos.x, this.pl.pos.z]; this.busted = false; this.pl.held = false; this.pl.pos.set(h[0], 0, h[1]); $('busted').classList.remove('on');
     for (const o of this.o) { o.back = false; o.x = o.hx; o.z = o.hz; }
   }
   update(dt) {
     for (const f of this.fx) if (f.sp.visible) { f.t += dt; const k = f.t / f.life; if (k >= 1) f.sp.visible = false; else { f.sp.scale.setScalar(f.s * (.45 + .75 * Math.min(1, k * 3))); f.sp.material.opacity = 1 - k * k; } }
+    this.cars.update(dt, this.cases >= 3 ? this.cases - 2 : 0, !!(this.pl.ride || this.pl.zone)); // one police car at three cases, one more for each case after
     if (this.beat) { this.beating(dt); return; }
     const pl = this.pl, p = pl.pos, car = pl.car; if (this.cool > 0) this.cool -= dt;
     if ((this.tick -= dt) < 0) { // hand the few animated figures to the officers nearest the player
       this.tick = .4;
       for (const o of this.o) {
         const d = Math.hypot(o.x - p.x, o.z - p.z);
+        if (o.temp) { if (!o.rig && this.pool.length) { o.rig = this.pool.pop(); o.rig.g.visible = true; } continue; }
         if (o.rig && d > 175 && !o.chase) { o.down = 0; o.rig.g.rotation.x = 0; o.rig.g.visible = false; this.pool.push(o.rig); o.rig = null; o.back = false; o.x = o.hx; o.z = o.hz; }
         else if (!o.rig && d < 150 && this.pool.length) { o.rig = this.pool.pop(); o.rig.g.visible = true; }
       }
@@ -122,7 +127,7 @@ export class Police {
       if (away) { if (this.hot && (this.hot -= dt) <= 0) this.clear('x'); }
       else if (this.hot) { if ((this.hot -= dt) <= 0) this.clear('<small>মামলা খারিজ</small>The police gave up'); }
       else if (Math.hypot(p.x - this.origin[0], p.z - this.origin[1]) > ESCAPE) this.clear('<small>মামলা খারিজ</small>The police lost you');
-      if (this.wanted && !away && (this.sir -= dt) < 0) { this.sir = .5; this.snd.siren(); }
+      if (this.wanted && !away && this.cases < 3 && (this.sir -= dt) < 0) { this.sir = .5; this.snd.siren(); }
     }
   }
 }

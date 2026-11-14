@@ -64,7 +64,7 @@ export class Drive {
   find() { // nearest taxi or bus within reach
     const p = this.pl.pos; let best = null, bd = 2.4;
     for (const v of this.tr.v) {
-      if (v.k === 2 || v.k === 3) continue; const dx = p.x - v.x, dz = p.z - v.z; if (dx * dx + dz * dz > 100) continue;
+      if (v.k === 2 || v.k === 3 || v.k === 6) continue; const dx = p.x - v.x, dz = p.z - v.z; if (dx * dx + dz * dz > 100) continue;
       const c = Math.cos(v.a), s = Math.sin(v.a), lx = dx * c - dz * s, lz = dx * s + dz * c, d = Math.hypot(Math.max(0, Math.abs(lx) - v.hl), Math.max(0, Math.abs(lz) - v.hw));
       if (d < bd) { bd = d; best = v; }
     }

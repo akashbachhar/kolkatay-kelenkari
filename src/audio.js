@@ -49,6 +49,7 @@ export class Sound {
   scrape() { const t = this.ctx?.currentTime || 0; if (t - (this.st || 0) < .3) return; this.st = t; this.noise(1300, 1.5, .035, .3); }
   yelp(x, z) { if (!this.ctx || this.muted) return; const a = this.at(x, z, .3, 60); if (!a) return; const f = 380 + Math.random() * 260; this.voice([f, f * 2.02, f * 3.01], 0, .34, a[0] * .22, a[1], 'sawtooth', 1800, .6); this.noise(170, .8, .2, .15); }
   whistle() { if (!this.ctx || this.muted) return; for (const t of [0, .16, .32]) this.voice([2850, 3080], t, .14, .03, 0, 'square', 7000); }
+  wail(d) { if (!this.ctx || this.muted) return; this.wl = !this.wl; const v = .075 / (1 + d / 45); this.voice([this.wl ? 640 : 930], 0, .44, v, 0, 'sawtooth', 2600); this.voice([this.wl ? 644 : 936], 0, .44, v * .6, 0, 'square', 1800); } // a police car's two-tone siren, louder as it closes
   siren() { if (!this.ctx || this.muted) return; this.sn = !this.sn; this.voice([this.sn ? 660 : 880], 0, .5, .022, 0, 'triangle', 2400); }
   punch(hit) {
     if (!this.ctx || this.muted) return;

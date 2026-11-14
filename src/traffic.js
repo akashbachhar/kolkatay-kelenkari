@@ -10,8 +10,8 @@ const cz = (r, w, s = 14) => new THREE.CylinderGeometry(r, r, w, s).rotateX(PI /
 
 // Road graph: vehicles drive from junction to junction and turn onto another road there,
 // instead of flipping round at the end of a road.
-function graph() {
-  const lines = ROADS.filter(r => r.w >= 12).map(r => ({ w: r.w, p: r.p.map(q => [q[0], q[1]]) }));
+export function graph(minW = 12) {
+  const lines = ROADS.filter(r => r.w >= minW).map(r => ({ w: r.w, p: r.p.map(q => [q[0], q[1]]) }));
   for (const a of lines) for (const e of [a.p[0], a.p.at(-1)]) for (const b of lines) { // T-junctions: split the road being joined
     if (a === b) continue;
     for (let i = 0; i < b.p.length - 1; i++) {
@@ -157,6 +157,29 @@ export function bikeKit(police, col = M.dark) {
   return k;
 }
 
+// the flashing bar on the police cars: 0 off, 1 red, 2 blue
+export const BEACON = { red: new THREE.MeshStandardMaterial({ color: '#7a1512', emissive: '#ff2a1a', emissiveIntensity: 0 }), blue: new THREE.MeshStandardMaterial({ color: '#12205a', emissive: '#2a5cff', emissiveIntensity: 0 }),
+  set(m) { this.red.emissiveIntensity = m === 1 ? 7 : 0; this.blue.emissiveIntensity = m === 2 ? 7 : 0; } };
+function policeKit() { // Kolkata Police patrol car: a white SUV with the blue band, light bar, bull bar and spare wheel
+  const k = new Kit(), W = M.rosh, CH = M.chrome, D = M.dark;
+  k.loft(W, [[-2.1, .42, .78, .86], [-2.02, .42, 1.2, .9], [-.9, .42, 1.22, .92], [.5, .42, 1.2, .92], [1.4, .42, 1.14, .9], [2.0, .42, 1.05, .86], [2.12, .46, .8, .8]], 4, 20); // lower body, bonnet falling to the nose
+  k.loft(W, [[-2.0, 1.15, 1.86, .84], [-1.2, 1.15, 1.92, .86], [.1, 1.15, 1.9, .86], [.55, 1.15, 1.8, .82], [.98, 1.15, 1.2, .8]], 4, 20); // cabin and roof
+  k.loft(M.glass, [[-1.9, 1.24, 1.76, .855], [-1.2, 1.24, 1.8, .875], [.1, 1.24, 1.78, .875], [.5, 1.24, 1.7, .835], [.9, 1.24, 1.26, .815]], 4, 20); // glasshouse
+  for (const x of [-1.86, -.62, .12]) for (const s of [-1, 1]) k.box(W, .09, .62, .05, x, 1.2, s * .875); // pillars
+  k.box(M.blue, 4.14, .17, 1.86, -.02, .82, 0); k.box(D, 4.2, .12, 1.88, 0, .34, 0);
+  for (const s of [-1, 1]) { k.sign('KOLKATA POLICE', 1.7, .2, -.45, 1.0, s * .935, s > 0 ? 0 : PI, '#f4f1e8', '#27408f'); k.sign('কলকাতা পুলিশ', 1.0, .17, -.5, .83, s * .94, s > 0 ? 0 : PI, '#27408f', '#ffffff');
+    for (const x of [-1.32, 1.34]) { k.add(M.tyre, cz(.39, .27), x, .39, s * .8); k.add(CH, cz(.2, .29), x, .39, s * .8); k.add(D, new THREE.CylinderGeometry(.47, .47, .1, 14, 1, true, PI * .5, PI).rotateX(PI / 2), x, .4, s * .88); }
+    k.add(M.lamp, new THREE.SphereGeometry(.12, 10, 6).scale(.5, 1, 1.1), 2.1, .92, s * .62); k.box(M.orange, .05, .08, .16, 2.1, .76, s * .66); k.box(M.red, .06, .34, .14, -2.11, .8, s * .76);
+    k.box(D, .1, .1, .16, .95, 1.3, s * .98); k.box(D, .5, .04, .26, 0, .36, s * .98); }
+  k.box(D, .06, .3, 1.0, 2.13, .78, 0); for (let i = 0; i < 5; i++) k.box(CH, .07, .03, 1.0, 2.14, .8 + i * .06, 0);
+  k.box(D, .16, .16, 1.9, 2.2, .44, 0); k.box(D, .16, .16, 1.9, -2.18, .46, 0); for (const z of [-.5, .5]) k.beam(D, [2.26, .4, z], [2.26, 1.0, z], .03); k.beam(D, [2.26, 1.0, -.5], [2.26, 1.0, .5], .03); k.beam(D, [2.26, .72, -.5], [2.26, .72, .5], .025); // bumpers, bull bar
+  k.sign('POLICE', .9, .2, 1.45, 1.215, 0, 0, '#f4f1e8', '#27408f'); k.sign('POLICE', .8, .2, -2.125, 1.02, 0, -PI / 2, '#f4f1e8', '#27408f'); k.sign('WB 01 P 0100', .5, .13, 2.285, .5, 0, PI / 2, '#f4f1e8', '#141414');
+  k.add(M.tyre, cx(.36, .22), -2.24, 1.2, 0); k.add(W, cx(.2, .24), -2.25, 1.2, 0); // spare wheel
+  k.box(D, .34, .06, 1.24, -.3, 1.93, 0); k.box(BEACON.red, .26, .13, .5, -.3, 1.99, -.33); k.box(BEACON.blue, .26, .13, .5, -.3, 1.99, .33); k.box(M.rosh, .26, .13, .12, -.3, 1.99, 0); // light bar
+  k.cyl(D, .012, .012, 1.1, -1.7, 1.92, .6, 4);
+  return k;
+}
+
 export class Traffic {
   constructor(scene) {
     this.v = [];
@@ -183,12 +206,14 @@ export class Traffic {
       const helm = () => nu(tint(new THREE.SphereGeometry(.135, 9, 7).translate(-.3, 1.52, 0), '#22252b'));
       const PK = PARKED.filter(q => q.k === 5); if (PK.length) mk(bikeKit(false, M.dark), PK.length, .98, .34, park(PK, car(5, 9.5, 13)), { boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96 }) }); // standing at the kerb, no rider
       cols.forEach((c, j) => mk(bikeKit(false, c), 5, .98, .34, car(5, 9.5, 13), { drv: mergeGeometries([rd({ ...look(R, false), s: .97 }), helm()]), boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96 }) })); }
+    mk(policeKit(), 5, 2.2, .96, () => ({ k: 6, own: true, hide: true, live: 1, x: 1e6, z: 1e6, a: 0, e: E[0], s: 0, vmax: 0 }));
     mk(tramKit(), 4, 9, 1.25, i => ({ k: 2, r: tr, i: 0, s: tr.len * (.1 + i * .22), dir: i % 2 ? 1 : -1, side: i % 2 ? 1 : -1, vmax: 6.5 }));
     for (const v of this.v) if (v.k === 1) { v.tag = busTag(v.route); scene.add(v.tag); }
     this.m = new THREE.Object3D(); this.m.rotation.order = 'YXZ'; this.update(0, { x: 1e6, z: 1e6 });
   }
   put(v) {
-    const m = this.m, s = v.set; m.position.set(v.x, 0, v.z); m.rotation.set(v.roll || 0, v.a, 0); m.updateMatrix();
+    const m = this.m, s = v.set; if (v.hide) { for (const im of s.ims) im.setMatrixAt(v.idx, ZERO); return; }
+    m.position.set(v.x, 0, v.z); m.rotation.set(v.roll || 0, v.a, 0); m.updateMatrix();
     for (const im of s.ims) im.setMatrixAt(v.idx, m.matrix);
     if (v.tag) { v.tag.position.set(v.x, 0, v.z); v.tag.rotation.set(v.roll || 0, v.a, 0); }
     if (s.drv) s.drv.setMatrixAt(v.idx, v.own ? ZERO : m.matrix); if (s.boy) s.boy.setMatrixAt(v.idx, v.me ? m.matrix : ZERO);
