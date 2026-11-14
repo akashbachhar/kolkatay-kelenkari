@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Kit, M, PI, R, rr, pick } from './kit.js';
 import { ll, ROADS, DAK, RIVER_W, COPS, BUS_ROUTES, PARKED, RACE, LOCKED } from './data.js';
-import { addBox } from './collide.js';
+import { addBox, solid } from './collide.js';
 import { bikeKit } from './traffic.js';
 
 // Second batch of places: Park Street, the markets, metro entrances, College Street, gully cricket, Dakshineswar.
@@ -592,4 +592,29 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
     for (let i = 0; i < 4; i++) { house(BX - BW / 2 + 7, BZ - 21 + i * 14, 10, 10, 3 + (i % 2), -PI / 2); house(BX + BW / 2 - 7, BZ - 21 + i * 14, 10, 10, 4 - (i % 2), PI / 2); }
     for (let i = 0; i < 3; i++) { house(BX - 14 + i * 14, BZ - 6, 12, 10, 2 + (i % 2), 0); house(BX - 14 + i * 14, BZ + 6, 12, 10, 2 + ((i + 1) % 2), PI); }
   });
+
+  // ───────── Small taxi stands and a parked motorbike at the well-known places: on the pavement by the nearest road, wherever there is room
+  const used = [];
+  const kerb = (name, len, out) => { // a free stretch of pavement near a landmark: {x, z, tx, tz, ry} or null
+    const l = LM.find(q => q.n === name); if (!l) return null; let best = null, bd = 1e9;
+    for (const R2 of ROADS) for (let i = 0; i < R2.p.length - 1; i++) { const a = R2.p[i], b = R2.p[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), t = Math.max(0, Math.min(1, ((l.x - a[0]) * dx + (l.z - a[1]) * dz) / (L * L))), d = Math.hypot(a[0] + dx * t - l.x, a[1] + dz * t - l.z); if (d < bd) { bd = d; best = { a, tx: dx / L, tz: dz / L, s: t * L, L, hw: R2.w / 2 }; } }
+    const { a, tx, tz, hw, L } = best, cx = a[0] + tx * best.s, cz = a[1] + tz * best.s, side = (l.x - cx) * -tz + (l.z - cz) * tx >= 0 ? 1 : -1;
+    for (const off of [0, 8, -8, 16, -16, 24, -24, 34, -34, 46, -46]) { const s0 = best.s + off; if (s0 < len / 2 + 18 || s0 > L - len / 2 - 18) continue;
+      const x = a[0] + tx * s0 - tz * side * (hw + out), z = a[1] + tz * s0 + tx * side * (hw + out); let ok = !used.some(u => Math.hypot(u[0] - x, u[1] - z) < (u[2] + len) / 2 + 2.5);
+      for (let u = -len / 2 - .5; u <= len / 2 + .5 && ok; u += .5) for (const w of [-1, 0, 1]) if (solid(x + tx * u - tz * w, 1, z + tz * u + tx * w)) { ok = false; break; }
+      if (ok) { used.push([x, z, len]); return { x, z, tx, tz, ry: Math.atan2(-tz, tx) }; } }
+    return null;
+  };
+  for (const [name, n] of [['Sealdah Station', 3], ['Victoria Memorial', 3], ['Howrah Bridge', 3], ['Flurys', 2], ['College Square', 3], ['New Market', 3], ["Writers' Building", 2], ['Sobhabazar Metro', 2], ['Prinsep Ghat', 2], ['South Park Street Cemetery', 2]]) {
+    const len = n * 5.4 + 2, f = kerb(name, len, 1.7); if (!f) continue;
+    site(null, null, [f.x, f.z], f.ry, 0, (k, c) => {
+      c.clear(len + 2, 4.5, 0, 0); k.box(M.apron, len, .1, 2.6, 0, 0, 0);
+      for (let i = 0; i < n; i++) { const p = c.W(-len / 2 + 3.7 + i * 5.4, 0); PARKED.push({ k: 0, x: p[0], z: p[1], a: f.ry }); }
+      const sx = len / 2 - .4; k.cyl(M.steel, .05, .05, 3.2, sx, 0, 0, 6); c.circ(sx, 0, .15, 4);
+      for (const r of [PI / 2, -PI / 2]) k.sign('TAXI STAND\nট্যাক্সি স্ট্যান্ড', 1.9, .9, sx + (r > 0 ? .04 : -.04), 2.75, 0, r, '#f2c118', '#141414');
+    });
+  }
+  for (const name of ['Grand Hotel', 'Indian Coffee House', 'Victoria Memorial', 'New Market', 'Howrah Bridge', 'Sealdah Station', 'The Park Hotel', "Writers' Building", 'K.C. Das', 'Marble Palace', 'Race Course', 'Indian Museum', 'Eden Gardens', 'Gully Cricket', 'Lalbazar Police Headquarters', 'Birla Planetarium']) {
+    const f = kerb(name, 2.6, 1.1); if (!f) continue; PARKED.push({ k: 5, x: f.x, z: f.z, a: f.ry, roll: .1 });
+  }
 }

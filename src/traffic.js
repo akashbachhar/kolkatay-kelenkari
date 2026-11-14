@@ -170,7 +170,7 @@ export class Traffic {
     };
     const car = (k, lo, hi) => () => { const e = pe(); return { k, e, s: R() * e.len, vmax: rr(lo, hi) }; }, rows = [-3.7, -2.5, -1.3, -.1, 1.1, 2.3];
     const PB = PARKED.filter(q => q.k === 1), PT = PARKED.filter(q => q.k === 0); // standing at the terminus and the taxi stand: drivable, no driver aboard
-    const park = (list, gen) => i => { const q = list[i]; return q ? { k: q.k, own: true, park: true, live: 1, x: q.x, z: q.z, a: q.a, route: q.route, e: pe(), s: 0, vmax: 9 } : gen(i); };
+    const park = (list, gen) => i => { const q = list[i]; return q ? { k: q.k, own: true, park: true, live: 1, x: q.x, z: q.z, a: q.a, roll: q.roll || 0, route: q.route, e: pe(), s: 0, vmax: 9 } : gen(i); };
     mk(taxiKit(), 46 + PT.length, 2.3, .95, park(PT, car(0, 8.5, 11.5)), { drv: bust(DRV(), .2, .78, .4), boy: bust(BOY, .2, .78, .4), pas: bust(look(R), -.72, .76, -.32) });
     mk(busKit(), 9 + PB.length, 4.8, 1.35, park(PB, i => ({ ...car(1, 7, 9)(), route: BUS_ROUTES[i % BUS_ROUTES.length][0] })), { drv: bust(DRV(), 3.95, 1.4, .7), boy: bust(BOY, 3.95, 1.4, .7), pas: mergeGeometries(crowd(rows.slice(0, 5), [-.8, .8], 1.45)) });
     mk(ddKit(), 5, 4.8, 1.35, car(4, 6, 7.5), { drv: bust(DRV(), 3.95, 1.33, .7), boy: bust(BOY, 3.95, 1.33, .7), pas: mergeGeometries([...crowd(rows.slice(0, 5), [-.8, .8], 1.33), ...crowd([...rows, 3.5], [-.8, .8], 2.66, .7)]) });
@@ -181,6 +181,7 @@ export class Traffic {
     // motorbikes: a rider who can be turned off; the boy rides in his place
     { const nu = g => { g = g.index ? g.toNonIndexed() : g; g.deleteAttribute('uv'); return g; }, rd = o => nu(bake(o, 'ride').rotateY(PI / 2).translate(-.36, .2, 0)), cols = [M.dark, M.red, M.blue, M.dark];
       const helm = () => nu(tint(new THREE.SphereGeometry(.135, 9, 7).translate(-.3, 1.52, 0), '#22252b'));
+      const PK = PARKED.filter(q => q.k === 5); if (PK.length) mk(bikeKit(false, M.dark), PK.length, .98, .34, park(PK, car(5, 9.5, 13)), { boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96 }) }); // standing at the kerb, no rider
       cols.forEach((c, j) => mk(bikeKit(false, c), 5, .98, .34, car(5, 9.5, 13), { drv: mergeGeometries([rd({ ...look(R, false), s: .97 }), helm()]), boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96 }) })); }
     mk(tramKit(), 4, 9, 1.25, i => ({ k: 2, r: tr, i: 0, s: tr.len * (.1 + i * .22), dir: i % 2 ? 1 : -1, side: i % 2 ? 1 : -1, vmax: 6.5 }));
     for (const v of this.v) if (v.k === 1) { v.tag = busTag(v.route); scene.add(v.tag); }
