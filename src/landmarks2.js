@@ -3,6 +3,7 @@ import { Kit, M, PI, R, rr, pick } from './kit.js';
 import { ll, ROADS, DAK, RIVER_W, COPS, BUS_ROUTES, PARKED, RACE, LOCKED } from './data.js';
 import { addBox, solid } from './collide.js';
 import { bikeKit } from './traffic.js';
+import { makeHorse } from './horse.js';
 
 // Second batch of places: Park Street, the markets, metro entrances, College Street, gully cricket, Dakshineswar.
 export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims }) {
@@ -383,21 +384,15 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
     for (let i = 0; i < 10; i++) for (let j = 0; j < 2; j++) if (R() < .75) c.person(142.2 - j * 1, -18 + i * 4, PI / 2, R() < .2);
     c.roam(12, 72, 133, 0, 8);
     // eight runners
-    const HC = [M.wood, M.dark, M.thatch, M.clay, M.wood, M.stone, M.dark, M.clay], SILK = [M.red, M.yellow, M.blue, M.green, M.pink, M.orange, M.white, M.lime], legG = new THREE.BoxGeometry(.11, 1.2, .11).translate(0, -.6, 0);
-    const hs = HC.map((Bd, i) => {
-      const h = new Kit(), Sk = SILK[i];
-      h.add(Bd, new THREE.SphereGeometry(1, 10, 8).scale(.82, .36, .3), 0, 1.5, 0); h.beam(Bd, [.6, 1.6, 0], [1.05, 2.15, 0], .26); h.add(Bd, new THREE.BoxGeometry(.5, .2, .18), 1.27, 2.2, 0, 0, 0, -.5); h.beam(M.dark, [-.78, 1.6, 0], [-1.2, 1.15, 0], .08);
-      h.add(Sk, new THREE.BoxGeometry(.5, .3, .28), .12, 1.98, 0, 0, 0, .35); h.add(M.skin, new THREE.SphereGeometry(.11, 8, 6), .42, 2.22, 0); h.dome(Sk, .12, .42, 2.24, 0, 1, 8); h.add(M.white, new THREE.BoxGeometry(.16, .4, .46), 0, 1.72, 0);
-      const g = h.build(), legs = [[.55, .13], [.55, -.13], [-.55, .13], [-.55, -.13]].map(([x, z]) => { const m = new THREE.Mesh(legG, Bd); m.position.set(x, 1.3, z); m.castShadow = true; g.add(m); return m; });
-      k.extras.push(g); const hr = { g, legs, th: i * .03, lane: (i % 4) * 1.5 - 2.2, v: 15 + (i * 37 % 10) * .22, ph: i * 1.7 }; RACE.horses.push(hr); return hr;
-    });
+    const HC = ['#6b3d22', '#1d1714', '#8a5a34', '#4a2c1a', '#9a6a40', '#8f8a84', '#2a1c14', '#7a4526'].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: .55 })), SILK = [M.red, M.yellow, M.blue, M.green, M.pink, M.orange, M.white, M.lime];
+    const hs = HC.map((Bd, i) => { const H = makeHorse(Bd, SILK[i], i + 1); k.extras.push(H.g); const hr = { g: H.g, pose: H.pose, th: i * .03, lane: (i % 4) * 1.5 - 2.2, v: 15 + (i * 37 % 10) * .22, ph: i * 1.7 }; RACE.horses.push(hr); return hr; });
     let last = 0;
     anims.push(t => {
       const dt = Math.min(.1, t - last); last = t;
       for (const h of hs) {
         const a = 84.2 + h.lane, b = 52.4 + h.lane; h.th += (h.v + Math.sin(t * .3 + h.ph) * 1.6) * dt / Math.hypot(a * Math.sin(h.th), b * Math.cos(h.th));
         const tx = -a * Math.sin(h.th), tz = b * Math.cos(h.th), ph = t * 11 + h.ph; h.g.position.set(a * Math.cos(h.th), Math.abs(Math.sin(ph)) * .12, b * Math.sin(h.th)); h.g.rotation.y = Math.atan2(-tz, tx);
-        h.legs[0].rotation.z = Math.sin(ph) * .9; h.legs[1].rotation.z = Math.sin(ph + .5) * .9; h.legs[2].rotation.z = Math.sin(ph + 2.6) * .9; h.legs[3].rotation.z = Math.sin(ph + 3.1) * .9;
+        h.pose(ph);
       }
     });
   });

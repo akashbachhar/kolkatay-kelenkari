@@ -35,13 +35,14 @@ async function start() {
   // late-afternoon sun over the Hooghly, hazy Kolkata sky
   // evening: the sun about 7 degrees up in the west-south-west, setting over the Hooghly
   const sunDir = new THREE.Vector3(-.92, .13, .37).normalize();
-  const mkSky = () => { const s = new Sky(); s.userData.noAO = true; s.scale.setScalar(10000); const u = s.material.uniforms; u.turbidity.value = 14; u.rayleigh.value = 2.8; u.mieCoefficient.value = .018; u.mieDirectionalG.value = .93; u.sunPosition.value.copy(sunDir); return s; };
+  const mkSky = () => { const s = new Sky(); s.userData.noAO = true; s.scale.setScalar(10000); const u = s.material.uniforms; u.turbidity.value = 14; u.rayleigh.value = 2.8; u.mieCoefficient.value = .018; u.mieDirectionalG.value = .93; u.sunPosition.value.copy(sunDir);
+    s.material.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( retColor, 1.0 );', 'gl_FragColor = vec4( min( retColor, vec3( 1.25 ) ), 1.0 );'); }; return s; }; // the sky's own sun is capped: no blinding flare
   scene.add(mkSky());
   const pm = new THREE.PMREMGenerator(renderer), es = new THREE.Scene(); es.add(mkSky());
   scene.environment = pm.fromScene(es, 0, .1, 20000).texture; scene.environmentIntensity = 1.05;
   scene.fog = new THREE.FogExp2(0xd9b596, .00105); // dusty evening haze
-  scene.add(new THREE.HemisphereLight(0xdfe4f2, 0x9a7c62, 1.5));
-  const sun = new THREE.DirectionalLight(0xffb985, 3.2); sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
+  scene.add(new THREE.HemisphereLight(0xdfe4f2, 0x9a7c62, 1.75));
+  const sun = new THREE.DirectionalLight(0xffc49a, 2.5); sun.castShadow = true; sun.shadow.mapSize.set(TOUCH ? 1024 : 2048, TOUCH ? 1024 : 2048);
   Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, near: 1, far: 900 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .4;
   scene.add(sun, sun.target);
   // picture quality: 2 High (ambient occlusion, bloom, grade), 1 Medium (bloom, grade), 0 Low (plain). G changes it; it steps down by itself if the frame rate is poor
@@ -52,12 +53,12 @@ async function start() {
   const glow = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
     gr.addColorStop(0, 'rgba(255,248,225,1)'); gr.addColorStop(.09, 'rgba(255,236,190,1)'); gr.addColorStop(.12, 'rgba(255,170,90,.75)'); gr.addColorStop(.35, 'rgba(255,120,60,.22)'); gr.addColorStop(1, 'rgba(255,90,40,0)');
     g.fillStyle = gr; g.fillRect(0, 0, 256, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, fog: false, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.scale.setScalar(2600); scene.add(sp); return sp; })();
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, fog: false, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.scale.setScalar(900); scene.add(sp); return sp; })();
   // the orange-pink band along the western horizon around the setting sun
   const band = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
     gr.addColorStop(0, 'rgba(255,125,40,.95)'); gr.addColorStop(.4, 'rgba(255,95,60,.5)'); gr.addColorStop(.75, 'rgba(225,80,105,.16)'); gr.addColorStop(1, 'rgba(200,80,120,0)');
     g.fillStyle = gr; g.fillRect(0, 0, 256, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, fog: false, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.scale.set(15000, 3200, 1); scene.add(sp); return sp; })();
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, fog: false, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.material.opacity = .45; sp.scale.set(9000, 1500, 1); scene.add(sp); return sp; })();
   const bandDir = new THREE.Vector3(sunDir.x, .015, sunDir.z).normalize();
 
   const world = buildWorld(scene), traffic = new Traffic(scene), player = new Player(scene, camera, renderer.domElement), hud = new Hud(), people = new People(scene, folk, roams, TOUCH ? 26 : 48, TOUCH), sound = new Sound();

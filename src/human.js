@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Procedural people: the protagonist, pedestrians, hawkers. Figures face +z.
-const PI = Math.PI, MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 }), cloths = new Map();
+const PI = Math.PI;
+export const MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 }), cloths = new Map();
 let LOW = false;
-const cyl = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, LOW ? Math.min(s, 5) : s), sph = (r, w = 12, h = 9) => new THREE.SphereGeometry(r, LOW ? Math.min(w, 6) : w, LOW ? Math.min(h, 4) : h), box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+const cyl = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, LOW ? Math.min(s, 7) : s), sph = (r, w = 12, h = 9) => new THREE.SphereGeometry(r, LOW ? Math.min(w, 8) : w, LOW ? Math.min(h, 6) : h), box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
 const P = (g, c, x = 0, y = 0, z = 0, rx = 0, rz = 0) => {
   if (rx) g.rotateX(rx); if (rz) g.rotateZ(rz); g.translate(x, y, z); if (g.index) g = g.toNonIndexed();
   const n = g.attributes.position.count, a = new Float32Array(n * 3), k = new THREE.Color(c);
@@ -20,9 +21,14 @@ export function checkTex() { // white shirt with fine blue checks
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 7); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 
+const lathe = (pts, seg, zs = 1) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), LOW ? Math.min(seg, 8) : seg).scale(1, 1, zs);
+const cap = (r, len, s = 10) => new THREE.CapsuleGeometry(r, len, LOW ? 2 : 4, LOW ? Math.min(s, 6) : s); // a rounded limb, centred, along y
+const shade = (c, k) => '#' + new THREE.Color(c).multiplyScalar(k).getHexString();
+
+// A person, built to human proportions (about 1.72 m at s = 1): shaped torso, rounded limbs with elbows and knees, a face, hair, hands, shoes.
 export function makeFigure(o = {}) {
   const { skin = '#9a6846', hair = '#17110d', top = '#e9e4d8', bottom = '#26262b', shoe = '#2a1d14', woman = false, border = '#d4af37', blouse = '#7a1f2a', full = false, map = null, s = 1 } = o;
-  LOW = !o.hi; // only the protagonist gets the detailed mesh
+  LOW = !o.hi; // the protagonist gets the finest mesh
   const g = new THREE.Group(), body = new THREE.Group(); body.position.y = .9; g.add(body); g.scale.setScalar(s);
   const part = (list, parent, x = 0, y = 0, z = 0) => {
     const grp = new THREE.Group(); grp.position.set(x, y, z); parent.add(grp);
@@ -32,29 +38,51 @@ export function makeFigure(o = {}) {
     if (cl.length) { if (!cloths.has(map)) cloths.set(map, new THREE.MeshStandardMaterial({ map, vertexColors: true, roughness: .8 })); put(cl, cloths.get(map)); }
     return grp;
   };
-  const head = [P(cyl(.05, .055, .1, 8), skin, 0, .57, 0), P(sph(.112, 14, 12).scale(1, 1.14, 1.04), skin, 0, .715, 0),
-    P(new THREE.SphereGeometry(.12, LOW ? 7 : 14, LOW ? 4 : 8, 0, PI * 2, 0, 1.8).scale(1, 1.1, 1.06), hair, 0, .735, -.012, -.32),
-    ...(LOW ? [] : [P(sph(.013, 6, 5), '#0c0806', -.04, .73, .108), P(sph(.013, 6, 5), '#0c0806', .04, .73, .108)]),
-    ...(o.cap ? [P(cyl(.122, .126, .07, 10), o.cap, 0, .825, -.005), P(box(.17, .016, .1), '#111111', 0, .795, .125), P(cyl(.17, .168, .05, 10).scale(1, 1, .64), '#111111', 0, 0, 0)] : [])];
-  let sh = .235;
-  if (woman) {
-    sh = .2;
-    part([...head, P(sph(.065, 8, 6), hair, 0, .7, -.135), P(cyl(.16, .135, .34, 12).scale(1, 1, .66), blouse, 0, .33, 0), P(sph(.17, 12, 6).scale(1, .33, .66), blouse, 0, .5, 0),
-      P(cyl(.135, .15, .14, 12).scale(1, 1, .66), skin, 0, .1, 0), P(box(.15, .6, .035), top, 0, .3, .1, 0, .45), P(box(.2, .8, .03), top, -.09, .12, -.125),
-      P(cyl(.165, .31, .94, 14).scale(1, 1, .82), top, 0, -.43, 0), P(cyl(.313, .317, .09, 14).scale(1, 1, .82), border, 0, -.855, 0)], body);
+  const lip = shade(skin, .72), dk = '#0c0806', wh = '#f2efe8';
+  // head: skull, jaw, nose, ears, eyes with whites, brows, mouth, hair
+  const head = [P(cyl(.047, .052, .11, 10), skin, 0, .575, -.004), P(sph(.104, 16, 12).scale(.96, 1.16, 1.06), skin, 0, .722, 0), P(sph(.08, 12, 8).scale(.98, .9, .98), skin, 0, .664, .022),
+    P(sph(.017, 8, 6).scale(.95, 1.5, 1.25), skin, 0, .703, .108), P(sph(.013, 6, 5), dk, -.039, .737, .1), P(sph(.013, 6, 5), dk, .039, .737, .1),
+    P(box(.046, .008, .012), lip, 0, .664, .099),
+    P(new THREE.SphereGeometry(.112, LOW ? 8 : 16, LOW ? 5 : 9, 0, PI * 2, 0, 1.75).scale(1, 1.12, 1.1), hair, 0, .74, -.014, -.3),
+    ...(LOW ? [] : [P(sph(.019, 8, 6), wh, -.039, .737, .09), P(sph(.019, 8, 6), wh, .039, .737, .09), P(box(.04, .008, .012), hair, -.04, .763, .098, 0, .1), P(box(.04, .008, .012), hair, .04, .763, .098, 0, -.1),
+      P(sph(.024, 8, 6).scale(.45, 1, .75), skin, -.101, .722, .002), P(sph(.024, 8, 6).scale(.45, 1, .75), skin, .101, .722, .002)]),
+    ...(o.mous || (!woman && !o.hi && skin.charCodeAt(2) % 3 === 0) ? [P(box(.05, .012, .012), hair, 0, .682, .104)] : []),
+    ...(o.cap ? [P(cyl(.118, .122, .07, 12), o.cap, 0, .83, -.005), P(box(.17, .016, .1), '#111111', 0, .8, .12), P(cyl(.118, .118, .02, 12), '#b3261e', 0, .79, -.005)] : [])];
+  let sh = .215, armTop = top;
+  if (woman) { // saree: blouse, bare midriff, pleated skirt with a border, the pallu over the left shoulder and down the back
+    sh = .185; armTop = blouse;
+    part([...head, P(sph(.062, 8, 6), hair, 0, .7, -.125), P(sph(.1, 10, 6).scale(1, 1.3, .5), hair, 0, .66, -.06), P(sph(.009, 5, 4), '#b3261e', 0, .765, .104),
+      P(lathe([[.118, .2], [.14, .3], [.158, .42], [.15, .5], [.07, .545]], 14, .68), blouse), P(lathe([[.128, .02], [.12, .12], [.118, .2]], 12, .68), skin),
+      P(lathe([[.3, -.87], [.305, -.84], [.27, -.6], [.215, -.3], [.165, -.05], [.14, .04]], 16, .8), top), P(lathe([[.303, -.875], [.309, -.8]], 16, .8), border),
+      ...[-.1, -.05, 0, .05, .1].map(x => P(box(.012, .78, .012), shade(top, .8), x, -.45, .2 + Math.abs(x) * -.25)),
+      P(box(.13, .62, .03), top, .0, .3, .1, 0, .5), P(box(.012, .62, .032), border, -.062, .3, .1, 0, .5), P(box(.2, .82, .028), top, -.1, .1, -.125), P(box(.2, .05, .03), border, -.1, -.3, -.125)], body);
   } else {
-    part([...head, C(P(cyl(.185, .165, .5, 12).scale(1, 1, .62), top, 0, .26, 0)), C(P(sph(.2, 12, 6).scale(1, .33, .62), top, 0, .5, 0)), P(cyl(.166, .16, .16, 12).scale(1, 1, .62), bottom, 0, -.04, 0)], body);
+    part([...head,
+      C(P(lathe([[.172, -.06], [.168, .06], [.156, .16], [.175, .32], [.19, .43], [.165, .5], [.075, .545]], 16, .64), top)), // shirt: hem, waist, chest, shoulders
+      C(P(sph(.06, 10, 6).scale(1.1, .75, 1), top, -.172, .462, 0)), C(P(sph(.06, 10, 6).scale(1.1, .75, 1), top, .172, .462, 0)),
+      P(cyl(.062, .068, .035, 10), shade(top, .93), 0, .55, .004), P(box(.022, .5, .012), shade(top, .9), 0, .25, .116), // collar, placket
+      ...(LOW ? [] : [0, 1, 2, 3].map(i => P(sph(.008, 5, 4), '#d8d4c8', 0, .1 + i * .11, .124)).concat([P(box(.07, .075, .008), shade(top, .92), .085, .35, .112)])),
+      P(lathe([[.05, -.2], [.162, -.17], [.168, -.02], [.16, .0]], 12, .64), bottom),
+      ...(o.cap ? [P(cyl(.18, .18, .045, 14).scale(1, 1, .66), '#141414', 0, .02, 0), P(box(.045, .04, .012), '#c9a23a', 0, .02, .121)] : [])], body);
   }
-  const arm = sx => part([C(P(cyl(.056, .05, woman ? .14 : .26, 8), woman ? blouse : top, 0, woman ? -.07 : -.13, 0)), ...(woman ? [P(cyl(.046, .043, .14, 8), skin, 0, -.2, 0)] : []),
-    (full ? C : (e => e))(P(cyl(.043, .037, .28, 8), full ? top : skin, 0, -.4, .025, -.18)), P(sph(.045, 8, 6), skin, 0, -.56, .05)], body, sx * sh, .49, 0);
-  const armL = arm(-1), armR = arm(1); armL.rotation.z = -.07; armR.rotation.z = .07;
+  const arm = sx => { // upper arm from the shoulder; the forearm hangs from the elbow
+    const slv = woman ? .13 : full ? .28 : .15;
+    const up = part([C(P(cap(.05, slv, 10), armTop, 0, -slv / 2 - .01, 0)), ...(slv < .27 ? [P(cap(.042, .27 - slv, 10), skin, 0, -slv - (.27 - slv) / 2, 0)] : []), ...(slv < .27 && !woman ? [C(P(cyl(.056, .056, .012, 10), shade(armTop, .9), 0, -slv - .02, 0))] : [])], body, sx * sh, .485, 0);
+    const fore = part([(full ? C : (e => e))(P(cap(.037, .21, 10), full ? armTop : skin, 0, -.125, 0)), ...(full ? [C(P(cyl(.043, .043, .03, 10), shade(armTop, .9), 0, -.245, 0))] : []),
+      ...(woman ? [P(cyl(.044, .044, .012, 10), '#d4af37', 0, -.22, 0), P(cyl(.044, .044, .012, 10), '#b3261e', 0, -.2, 0)] : []),
+      P(sph(.04, 8, 6).scale(.62, 1.25, 1), skin, 0, -.3, 0), P(sph(.016, 6, 5).scale(1, 1.6, 1), skin, 0, -.29, .04)], up, 0, -.29, 0);
+    fore.rotation.x = -.16; return [up, fore];
+  };
+  const [armL, foreL] = arm(-1), [armR, foreR] = arm(1); armL.rotation.z = -.07; armR.rotation.z = .07;
+  const foot = () => [P(sph(.05, 8, 6).scale(.95, .62, 1.9), shoe, 0, -.435, .06), P(box(.09, .022, .245), shade(shoe, .6), 0, -.468, .05)];
   let legL, legR, shinL, shinR;
-  if (woman) { legL = part([P(box(.08, .06, .2), shoe)], g, -.08, .03, .04); legR = part([P(box(.08, .06, .2), shoe)], g, .08, .03, .04); }
+  if (woman) { const ft = () => [P(sph(.045, 8, 6).scale(.9, .55, 1.9), skin, 0, .0, .06), P(box(.085, .014, .23), shoe, 0, -.024, .05)]; legL = part(ft(), g, -.08, .03, .04); legR = part(ft(), g, .08, .03, .04); }
   else {
-    const leg = sx => { const t = part([P(cyl(.086, .068, .46, 8), bottom, 0, -.23, 0)], g, sx * .09, .9, 0), k = part([P(cyl(.064, .05, .42, 8), bottom, 0, -.21, 0), P(box(.095, .07, .25), shoe, 0, -.445, .045)], t, 0, -.45, 0); return [t, k]; };
+    const leg = sx => { const t = part([P(cyl(.084, .064, .46, 10), bottom, 0, -.23, 0), P(sph(.085, 10, 6), bottom, 0, -.02, 0), P(sph(.063, 8, 6), bottom, 0, -.45, 0)], g, sx * .088, .9, 0),
+      k = part([P(cyl(.062, .05, .41, 10), bottom, 0, -.205, 0), P(cyl(.053, .053, .02, 10), shade(bottom, .85), 0, -.41, 0), ...foot()], t, 0, -.45, 0); return [t, k]; };
     [legL, shinL] = leg(-1); [legR, shinR] = leg(1);
   }
-  return { g, body, armL, armR, legL, legR, shinL, shinR, saree: woman, ph: Math.random() * 6 };
+  return { g, body, armL, armR, foreL, foreR, legL, legR, shinL, shinR, saree: woman, ph: Math.random() * 6 };
 }
 
 export function animate(r, speed, dt) {
@@ -65,6 +93,7 @@ export function animate(r, speed, dt) {
   const A = (.42 + .5 * run) * on, K = (.75 + .75 * run) * on, Cc = (.32 + .8 * run) * on;
   r.legL.rotation.x = -s * A; r.legR.rotation.x = s * A; r.shinL.rotation.x = Math.max(0, c) * K + .04; r.shinR.rotation.x = Math.max(0, -c) * K + .04;
   r.armL.rotation.x = s * Cc - run * .2; r.armR.rotation.x = -s * Cc - run * .2;
+  if (r.foreL) { r.foreL.rotation.x = -.16 - on * (.12 + 1.1 * run) - Math.max(0, s) * (.2 + .3 * run) * on; r.foreR.rotation.x = -.16 - on * (.12 + 1.1 * run) - Math.max(0, -s) * (.2 + .3 * run) * on; } // elbows: a little give when walking, pumping when running
   r.body.rotation.x = .03 + run * .16; r.body.position.y = .9 + Math.abs(c) * .03 * on * (1 + run) - run * .03;
 }
 
