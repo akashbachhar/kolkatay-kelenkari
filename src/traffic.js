@@ -160,23 +160,36 @@ export function bikeKit(police, col = M.dark) {
 // the flashing bar on the police cars: 0 off, 1 red, 2 blue
 export const BEACON = { red: new THREE.MeshStandardMaterial({ color: '#7a1512', emissive: '#ff2a1a', emissiveIntensity: 0 }), blue: new THREE.MeshStandardMaterial({ color: '#12205a', emissive: '#2a5cff', emissiveIntensity: 0 }),
   set(m) { this.red.emissiveIntensity = m === 1 ? 7 : 0; this.blue.emissiveIntensity = m === 2 ? 7 : 0; } };
-function policeKit() { // Kolkata Police patrol car: a white SUV with the blue band, light bar, bull bar and spare wheel
-  const k = new Kit(), W = M.rosh, CH = M.chrome, D = M.dark;
-  k.loft(W, [[-2.1, .42, .78, .86], [-2.02, .42, 1.2, .9], [-.9, .42, 1.22, .92], [.5, .42, 1.2, .92], [1.4, .42, 1.14, .9], [2.0, .42, 1.05, .86], [2.12, .46, .8, .8]], 4, 20); // lower body, bonnet falling to the nose
-  k.loft(W, [[-2.0, 1.15, 1.86, .84], [-1.2, 1.15, 1.92, .86], [.1, 1.15, 1.9, .86], [.55, 1.15, 1.8, .82], [.98, 1.15, 1.2, .8]], 4, 20); // cabin and roof
-  k.loft(M.glass, [[-1.9, 1.24, 1.76, .855], [-1.2, 1.24, 1.8, .875], [.1, 1.24, 1.78, .875], [.5, 1.24, 1.7, .835], [.9, 1.24, 1.26, .815]], 4, 20); // glasshouse
-  for (const x of [-1.86, -.62, .12]) for (const s of [-1, 1]) k.box(W, .09, .62, .05, x, 1.2, s * .875); // pillars
-  k.box(M.blue, 4.14, .17, 1.86, -.02, .82, 0); k.box(D, 4.2, .12, 1.88, 0, .34, 0);
-  for (const s of [-1, 1]) { k.sign('KOLKATA POLICE', 1.7, .2, -.45, 1.0, s * .935, s > 0 ? 0 : PI, '#f4f1e8', '#27408f'); k.sign('কলকাতা পুলিশ', 1.0, .17, -.5, .83, s * .94, s > 0 ? 0 : PI, '#27408f', '#ffffff');
-    for (const x of [-1.32, 1.34]) { k.add(M.tyre, cz(.39, .27), x, .39, s * .8); k.add(CH, cz(.2, .29), x, .39, s * .8); k.add(D, new THREE.CylinderGeometry(.47, .47, .1, 14, 1, true, PI * .5, PI).rotateX(PI / 2), x, .4, s * .88); }
-    k.add(M.lamp, new THREE.SphereGeometry(.12, 10, 6).scale(.5, 1, 1.1), 2.1, .92, s * .62); k.box(M.orange, .05, .08, .16, 2.1, .76, s * .66); k.box(M.red, .06, .34, .14, -2.11, .8, s * .76);
-    k.box(D, .1, .1, .16, .95, 1.3, s * .98); k.box(D, .5, .04, .26, 0, .36, s * .98); }
-  k.box(D, .06, .3, 1.0, 2.13, .78, 0); for (let i = 0; i < 5; i++) k.box(CH, .07, .03, 1.0, 2.14, .8 + i * .06, 0);
-  k.box(D, .16, .16, 1.9, 2.2, .44, 0); k.box(D, .16, .16, 1.9, -2.18, .46, 0); for (const z of [-.5, .5]) k.beam(D, [2.26, .4, z], [2.26, 1.0, z], .03); k.beam(D, [2.26, 1.0, -.5], [2.26, 1.0, .5], .03); k.beam(D, [2.26, .72, -.5], [2.26, .72, .5], .025); // bumpers, bull bar
-  k.sign('POLICE', .9, .2, 1.45, 1.215, 0, 0, '#f4f1e8', '#27408f'); k.sign('POLICE', .8, .2, -2.125, 1.02, 0, -PI / 2, '#f4f1e8', '#27408f'); k.sign('WB 01 P 0100', .5, .13, 2.285, .5, 0, PI / 2, '#f4f1e8', '#141414');
-  k.add(M.tyre, cx(.36, .22), -2.24, 1.2, 0); k.add(W, cx(.2, .24), -2.25, 1.2, 0); // spare wheel
-  k.box(D, .34, .06, 1.24, -.3, 1.93, 0); k.box(BEACON.red, .26, .13, .5, -.3, 1.99, -.33); k.box(BEACON.blue, .26, .13, .5, -.3, 1.99, .33); k.box(M.rosh, .26, .13, .12, -.3, 1.99, 0); // light bar
-  k.cyl(D, .012, .012, 1.1, -1.7, 1.92, .6, 4);
+function policeKit() { // Kolkata Police patrol car: an upright white SUV with the blue band, light bar, bull bar and a spare wheel on the tailgate
+  const k = new Kit(), W = M.tram, CH = M.chrome, D = M.dark, G = M.glass, hw = .88;
+  // body: sills to waistline, the bonnet falling gently to the nose; then the cabin with a raked windscreen
+  k.loft(W, [[-2.08, .8, .5, 1.04], [-2.0, .87, .42, 1.1], [-1.0, hw, .4, 1.12], [.5, hw, .4, 1.12], [.98, hw, .4, 1.1], [1.5, .87, .42, 1.06], [1.98, .85, .44, 1.01], [2.1, .78, .52, .96]], 6, 24);
+  k.loft(W, [[-2.04, .78, 1.08, 1.8], [-1.94, .835, 1.08, 1.87], [-.2, .835, 1.08, 1.87], [.42, .825, 1.08, 1.85], [.68, .8, 1.08, 1.5], [.97, .77, 1.08, 1.15]], 6, 24);
+  k.add(G, new THREE.BoxGeometry(.04, .78, 1.46), .715, 1.5, 0, 0, 0, .62); for (const s of [-1, 1]) k.add(W, new THREE.BoxGeometry(.07, .84, .07), .7, 1.5, s * .76, 0, 0, .62); // windscreen and A-pillars
+  for (const [x, w] of [[.02, .74], [-.82, .8], [-1.6, .56]]) k.box(G, w, .47, 1.685, x, 1.27, 0); k.box(G, .05, .46, 1.36, -2.035, 1.28, 0); // side and rear glass
+  for (const x of [.42, -.4, -1.26, -1.92]) k.box(D, .018, 1.3, 1.772, x, .46, 0); // door shuts
+  k.box(M.blue, 4.06, .13, 1.775, -.04, .8, 0); k.box(M.red, 4.06, .035, 1.776, -.04, .765, 0); k.box(D, 3.0, .1, 1.9, -.05, .34, 0); // band, pinstripe, side steps
+  for (const s of [-1, 1]) {
+    k.sign('KOLKATA POLICE', 1.5, .2, -.42, 1.0, s * .892, s > 0 ? 0 : PI, '#f4f1e8', '#1f3a8a'); k.sign('কলকাতা পুলিশ', .9, .16, -1.3, .6, s * .892, s > 0 ? 0 : PI, '#f4f1e8', '#1f3a8a'); k.sign('DIAL 100', .5, .14, .7, .6, s * .892, s > 0 ? 0 : PI, '#b3261e', '#ffffff');
+    for (const x of [-1.3, 1.36]) { // wheels: tyre, white steel rim with a hub cap, the arch above
+      k.add(M.tyre, new THREE.TorusGeometry(.27, .115, 10, 22), x, .385, s * .79); k.add(M.tyre, cz(.3, .2), x, .385, s * .79); k.add(W, cz(.2, .215), x, .385, s * .8); k.add(CH, cz(.075, .23), x, .385, s * .8);
+      for (let i = 0; i < 5; i++) k.add(D, cz(.028, .225, 6), x + Math.cos(i * 1.257) * .135, .385 + Math.sin(i * 1.257) * .135, s * .8);
+      k.add(D, new THREE.CylinderGeometry(.47, .47, .16, 16, 1, true, PI * .5, PI).rotateX(PI / 2), x, .4, s * .84); k.box(D, .03, .2, .22, x - .44, .16, s * .8);
+    }
+    k.box(M.lamp, .05, .19, .3, 2.085, .74, s * .6); k.box(CH, .04, .23, .34, 2.075, .72, s * .6); k.box(M.orange, .05, .08, .13, 2.07, .64, s * .8); k.add(M.lamp, new THREE.SphereGeometry(.06, 8, 6).scale(.5, 1, 1), 2.26, .48, s * .56); // head, turn and fog lamps
+    k.box(M.red, .05, .42, .13, -2.06, .78, s * .8); k.box(M.orange, .05, .1, .13, -2.062, .7, s * .8);
+    k.box(D, .09, .13, .2, .93, 1.26, s * .97); k.beam(D, [.9, 1.2, s * .86], [.93, 1.3, s * .95], .02); k.box(D, .12, .03, .03, .22, 1.02, s * .885); k.box(D, .12, .03, .03, -.62, 1.02, s * .885); // mirrors, handles
+    k.beam(D, [-1.9, 1.9, s * .66], [.3, 1.9, s * .66], .022); for (const x of [-1.7, -.7, .2]) k.beam(D, [x, 1.86, s * .66], [x, 1.9, s * .66], .02); // roof rails
+  }
+  k.box(D, .05, .3, 1.02, 2.09, .62, 0); for (let i = 0; i < 7; i++) k.box(CH, .04, .26, .035, 2.115, .64, -.42 + i * .14); k.box(CH, .04, .04, 1.06, 2.112, .92, 0); // grille
+  k.box(M.conc, .22, .2, 1.84, 2.17, .34, 0); k.box(M.conc, .2, .2, 1.84, -2.16, .36, 0); k.box(D, .26, .03, 1.2, -2.3, .34, 0); // bumpers, rear step
+  for (const z of [-.46, .46]) k.beam(D, [2.3, .36, z], [2.3, 1.0, z], .032); k.beam(D, [2.3, 1.0, -.46], [2.3, 1.0, .46], .032); k.beam(D, [2.3, .7, -.46], [2.3, .7, .46], .026); // bull bar
+  k.sign('WB 01 P 0100', .5, .13, 2.285, .44, 0, PI / 2, '#f4f1e8', '#141414'); k.sign('WB 01 P 0100', .46, .12, -2.265, .52, .5, -PI / 2, '#f4f1e8', '#141414');
+  k.sign('POLICE', .8, .14, .47, 1.775, 0, PI / 2, '#1f3a8a', '#ffffff');
+  k.add(M.tyre, cx(.37, .2), -2.2, 1.12, 0); k.add(W, cx(.33, .22), -2.22, 1.12, 0); k.sign('POLICE', .5, .14, -2.335, 1.12, 0, -PI / 2, '#f4f1e8', '#1f3a8a'); // spare wheel in its cover
+  // light bar: two long lenses and the siren speaker between them, on a base across the roof
+  k.box(D, .34, .05, 1.36, -.25, 1.87, 0); k.box(BEACON.red, .28, .12, .52, -.25, 1.92, -.38); k.box(BEACON.blue, .28, .12, .52, -.25, 1.92, .38); k.box(M.steel, .24, .11, .22, -.25, 1.92, 0); k.box(CH, .3, .015, 1.32, -.25, 2.04, 0);
+  k.cyl(D, .01, .014, 1.0, -1.75, 1.87, .55, 4); k.cyl(D, .03, .03, .05, -1.75, 1.87, .55, 6); // aerial
   return k;
 }
 
