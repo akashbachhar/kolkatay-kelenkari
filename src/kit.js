@@ -42,9 +42,9 @@ function layers(S, sc = 1) {
   return { c: L.map(q => q[0]), g, h, o, e, rect };
 }
 function facade(i) {
-  const S = 1024, sc = 2, L = layers(S, sc), { g, h, rect } = L, wall = ['#d6b46c', '#c79183', '#c4c2b6', '#93a4ad', '#b5c4a0', '#dbd5c5'][i];
-  speckle(g, S, S, wall, 16000, .1, 70);
-  for (let k = 0; k < 9000; k++) { const v = 128 + (R() - .5) * 34 | 0; h.fillStyle = `rgb(${v},${v},${v})`; h.fillRect(R() * S, R() * S, 2 + R() * 3, 2 + R() * 3); } // plaster grain
+  const sc = LITE ? 1 : 2, S = 512 * sc, L = layers(S, sc), { g, h, rect } = L, wall = ['#d6b46c', '#c79183', '#c4c2b6', '#93a4ad', '#b5c4a0', '#dbd5c5'][i];
+  speckle(g, S, S, wall, LITE ? 5000 : 16000, .1, 70);
+  for (let k = 0; k < (LITE ? 2500 : 9000); k++) { const v = 128 + (R() - .5) * 34 | 0; h.fillStyle = `rgb(${v},${v},${v})`; h.fillRect(R() * S, R() * S, 2 + R() * 3, 2 + R() * 3); } // plaster grain
   const WARM = ['rgba(255,206,140,.95)', 'rgba(255,226,170,.9)', 'rgba(255,190,120,.85)', 'rgba(210,228,255,.8)'];
   for (let r = 0; r < 4; r++) for (let q = 0; q < 4; q++) {
     const x = q * 128, y = r * 128;
@@ -180,7 +180,9 @@ const tri = (color, map, sc, o = {}) => { // texture projected from the model's 
   mt.customProgramCacheKey = () => 'tri' + sc; return mt;
 };
 export const M = {}, T = {};
-export function initMats() {
+let LITE = false; // phones and tablets: half-size building textures, to spare their memory
+export function initMats(lite = false) {
+  LITE = lite;
   Object.assign(M, {
     marble: m('#f1eee6', { roughness: .5 }), white: m('#ece8de'), cream: m('#e2d2aa'), brick: m('#9c3f30'), brickD: m('#7d3026'), redOx: m('#8f3a2b'),
     sand: m('#b5563c'), steel: m('#aab1b6', { metalness: .65, roughness: .45 }), glass: m('#1a252d', { roughness: .06, metalness: .75 }), dark: m('#19191b'),

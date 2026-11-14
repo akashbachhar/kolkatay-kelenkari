@@ -32,6 +32,8 @@ export function makeFx(renderer, scene, camera, sun) {
     const half = [150, 130, 110][tier]; Object.assign(sun.shadow.camera, { left: -half, right: half, top: half, bottom: -half }); sun.shadow.camera.updateProjectionMatrix();
     if (!tier) return;
     renderer.getDrawingBufferSize(size);
+    const hdr = renderer.extensions.has('EXT_color_buffer_float') || renderer.extensions.has('EXT_color_buffer_half_float'); // without it, fall back to the plain picture rather than a black one
+    if (!hdr) { fx.tier = 0; return; }
     const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: tier === 1 ? 4 : 0 });
     const c = fx.composer = new EffectComposer(renderer, rt); c.addPass(new RenderPass(scene, camera));
     if (tier === 2) { const ao = new GTAOPass(scene, camera, size.x, size.y); ao.updateGtaoMaterial({ radius: .7, distanceExponent: 1.2, thickness: 1.2, scale: 1.25, samples: 12, distanceFallOff: 1, screenSpaceRadius: false }); ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 }); ao.blendIntensity = .9; c.addPass(ao);
@@ -43,6 +45,6 @@ export function makeFx(renderer, scene, camera, sun) {
     if (tier === 2) c.addPass(new SMAAPass(size.x, size.y));
   };
   fx.size = () => { renderer.setSize(innerWidth, innerHeight); if (fx.composer) { fx.composer.setPixelRatio(renderer.getPixelRatio()); fx.composer.setSize(innerWidth, innerHeight); } };
-  fx.render = t => { if (fx.composer) { fx.grade.uniforms.time.value = t % 10; fx.composer.render(); } else renderer.render(scene, camera); };
+  fx.render = t => { if (fx.composer) { try { fx.grade.uniforms.time.value = t % 10; fx.composer.render(); return; } catch (e) { console.error(e); fx.set(0); } } renderer.render(scene, camera); };
   return fx;
 }
