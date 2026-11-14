@@ -74,7 +74,7 @@ async function start() {
   const go = () => { playing = true; sound.start(); ov.classList.add('hide'); $('hud').classList.add('on'); lock(); };
   if (TOUCH) initTouch(player, dom, { map: () => hud.toggleMap(), sound: () => sound.toggle() });
   $('load').style.display = 'none'; $('play').style.display = 'inline-block';
-  $('bHelp').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.toggleHelp(); }); $('keys').addEventListener('pointerdown', () => hud.toggleHelp(false));
+  $('bHelp').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.toggleHelp(); }); $('keys').addEventListener('pointerdown', () => hud.toggleHelp(false)); $('plist').addEventListener('pointerdown', e => { e.stopPropagation(); hud.togglePlaces(false); }); $('points').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.togglePlaces(); });
   // before play: what earns points, the places to find, the controls
   Score.load();
   { const pgs = [...document.querySelectorAll('#intro .pg')]; let pi = -1;
@@ -85,7 +85,7 @@ async function start() {
   $('play').onclick = () => window.kkPage(); dom.addEventListener('click', () => { if (playing && !police.busted && document.pointerLockElement !== dom) lock(); });
   window.kkLock = lock;
   document.addEventListener('pointerlockchange', () => { if (playing && !TOUCH && !police.busted && document.pointerLockElement !== dom) $('paused').classList.add('on'); else $('paused').classList.remove('on'); });
-  addEventListener('keydown', e => { if (e.code === 'KeyM' && playing) hud.toggleMap(); if (e.code === 'KeyC' && playing) hud.toggleHelp(); if (e.code === 'KeyN' && playing) hud.toast(sound.toggle() ? '<small>SOUND</small>Off' : '<small>SOUND</small>On'); if (e.code === 'Enter' && !playing) window.kkPage(); });
+  addEventListener('keydown', e => { if (e.code === 'KeyM' && playing) hud.toggleMap(); if (e.code === 'KeyC' && playing) hud.toggleHelp(); if (e.code === 'KeyP' && playing) hud.togglePlaces(); if (e.code === 'KeyN' && playing) hud.toast(sound.toggle() ? '<small>SOUND</small>Off' : '<small>SOUND</small>On'); if (e.code === 'Enter' && !playing) window.kkPage(); });
   const fit = () => { camera.aspect = innerWidth / innerHeight; camera.fov = innerWidth < innerHeight ? 72 : 58; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); };
   addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 250)); fit();
   if (Q.has('auto')) go();

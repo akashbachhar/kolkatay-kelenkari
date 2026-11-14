@@ -158,6 +158,12 @@ body.touch #where{top:44px}body.touch #ptsWhy{top:100px;right:14px;font-size:14p
   body.touch #where{top:66px}body.touch #ptsWhy{top:124px;right:92px}
 }
 @media (max-width:520px){body.touch #ptsWhy{right:14px;top:126px;max-width:calc(100vw - 150px);white-space:normal;line-height:1.2}}
+/* v15: the list of places (P, or tap the points) */
+#plist{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(820px,94vw);max-height:90vh;overflow:auto;background:rgba(23,19,15,.94);border:5px solid var(--ink);box-shadow:0 0 0 2px var(--taxi),0 20px 60px rgba(0,0,0,.6);padding:16px 26px 12px;pointer-events:auto}#plist.on{display:block}
+#plist h4{margin:0 0 10px;font-size:22px;color:var(--taxi);text-align:center}#plist small{display:block;text-align:center;margin-top:10px;opacity:.6}
+#places2{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:3px 16px;font-size:15px;font-weight:600}
+#places2 span{opacity:.7}#places2 span::before{content:"○ ";color:var(--taxi)}#places2 span.ok{opacity:1;color:var(--taxi)}#places2 span.ok::before{content:"✓ "}
+#points{pointer-events:auto;cursor:pointer}
 </style>
 </head>
 <body>
@@ -168,9 +174,10 @@ body.touch #where{top:44px}body.touch #ptsWhy{top:100px;right:14px;font-size:14p
   <div id="where"><div id="road"></div><div id="area"></div></div>
   <button id="bHelp" aria-label="Controls">C</button>
   <div id="keys"><h4>Controls</h4>
-    <div class="grid kb"><b>W A S D</b><span>walk / drive</span><b>Mouse</b><span>look around</span><b>Shift</b><span>sprint</span><b>Space</b><span>jump · brake</span><b>Left click</b><span>hit</span><b>X</b><span>walk / jog</span><b>E</b><span>get in / out of a taxi or bus</span><b>V</b><span>first / third person</span><b>H</b><span>horn</span><b>Wheel</b><span>zoom</span><b>M</b><span>city map</span><b>N</b><span>sound on / off</span><b>C</b><span>these controls</span><b>Esc</b><span>free the mouse</span></div>
-    <div class="grid tc"><b>Left thumb</b><span>walk / drive</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump · brake</span><b>HIT</b><span>hit</span><b>CAR</b><span>get in / out</span><b>VIEW</b><span>first / third person</span><b>MAP</b><span>city map</span><b>SOUND</b><span>sound on / off</span></div>
+    <div class="grid kb"><b>W A S D</b><span>walk / drive</span><b>Mouse</b><span>look around</span><b>Shift</b><span>sprint</span><b>Space</b><span>jump · brake</span><b>Left click</b><span>hit</span><b>X</b><span>walk / jog</span><b>E</b><span>get in / out of a taxi or bus</span><b>V</b><span>first / third person</span><b>H</b><span>horn</span><b>Wheel</b><span>zoom</span><b>M</b><span>city map</span><b>P</b><span>places to find</span><b>N</b><span>sound on / off</span><b>C</b><span>these controls</span><b>Esc</b><span>free the mouse</span></div>
+    <div class="grid tc"><b>Left thumb</b><span>walk / drive</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump · brake</span><b>HIT</b><span>hit</span><b>CAR</b><span>get in / out</span><b>VIEW</b><span>first / third person</span><b>MAP</b><span>city map</span><b>Points</b><span>tap for places to find</span><b>SOUND</b><span>sound on / off</span></div>
     <small>Tap or press C to close</small></div>
+  <div id="plist"><h4></h4><div id="places2"></div><small>Tap or press P to close</small></div>
   <canvas id="big"></canvas>
   <div id="lock"></div><div id="points"><b>০</b></div><div id="ptsWhy"></div><div id="wanted"><i>★</i><i>★</i><i>★</i></div><div id="hint"></div><div id="speed"></div>
   <div id="paused">Click to continue</div>

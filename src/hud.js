@@ -25,8 +25,13 @@ export class Hud {
     this.setZone(false);
   }
   setZone(d) { this.dak = d; this.base = d ? this.dakMap : this.city; OX = d ? DAK.bx - 430 : X0; OZ = d ? DAK.z - 330 : Z0; }
-  toggleHelp(v) { this.help = v ?? !this.help; $('keys').classList.toggle('on', this.help); if (this.help && this.open) this.toggleMap(); }
-  toggleMap() { if (!this.open && this.help) this.toggleHelp(false); this.open = !this.open; this.big.style.display = this.open ? 'block' : 'none'; this.n = 0; }
+  toggleHelp(v) { this.help = v ?? !this.help; $('keys').classList.toggle('on', this.help); if (this.help && this.open) this.toggleMap(); if (this.help) this.togglePlaces(false); }
+  togglePlaces(v) { // every place, ticked once found, and the count
+    this.pl = v ?? !this.pl; const e = $('plist'); e.classList.toggle('on', this.pl); if (!this.pl) return; if (this.open) this.toggleMap(); if (this.help) this.toggleHelp(false);
+    e.firstElementChild.textContent = `খুঁজে পেয়েছ ${Score.BN(LM.filter(l => Score.found.has(l.n)).length)} / ${Score.BN(LM.length)}`;
+    $('places2').innerHTML = LM.map(l => `<span class="${Score.found.has(l.n) ? 'ok' : ''}">${l.bn || l.n}</span>`).join('');
+  }
+  toggleMap() { if (!this.open && this.help) this.toggleHelp(false); if (!this.open && this.pl) this.togglePlaces(false); this.open = !this.open; this.big.style.display = this.open ? 'block' : 'none'; this.n = 0; }
   update(pl) {
     const p = pl.pos, n = this.n++;
     if (!!pl.zone !== this.dak) this.setZone(!!pl.zone);
