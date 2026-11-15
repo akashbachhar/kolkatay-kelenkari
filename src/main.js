@@ -30,8 +30,11 @@ const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(58, innerW
 
 async function start() {
   try { await Promise.race([Promise.all([document.fonts.load('700 36px "Baloo Da 2"', 'কলকাতা'), document.fonts.load('700 36px "Baloo Da 2"', 'Kolkata')]), new Promise(r => setTimeout(r, 2500))]); } catch { }
-  await new Promise(r => setTimeout(r, 30));
+  // the loading bar: each stage of building the city reports in, and PLAY only appears once everything is ready and the first frames have been drawn
+  const prog = async (p, txt) => { $('load').firstElementChild.textContent = `${txt} ${p}%`; $('load').lastElementChild.firstElementChild.style.width = p + '%'; await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0))); };
+  await prog(8, 'Painting the walls…');
   initMats(TOUCH);
+  await prog(30, 'Raising the landmarks…');
   // late-afternoon sun over the Hooghly, hazy Kolkata sky
   // evening: the sun about 7 degrees up in the west-south-west, setting over the Hooghly
   const sunDir = new THREE.Vector3(-.92, .13, .37).normalize();
@@ -46,7 +49,7 @@ async function start() {
   Object.assign(sun.shadow.camera, { left: -150, right: 150, top: 150, bottom: -150, near: 1, far: 900 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .4;
   scene.add(sun, sun.target);
   // picture quality: 2 High (ambient occlusion, bloom, grade), 1 Medium (bloom, grade), 0 Low (plain). G changes it; it steps down by itself if the frame rate is poor
-  const fx = makeFx(renderer, scene, camera, sun); fx.maxPR = TOUCH ? 1.25 : 9; fx.set(Q.has('gfx') ? +Q.get('gfx') : TOUCH ? 0 : 2); // phones start plain: the effects are for desktops (G, or ?gfx=1, turns them on)
+  const fx = makeFx(renderer, scene, camera, sun); fx.maxPR = TOUCH ? 1.25 : 9; fx.set(Q.has('gfx') ? +Q.get('gfx') : TOUCH ? 0 : 1); // desktops start on Medium (bloom and grade); High adds ambient occlusion, on G. Phones start plain
   const gfxNote = () => { const w = $('ptsWhy'); w.style.color = ''; w.textContent = 'Graphics · ' + fx.names[fx.tier]; w.classList.add('on'); clearTimeout(fx.nt); fx.nt = setTimeout(() => w.classList.remove('on'), 2200); };
   addEventListener('keydown', e => { if (e.code === 'KeyG' && !e.repeat) { fx.set((fx.tier + 2) % 3); fx.auto = false; gfxNote(); } });
   // the sun's disc and glow, kept far away along the sun direction
@@ -61,7 +64,9 @@ async function start() {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, fog: false, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); sp.material.opacity = .45; sp.scale.set(9000, 1500, 1); scene.add(sp); return sp; })();
   const bandDir = new THREE.Vector3(sunDir.x, .015, sunDir.z).normalize();
 
-  const world = buildWorld(scene), traffic = new Traffic(scene), player = new Player(scene, camera, renderer.domElement), hud = new Hud(), people = new People(scene, folk, roams, TOUCH ? 26 : 48, TOUCH), sound = new Sound();
+  const world = buildWorld(scene); await prog(62, 'Putting taxis on the road…');
+  const traffic = new Traffic(scene); await prog(76, 'Filling the streets…');
+  const player = new Player(scene, camera, renderer.domElement), hud = new Hud(), people = new People(scene, folk, roams, TOUCH ? 26 : 48, TOUCH), sound = new Sound();
   let police; player.onStep = fast => sound.step(fast);
   player.onPunch = (x, z, fx, fz) => { // a person or an officer within reach falls; any officer within 50 m makes it a case
     const who = people.hitAt(x, z, fx, fz, sound), cop = who ? null : police.hitAt(x, z, fx, fz); sound.punch(!!(who || cop));
@@ -79,7 +84,6 @@ async function start() {
   const lock = () => { if (!TOUCH) dom.requestPointerLock?.()?.catch?.(() => { }); };
   const go = () => { playing = true; sound.start(); ov.classList.add('hide'); $('hud').classList.add('on'); lock(); };
   if (TOUCH) initTouch(player, dom, { map: () => hud.toggleMap(), sound: () => sound.toggle() });
-  $('load').style.display = 'none'; $('play').style.display = 'inline-block';
   $('bHelp').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.toggleHelp(); }); $('keys').addEventListener('pointerdown', () => hud.toggleHelp(false)); $('plist').addEventListener('pointerdown', e => { e.stopPropagation(); hud.togglePlaces(false); }); $('points').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.togglePlaces(); });
   // before play: what earns points, the places to find, the controls
   Score.load();
@@ -124,7 +128,12 @@ async function start() {
   let ft = 0, fn = 0, warm = 0; fx.auto = !Q.has('gfx');
   renderer.domElement.addEventListener('webglcontextlost', e => { e.preventDefault(); const l = $('load'); ov.classList.remove('hide', 'pages'); $('play').style.display = 'none'; l.style.display = 'block'; l.textContent = 'The graphics ran out of memory. Close other tabs and reload.'; });
   renderer.setAnimationLoop(() => { const raw = clock.getDelta(), dt = Math.min(.05, raw); if (window.kkManual) return; frame(dt);
-    if (playing && fx.auto && fx.tier > 0 && document.visibilityState === 'visible' && raw < .5) { if ((warm += raw) > 3) { ft += raw; fn++; if (ft > 4) { if (fn / ft < 27) { fx.set(fx.tier - 1); gfxNote(); warm = 0; } ft = fn = 0; } } } });
+    if (playing && fx.auto && fx.tier > 0 && document.visibilityState === 'visible' && raw < .5) { if ((warm += raw) > 1.5) { ft += raw; fn++; if (ft > 2.5) { if (fn / ft < 32) { fx.set(fx.tier - 1); gfxNote(); warm = 0; } ft = fn = 0; } } } });
   Object.assign(window.kk, { fx, step: (dt, skip) => frame(dt, skip), LM, ROADS, BRIDGE, DAK, COPS, go: () => go() });
+  await prog(90, 'Warming up…');
+  try { await renderer.compileAsync(scene, camera); } catch (e) { }
+  if (!window.kkManual) await new Promise(r => setTimeout(r, 900)); // let the first frames through behind the title
+  await prog(100, 'Ready');
+  $('load').style.display = 'none'; $('play').style.display = 'inline-block';
 }
 start().catch(e => { console.error(e); $('load').textContent = 'Could not start: ' + e.message; });

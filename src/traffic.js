@@ -217,24 +217,27 @@ export class Traffic {
     // motorbikes: a rider who can be turned off; the boy rides in his place
     { const nu = g => { g = g.index ? g.toNonIndexed() : g; g.deleteAttribute('uv'); return g; }, rd = o => nu(bake(o, 'ride').rotateY(PI / 2).translate(-.36, .2, 0)), cols = [M.dark, M.red, M.blue, M.dark];
       const helm = () => nu(tint(new THREE.SphereGeometry(.135, 9, 7).translate(-.3, 1.52, 0), '#22252b'));
-      const PK = PARKED.filter(q => q.k === 5); if (PK.length) mk(bikeKit(false, M.dark), PK.length, .98, .34, park(PK, car(5, 9.5, 13)), { boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96 }) }); // standing at the kerb, no rider
-      cols.forEach((c, j) => mk(bikeKit(false, c), 5, .98, .34, car(5, 9.5, 13), { drv: mergeGeometries([rd({ ...look(R, false), s: .97 }), helm()]), boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96 }) })); }
+      const PK = PARKED.filter(q => q.k === 5); if (PK.length) mk(bikeKit(false, M.dark), PK.length, .98, .34, park(PK, car(5, 9.5, 13)), { boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96, ultra: false }) }); // standing at the kerb, no rider
+      cols.forEach((c, j) => mk(bikeKit(false, c), 5, .98, .34, car(5, 9.5, 13), { drv: mergeGeometries([rd({ ...look(R, false), s: .97 }), helm()]), boy: rd({ top: '#ffffff', bottom: '#151518', hair: '#120d0a', skin: '#a06d49', shoe: '#1c1410', s: .96, ultra: false }) })); }
     mk(policeKit(), 5, 2.2, .96, () => ({ k: 6, own: true, hide: true, live: 1, x: 1e6, z: 1e6, a: 0, e: E[0], s: 0, vmax: 0 }));
     mk(tramKit(), 4, 9, 1.25, i => ({ k: 2, r: tr, i: 0, s: tr.len * (.1 + i * .22), dir: i % 2 ? 1 : -1, side: i % 2 ? 1 : -1, vmax: 6.5 }));
     for (const v of this.v) if (v.k === 1) { v.tag = busTag(v.route); scene.add(v.tag); }
     this.m = new THREE.Object3D(); this.m.rotation.order = 'YXZ'; this.update(0, { x: 1e6, z: 1e6 });
   }
   put(v) {
-    const m = this.m, s = v.set; if (v.hide) { for (const im of s.ims) im.setMatrixAt(v.idx, ZERO); return; }
+    // only vehicles within sight are drawn: each kind's instances are packed into the first s.n slots every frame
+    const m = this.m, s = v.set, far = v.hide || (v.x - this.px) ** 2 + (v.z - this.pz) ** 2 > 380 * 380; if (v.tag) v.tag.visible = !far; if (far) return; const idx = s.n++;
     m.position.set(v.x, 0, v.z); m.rotation.set(v.roll || 0, v.a, 0); m.updateMatrix();
-    for (const im of s.ims) im.setMatrixAt(v.idx, m.matrix);
+    for (const im of s.ims) im.setMatrixAt(idx, m.matrix);
     if (v.tag) { v.tag.position.set(v.x, 0, v.z); v.tag.rotation.set(v.roll || 0, v.a, 0); }
-    if (s.drv) s.drv.setMatrixAt(v.idx, v.own ? ZERO : m.matrix); if (s.boy) s.boy.setMatrixAt(v.idx, v.me ? m.matrix : ZERO);
-    if (s.fr) { const f = Math.floor(((v.ph || 0) / (PI * 2)) * s.fr.length) % s.fr.length; s.fr.forEach((im, i) => im.setMatrixAt(v.idx, i === f ? m.matrix : ZERO)); }
-    if (s.pas) s.pas.setMatrixAt(v.idx, v.k === 0 && (v.own || v.nop) ? ZERO : m.matrix);
+    if (s.drv) s.drv.setMatrixAt(idx, v.own ? ZERO : m.matrix); if (s.boy) s.boy.setMatrixAt(idx, v.me ? m.matrix : ZERO);
+    if (s.fr) { const f = Math.floor(((v.ph || 0) / (PI * 2)) * s.fr.length) % s.fr.length; s.fr.forEach((im, i) => im.setMatrixAt(idx, i === f ? m.matrix : ZERO)); }
+    if (s.pas) s.pas.setMatrixAt(idx, v.k === 0 && (v.own || v.nop) ? ZERO : m.matrix);
   }
   update(dt, p, snd) {
-    const V = this.v;
+    const V = this.v; this.px = p.x; this.pz = p.z;
+    if (!this.sets) this.sets = [...new Set(V.map(v => v.set))].map(s => ({ s, all: [...s.ims, ...(s.fr || []), s.drv, s.pas, s.boy].filter(Boolean) }));
+    for (const q of this.sets) q.s.n = 0;
     for (const v of V) {
       if (v.own) { this.put(v); continue; } // taken by the player: driven or parked
       // what is ahead?
@@ -278,7 +281,7 @@ export class Traffic {
       }
       this.put(v);
     }
-    for (const s of new Set(V.map(v => v.set))) for (const im of [...s.ims, ...(s.fr || []), s.drv, s.pas, s.boy]) if (im) im.instanceMatrix.needsUpdate = true;
+    for (const q of this.sets) for (const im of q.all) { im.count = q.s.n; im.instanceMatrix.needsUpdate = true; }
   }
   // keep the player (on foot) out of vehicles
   push(p, rad, skip) {

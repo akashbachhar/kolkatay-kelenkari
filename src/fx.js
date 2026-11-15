@@ -27,7 +27,7 @@ export function makeFx(renderer, scene, camera, sun) {
   const size = new THREE.Vector2();
   fx.set = tier => {
     fx.tier = tier; fx.composer?.dispose(); fx.composer = null;
-    renderer.setPixelRatio(Math.min(devicePixelRatio, [1.25, 1.5, 2][tier], fx.maxPR || 9)); renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, [1.25, 1.5, 1.75][tier], fx.maxPR || 9)); renderer.setSize(innerWidth, innerHeight);
     const sm = [1024, 2048, 4096][tier]; if (sun.shadow.mapSize.x !== sm) { sun.shadow.mapSize.set(sm, sm); sun.shadow.map?.dispose(); sun.shadow.map = null; }
     const half = [150, 130, 110][tier]; Object.assign(sun.shadow.camera, { left: -half, right: half, top: half, bottom: -half }); sun.shadow.camera.updateProjectionMatrix();
     if (!tier) return;

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeFigure, animate, bake, look } from './human.js';
-import { R } from './kit.js';
+import { lean, R } from './kit.js';
 import { SEG } from './world.js';
 
 const PI = Math.PI;
@@ -9,7 +9,9 @@ export class People {
   constructor(scene, folk, roams = [], count = 48, lite = false) {
     // hawkers, shopkeepers, customers, spectators: all baked into a single mesh
     const m4 = new THREE.Matrix4(), list = folk.map(f => bake({ ...look(R, f.woman ?? (R() < .35)), ...f.o }, f.pose).applyMatrix4(m4.makeRotationY(f.ry).setPosition(f.x, f.y || 0, f.z)));
-    if (list.length) { const me = new THREE.Mesh(mergeGeometries(list), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 })); me.castShadow = true; scene.add(me); }
+    // merged by district (300 m squares), so only the crowd near the camera is drawn
+    { const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 }), cells = new Map(); folk.forEach((f, i) => { const k = Math.floor(f.x / 300) + ',' + Math.floor(f.z / 300); (cells.get(k) || cells.set(k, []).get(k)).push(list[i]); });
+      for (const l of cells.values()) { const me = new THREE.Mesh(lean(mergeGeometries(l)), mat); me.castShadow = !lite; scene.add(me); } }
     const rig = ov => { const o = ov ? { ...look(Math.random, false), ...ov } : look(), r = makeFigure(o); r.g.visible = false; scene.add(r.g); return [r, o]; };
     this.w = []; // pavement walkers
     for (let i = 0; i < count; i++) { const [r, o] = rig(); this.w.push({ rig: r, seg: null, sp: o.woman ? .95 + Math.random() * .35 : 1.1 + Math.random() * .6, x: 0, z: 0 }); }

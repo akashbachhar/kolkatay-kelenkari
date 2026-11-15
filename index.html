@@ -19,7 +19,7 @@ h1{margin:0;font-size:clamp(44px,9vw,116px);line-height:.95;font-weight:800;text
 h2{margin:6px 0 26px;font-size:clamp(18px,3vw,34px);font-weight:500;letter-spacing:.32em;text-transform:uppercase;color:var(--taxi)}
 #play{display:none;border:0;background:var(--red);color:#fff;font:800 22px "Baloo Da 2",system-ui;padding:12px 44px;border-radius:4px;cursor:pointer;box-shadow:0 5px 0 #6d140f}
 #play:hover{transform:translateY(1px);box-shadow:0 4px 0 #6d140f}
-#load{font-size:18px;opacity:.85}
+#load{font-size:18px;opacity:.9}#load span{display:block;margin-bottom:8px}#load i{display:block;width:min(320px,70vw);height:8px;margin:0 auto;background:rgba(255,255,255,.18);border-radius:4px;overflow:hidden}#load i b{display:block;height:100%;width:0;background:var(--taxi);transition:width .25s}
 .keys{margin-top:26px;font-size:15px;opacity:.9;display:grid;grid-template-columns:auto auto;gap:4px 18px;text-align:left}
 .keys b{color:var(--taxi);text-align:right}
 #hud{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .5s}#hud.on{opacity:1}
@@ -128,7 +128,7 @@ body.cine #hud{opacity:0}body.cine #touch{display:none!important}
 /* v13: points beside the stars, and the three pages shown before play */
 #points{position:absolute;top:10px;right:158px;text-align:right;color:#f2c118;font-weight:800;font-size:30px;line-height:1.25;text-shadow:0 2px 6px rgba(0,0,0,.7);white-space:nowrap}
 #points b{display:inline-block;transition:transform .15s}#points b::before{content:"পয়েন্ট ";font-size:15px;font-weight:700;color:#fff;opacity:.85}
-#points.bump b{animation:ptb .45s}@keyframes ptb{30%{transform:scale(1.35)}}
+#points b{transform-origin:right center}#points.bump b{animation:ptb .45s}@keyframes ptb{30%{transform:scale(1.35)}}
 #ptsWhy{position:absolute;top:52px;right:18px;text-align:right;color:#fff;font-weight:700;font-size:17px;text-shadow:0 2px 6px rgba(0,0,0,.8);opacity:0;transform:translateY(-6px);transition:opacity .3s,transform .3s;white-space:nowrap}#ptsWhy.on{opacity:1;transform:none}
 body.touch #points{top:6px;right:120px;font-size:22px}body.touch #points b::before{font-size:12px}body.touch #ptsWhy{top:150px;right:14px;font-size:14px}
 body.cine #points,body.cine #ptsWhy{opacity:0}
@@ -187,7 +187,7 @@ body.touch #where{top:44px}body.touch #ptsWhy{top:100px;right:14px;font-size:14p
 <div id="overlay">
   <h1>কলকাতায় কেলেঙ্কারি</h1>
   <h2>Kolkatay Kelenkari</h2>
-  <div id="load">Building the city…</div>
+  <div id="load"><span>Loading… 0%</span><i><b></b></i></div>
   <button id="play">PLAY</button>
   <div id="intro">
     <div class="pg on"><h3>কীসে কত পয়েন্ট</h3><ol>

@@ -73,6 +73,7 @@ function facade(i) {
     if (R() < .5) { g.fillStyle = 'rgba(40,30,20,.13)'; g.fillRect((x + R() * 110) * sc, y * sc, (6 + R() * 12) * sc, 128 * sc); } // rain streaks
     if (R() < .3) { const gx = (x + R() * 100) * sc, gr = g.createLinearGradient(0, (y + 119) * sc, 0, (y + 128 + 60) * sc); gr.addColorStop(0, 'rgba(30,40,25,.28)'); gr.addColorStop(1, 'rgba(30,40,25,0)'); g.fillStyle = gr; g.fillRect(gx, (y + 119) * sc, (20 + R() * 40) * sc, 70 * sc); } // damp under the ledge
   }
+  if (LITE) return { map: tex(L.c[0]) }; // phones: colour only
   return { map: tex(L.c[0]), normalMap: nrmMap(L.c[1], 3.2), orm: data(L.c[2]), emissiveMap: tex(L.c[3]) };
 }
 
@@ -98,7 +99,7 @@ function shops() {
   }
   const [ec, eg] = canvas(2048, 256); eg.fillStyle = '#000'; eg.fillRect(0, 0, 2048, 256); // what glows at dusk: the open shop fronts, and (faintly) every signboard
   open.forEach((on, i) => { const x = i * 256; eg.globalAlpha = .3; eg.drawImage(c, x + 6, 4, 244, 58, x + 6, 4, 244, 58); if (on) { eg.globalAlpha = .75; eg.drawImage(c, x + 14, 84, 228, 120, x + 14, 84, 228, 120); eg.globalAlpha = .35; eg.fillStyle = '#ffd596'; eg.fillRect(x + 14, 64, 228, 140); } });
-  return { map: tex(c), emissiveMap: tex(ec) };
+  return LITE ? { map: tex(c) } : { map: tex(c), emissiveMap: tex(ec) };
 }
 function road() { // worn asphalt: tar patches, cracks, polished wheel tracks; one tile is the road's width by 12 m
   const S = 1024, [c, g] = canvas(S, S), [hc, h] = canvas(S, S), [oc, o] = canvas(S, S); speckle(g, S, S, '#3a3a3c', 60000, .16, 90);
@@ -112,7 +113,7 @@ function road() { // worn asphalt: tar patches, cracks, polished wheel tracks; o
   g.fillStyle = 'rgba(232,232,222,.8)'; g.fillRect(S / 2 - 9, 0, 18, S * .47); g.fillStyle = 'rgba(228,206,110,.6)'; g.fillRect(30, 0, 9, S); g.fillRect(S - 39, 0, 9, S);
   h.fillStyle = 'rgba(175,175,175,.9)'; h.fillRect(S / 2 - 9, 0, 18, S * .47); h.fillRect(30, 0, 9, S); h.fillRect(S - 39, 0, 9, S);
   for (let k = 0; k < 900; k++) { g.fillStyle = 'rgba(58,58,60,.7)'; g.fillRect(S / 2 - 9 + R() * 18, R() * S * .47, 2 + R() * 3, 2 + R() * 4); } // worn paint
-  return { map: tex(c), normalMap: nrmMap(hc, 1.6), orm: data(oc) };
+  return LITE ? { map: tex(c) } : { map: tex(c), normalMap: nrmMap(hc, 1.6), orm: data(oc) };
 }
 function paving() { // footpath: square concrete pavers, a few cracked or stained, kerb stones along both edges
   const S = 512, N = 8, t = S / N, [c, g] = canvas(S, S), [hc, h] = canvas(S, S); g.fillStyle = '#8e8a80'; g.fillRect(0, 0, S, S); h.fillStyle = '#404040'; h.fillRect(0, 0, S, S);
@@ -120,7 +121,7 @@ function paving() { // footpath: square concrete pavers, a few cracked or staine
   for (let k = 0; k < 9000; k++) { g.fillStyle = `rgba(${R() < .5 ? '0,0,0' : '255,255,255'},${R() * .1})`; g.fillRect(R() * S, R() * S, 2, 2); const v = R() < .5 ? 0 : 255; h.fillStyle = `rgba(${v},${v},${v},.08)`; h.fillRect(R() * S, R() * S, 2, 2); }
   for (let k = 0; k < 12; k++) { g.fillStyle = `rgba(40,34,26,${.06 + R() * .1})`; g.beginPath(); g.ellipse(R() * S, R() * S, 20 + R() * 60, 12 + R() * 40, R() * 3, 0, 7); g.fill(); }
   for (let k = 0; k < 5; k++) { let x = R() * S, y = R() * S; g.beginPath(); h.beginPath(); g.moveTo(x, y); h.moveTo(x, y); for (let j = 0; j < 5; j++) { x += rr(-20, 20); y += rr(-20, 20); g.lineTo(x, y); h.lineTo(x, y); } g.strokeStyle = 'rgba(30,30,30,.5)'; g.stroke(); h.strokeStyle = '#202020'; h.lineWidth = 2; h.stroke(); }
-  return { map: tex(c), normalMap: nrmMap(hc, 2.4) };
+  return LITE ? { map: tex(c) } : { map: tex(c), normalMap: nrmMap(hc, 2.4) };
 }
 function grainN(S, n, amp, str) { const [hc, h] = canvas(S, S); h.fillStyle = '#808080'; h.fillRect(0, 0, S, S); for (let k = 0; k < n; k++) { const v = 128 + (R() - .5) * amp | 0; h.fillStyle = `rgb(${v},${v},${v})`; const q = 1 + R() * 4; h.fillRect(R() * S, R() * S, q, q); } return nrmMap(hc, str); }
 function plain(base, n, a, s = 256) { const [c, g] = canvas(s, s); speckle(g, s, s, base, n, a); return tex(c); }
@@ -156,16 +157,20 @@ function curtainTex() { // glass curtain wall: one tile is one floor by two bays
   g.fillStyle = 'rgba(50,70,85,.6)'; g.fillRect(0, 204, 256, 52); g.fillStyle = 'rgba(245,248,250,.95)'; g.fillRect(0, 0, 5, 256); g.fillRect(126, 0, 4, 256); g.fillRect(0, 250, 256, 6);
   return tex(c);
 }
+// Static geometry does not need its copy in main memory once it is on the graphics card: drop it after upload
+export function lean(g) { g.computeBoundingSphere(); g.computeBoundingBox(); const drop = function () { this.array = null; }; for (const a of Object.values(g.attributes)) a.onUpload(drop); if (g.index) g.index.onUpload(drop); return g; }
 // Painted sign board
+const SIGNS = new Map(); // one texture per distinct sign: number plates, TAXI STAND, POLICE and the like repeat many times
 export function signMesh(text, w, h, bg = '#f4f1e8', fg = '#141414') {
-  const H = 160, W = Math.min(2048, Math.round(H * w / h)), [c, g] = canvas(W, H);
+  const key = [text, Math.round(w / h * 20), bg, fg].join('|'); if (SIGNS.has(key)) return new THREE.Mesh(new THREE.PlaneGeometry(w, h), SIGNS.get(key));
+  const H = LITE ? 64 : 112, W = Math.min(LITE ? 768 : 1536, Math.round(H * w / h)), [c, g] = canvas(W, H), u = H / 160; g.save(); g.scale(u, u); const W0 = W; { const W = W0 / u, H = 160;
   g.fillStyle = bg; g.fillRect(0, 0, W, H); g.strokeStyle = fg; g.lineWidth = 5; g.strokeRect(6, 6, W - 12, H - 12);
   const lines = text.split('\n'); let fs = (H * .62) / lines.length;
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = fg;
   for (; fs > 10; fs -= 3) { g.font = `700 ${fs}px ${FONT}`; if (lines.every(l => g.measureText(l).width < W * .9)) break; }
-  lines.forEach((l, i) => g.fillText(l, W / 2, H * (i + .5) / lines.length + 3));
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: t, roughness: .7 }));
+  lines.forEach((l, i) => g.fillText(l, W / 2, H * (i + .5) / lines.length + 3)); } g.restore();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = LITE ? 2 : 4;
+  const mat = new THREE.MeshStandardMaterial({ map: t, roughness: .7 }); SIGNS.set(key, mat); return new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
 }
 
 const m = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: .85, ...o });
@@ -199,7 +204,7 @@ export function initMats(lite = false) {
   M.moss = tri('#8d917a', pt, .09); M.tower = tri('#9dbfd3', curtainTex(), 1 / 3.6, { roughness: .12, metalness: .6 });
   const flat = (c, o) => { const mt = m(c, { polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }); mt.userData.order = o; return mt; };
   M.apron = flat('#3b3b3d', 40); M.clayT = flat('#b8693d', 40); M.clayT.side = THREE.DoubleSide; M.lineT = flat('#ece8de', 41); M.lineT.side = THREE.DoubleSide; M.paint = flat('#ece8de', 41);
-  T.fac = [0, 1, 2, 3, 4, 5].map(facade); T.shops = shops(); T.road = road(); T.paving = paving(); T.grainN = grainN(256, 14000, 110, 1.4);
+  T.fac = [0, 1, 2, 3, 4, 5].map(facade); T.shops = shops(); T.road = road(); T.paving = paving(); T.grainN = LITE ? null : grainN(256, 14000, 110, 1.4);
   T.grass = plain('#5f7b3c', 9000, .12, 512); T.ground = plain('#8f877a', 7000, .1, 512); T.pave = plain('#aaa69c', 4000, .1);
   M.grass = m('#ffffff', { map: T.grass.clone() }); M.grass.map.repeat.set(6, 6);
   M.water = m('#56706a', { roughness: .08, metalness: .45, bumpMap: waterBump(), bumpScale: 4 });
@@ -274,7 +279,7 @@ export class Kit {
   }
   build(shadow = true) {
     const g = new THREE.Group();
-    for (const [mat, list] of this.parts) { const me = new THREE.Mesh(mergeGeometries(list), mat); me.castShadow = shadow && !mat.userData.order; me.receiveShadow = true; me.renderOrder = mat.userData.order || 0; g.add(me); }
+    for (const [mat, list] of this.parts) { const me = new THREE.Mesh(lean(mergeGeometries(list)), mat); me.castShadow = shadow && !mat.userData.order; me.receiveShadow = true; me.renderOrder = mat.userData.order || 0; g.add(me); }
     for (const e of this.extras) g.add(e);
     return g;
   }

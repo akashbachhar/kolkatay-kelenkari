@@ -529,8 +529,8 @@ export function buildMore({ site, stall, portico, ringTrees, fence, LM, anims })
         string(P(d, -1), P(d, 1), 1.1, 26); if (d + 11 < L - 4) { string(P(d, -1), P(d + 11, 1), 1.4, 30); string(P(d, -1), P(d + 11, -1), .5, 10); string(P(d, 1), P(d + 11, 1), .5, 10); }
       }
     }
-    const im = new THREE.InstancedMesh(new THREE.SphereGeometry(.09, 6, 4), new THREE.MeshBasicMaterial({ toneMapped: false }), pts.length), m4 = new THREE.Matrix4(), dim = new THREE.Color();
-    pts.forEach((p, i) => { im.setMatrixAt(i, m4.makeTranslation(p[0], p[1], p[2])); im.setColorAt(i, cols[i]); }); im.frustumCulled = false; k.extras.push(im);
+    const im = new THREE.InstancedMesh(new THREE.OctahedronGeometry(.1, 0), new THREE.MeshBasicMaterial({ toneMapped: false }), pts.length), m4 = new THREE.Matrix4(), dim = new THREE.Color();
+    pts.forEach((p, i) => { im.setMatrixAt(i, m4.makeTranslation(p[0], p[1], p[2])); im.setColorAt(i, cols[i]); }); im.computeBoundingSphere(); k.extras.push(im);
     let last = 0;
     anims.push(t => { if (t - last < .12) return; last = t; for (let j = 0; j < 40; j++) { const i = (Math.random() * pts.length) | 0; im.setColorAt(i, Math.random() < .35 ? dim.copy(cols[i]).multiplyScalar(.2) : cols[i]); } im.instanceColor.needsUpdate = true; }); // twinkle
   });

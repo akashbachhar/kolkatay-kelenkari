@@ -4,8 +4,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 // Procedural people: the protagonist, pedestrians, hawkers. Figures face +z.
 const PI = Math.PI;
 export const MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 }), cloths = new Map();
-let LOW = false;
-const cyl = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, LOW ? Math.min(s, 7) : s), sph = (r, w = 12, h = 9) => new THREE.SphereGeometry(r, LOW ? Math.min(w, 8) : w, LOW ? Math.min(h, 6) : h), box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+let LOW = false, ULTRA = false; // LOW: pedestrians. ULTRA: the still crowd and vehicle riders, hundreds of them, so only a few hundred triangles each
+const cyl = (rt, rb, h, s = 10) => new THREE.CylinderGeometry(rt, rb, h, ULTRA ? 5 : LOW ? Math.min(s, 7) : s), sph = (r, w = 12, h = 9) => new THREE.SphereGeometry(r, ULTRA ? 6 : LOW ? Math.min(w, 8) : w, ULTRA ? 4 : LOW ? Math.min(h, 6) : h), box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
 const P = (g, c, x = 0, y = 0, z = 0, rx = 0, rz = 0) => {
   if (rx) g.rotateX(rx); if (rz) g.rotateZ(rz); g.translate(x, y, z); if (g.index) g = g.toNonIndexed();
   const n = g.attributes.position.count, a = new Float32Array(n * 3), k = new THREE.Color(c);
@@ -21,17 +21,18 @@ export function checkTex() { // white shirt with fine blue checks
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 7); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
 
-const lathe = (pts, seg, zs = 1) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), LOW ? Math.min(seg, 8) : seg).scale(1, 1, zs);
-const cap = (r, len, s = 10) => new THREE.CapsuleGeometry(r, len, LOW ? 2 : 4, LOW ? Math.min(s, 6) : s); // a rounded limb, centred, along y
+const lathe = (pts, seg, zs = 1) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), ULTRA ? 6 : LOW ? Math.min(seg, 8) : seg).scale(1, 1, zs);
+const cap = (r, len, s = 10) => new THREE.CapsuleGeometry(r, len, ULTRA ? 1 : LOW ? 2 : 4, ULTRA ? 5 : LOW ? Math.min(s, 6) : s); // a rounded limb, centred, along y
 const shade = (c, k) => '#' + new THREE.Color(c).multiplyScalar(k).getHexString();
 
 // A person, built to human proportions (about 1.72 m at s = 1): shaped torso, rounded limbs with elbows and knees, a face, hair, hands, shoes.
 export function makeFigure(o = {}) {
   const { skin = '#9a6846', hair = '#17110d', top = '#e9e4d8', bottom = '#26262b', shoe = '#2a1d14', woman = false, border = '#d4af37', blouse = '#7a1f2a', full = false, map = null, s = 1 } = o;
-  LOW = !o.hi; // the protagonist gets the finest mesh
+  LOW = !o.hi; ULTRA = !!o.ultra; // the protagonist gets the finest mesh
   const g = new THREE.Group(), body = new THREE.Group(); body.position.y = .9; g.add(body); g.scale.setScalar(s);
   const part = (list, parent, x = 0, y = 0, z = 0) => {
     const grp = new THREE.Group(); grp.position.set(x, y, z); parent.add(grp);
+    if (ULTRA) list = list.filter(e => { e.computeBoundingBox(); const b = e.boundingBox; return Math.max(b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z) > .075; }); // no buttons, eyes or thumbs at that size
     const cl = map ? list.filter(e => e.cloth) : [], rest = map ? list.filter(e => !e.cloth) : list;
     const put = (l, m) => { if (!l.length) return; const me = new THREE.Mesh(mergeGeometries(l), m); me.castShadow = true; grp.add(me); };
     put(rest, MAT);
@@ -43,7 +44,7 @@ export function makeFigure(o = {}) {
   const head = [P(cyl(.047, .052, .11, 10), skin, 0, .575, -.004), P(sph(.104, 16, 12).scale(.96, 1.16, 1.06), skin, 0, .722, 0), P(sph(.08, 12, 8).scale(.98, .9, .98), skin, 0, .664, .022),
     P(sph(.017, 8, 6).scale(.95, 1.5, 1.25), skin, 0, .703, .108), P(sph(.013, 6, 5), dk, -.039, .737, .1), P(sph(.013, 6, 5), dk, .039, .737, .1),
     P(box(.046, .008, .012), lip, 0, .664, .099),
-    P(new THREE.SphereGeometry(.112, LOW ? 8 : 16, LOW ? 5 : 9, 0, PI * 2, 0, 1.75).scale(1, 1.12, 1.1), hair, 0, .74, -.014, -.3),
+    P(new THREE.SphereGeometry(.112, ULTRA ? 6 : LOW ? 8 : 16, ULTRA ? 3 : LOW ? 5 : 9, 0, PI * 2, 0, 1.75).scale(1, 1.12, 1.1), hair, 0, .74, -.014, -.3),
     ...(LOW ? [] : [P(sph(.019, 8, 6), wh, -.039, .737, .09), P(sph(.019, 8, 6), wh, .039, .737, .09), P(box(.04, .008, .012), hair, -.04, .763, .098, 0, .1), P(box(.04, .008, .012), hair, .04, .763, .098, 0, -.1),
       P(sph(.024, 8, 6).scale(.45, 1, .75), skin, -.101, .722, .002), P(sph(.024, 8, 6).scale(.45, 1, .75), skin, .101, .722, .002)]),
     ...(o.mous || (!woman && !o.hi && skin.charCodeAt(2) % 3 === 0) ? [P(box(.05, .012, .012), hair, 0, .682, .104)] : []),
@@ -99,7 +100,7 @@ export function animate(r, speed, dt) {
 
 // one merged geometry of a standing or sitting person (for hawkers and shop customers)
 export function bake(o, pose, ph = 0) {
-  const r = makeFigure(o);
+  const r = makeFigure({ ultra: true, ...o });
   r.armL.rotation.x = -.45; r.armR.rotation.x = -.3;
   if (pose === 'tea' || pose === 'teasit') { // a clay cup of cha raised in the right hand
     r.armL.rotation.x = -2.2; r.armL.rotation.z = .45; r.body.rotation.x = -.04;
