@@ -77,7 +77,7 @@ export class Drive {
       const fx = Math.cos(v.a), fz = -Math.sin(v.a), rx = Math.sin(v.a), rz = Math.cos(v.a), had = !v.own;
       if (had) { // the driver is turned out and stands by his door, shaking his fist
         const r = this.dr[this.di++ % this.dr.length], off = v.hw + 1.1, fo = BIG(v) ? 3.6 : .3; r.g.visible = true; r.g.position.set(v.x + rx * off + fx * fo, 0, v.z + rz * off + fz * fo); r.t = 0; r.car = v; this.snd.yelp(v.x, v.z); this.police?.offence(v.x, v.z, 'steal', 20);
-      } else if (v.park && !v.taken) this.police?.offence(v.x, v.z, 'steal', 20);
+      } // an empty, parked vehicle is free to take: no case, wherever it stands
       if (had || (v.park && !v.taken)) v.k === 0 ? Score.add(PTS.taxi, 'ট্যাক্সি চুরি') : v.k === 5 ? Score.add(PTS.taxi, 'বাইক চুরি') : Score.add(PTS.bus, 'বাস চুরি');
       v.taken = true;
       this.v = v; v.own = true; v.me = true; v.sp = Math.max(-2, Math.min(3, v.sp)); v.kt = 0; pl.car = v; pl.root.visible = false; this.d0 = pl.dist; pl.dist = Math.max(pl.dist, BIG(v) ? 15 : v.k === 5 ? 6.5 : 8.5); pl.pitch = Math.max(pl.pitch, v.k === 4 ? .3 : .2); this.st = 0; pl.lookT = 0; pl.yaw = this.behind = Math.atan2(-Math.cos(v.a), Math.sin(v.a));

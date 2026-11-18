@@ -23,7 +23,7 @@ const $ = id => document.getElementById(id), Q = new URLSearchParams(location.se
 const TOUCH = matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && Math.min(innerWidth, innerHeight) < 900);
 const renderer = new THREE.WebGLRenderer({ antialias: !TOUCH, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, TOUCH ? 1.25 : 1.5)); renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = !TOUCH; renderer.shadowMap.type = THREE.PCFSoftShadowMap; // phones: no sun shadows (half the drawing work)
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .82;
 document.body.prepend(renderer.domElement);
 const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, .3, 12000);
@@ -130,8 +130,18 @@ async function start() {
   renderer.setAnimationLoop(() => { const raw = clock.getDelta(), dt = Math.min(.05, raw); if (window.kkManual) return; frame(dt);
     if (playing && fx.auto && fx.tier > 0 && document.visibilityState === 'visible' && raw < .5) { if ((warm += raw) > 1.5) { ft += raw; fn++; if (ft > 2.5) { if (fn / ft < 32) { fx.set(fx.tier - 1); gfxNote(); warm = 0; } ft = fn = 0; } } } });
   Object.assign(window.kk, { fx, step: (dt, skip) => frame(dt, skip), LM, ROADS, BRIDGE, DAK, COPS, go: () => go() });
-  await prog(90, 'Warming up…');
+  await prog(84, 'Warming up…');
   try { await renderer.compileAsync(scene, camera); } catch (e) { }
+  // send every building, vehicle, person and texture to the graphics card now, behind the loading bar, instead of
+  // in the middle of play the first time each comes into view (that was the stutter after PLAY)
+  await prog(93, 'Sending the city to the graphics card…');
+  { const keep = [], rt = new THREE.WebGLRenderTarget(8, 8), au = renderer.shadowMap.autoUpdate;
+    scene.traverse(o => { keep.push([o, o.visible, o.frustumCulled, o.isInstancedMesh ? o.count : -1]); o.visible = true; o.frustumCulled = false; if (o.isInstancedMesh) o.count = o.instanceMatrix.count; });
+    renderer.shadowMap.autoUpdate = false; renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.setRenderTarget(null); renderer.shadowMap.autoUpdate = au; rt.dispose();
+    for (const [o, v, f, c] of keep) { o.visible = v; o.frustumCulled = f; if (c >= 0) o.count = c; }
+    // the painted canvases are on the card now and never change: free their copies in memory
+    const seen = new Set(); scene.traverse(o => { for (const m of o.material ? [].concat(o.material) : []) for (const k in m) { const t = m[k]; if (!t || !t.isTexture || seen.has(t.source)) continue; seen.add(t.source);
+      const im = t.image; if (im instanceof HTMLCanvasElement && t.version > 0) { t.image = { width: im.width, height: im.height }; im.width = im.height = 0; } } }); }
   if (!window.kkManual) await new Promise(r => setTimeout(r, 900)); // let the first frames through behind the title
   await prog(100, 'Ready');
   $('load').style.display = 'none'; $('play').style.display = 'inline-block';

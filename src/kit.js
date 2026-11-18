@@ -158,7 +158,14 @@ function curtainTex() { // glass curtain wall: one tile is one floor by two bays
   return tex(c);
 }
 // Static geometry does not need its copy in main memory once it is on the graphics card: drop it after upload
-export function lean(g) { g.computeBoundingSphere(); g.computeBoundingBox(); const drop = function () { this.array = null; }; for (const a of Object.values(g.attributes)) a.onUpload(drop); if (g.index) g.index.onUpload(drop); return g; }
+export function lean(g) {
+  g.computeBoundingSphere(); g.computeBoundingBox();
+  // pack normals and vertex colours into bytes: a quarter of the graphics memory, no visible difference
+  const n = g.attributes.normal, c = g.attributes.color;
+  if (n && n.array instanceof Float32Array && n.itemSize === 3) { const q = new Int8Array(n.array.length); for (let i = 0; i < q.length; i++) q[i] = Math.max(-127, Math.min(127, Math.round(n.array[i] * 127))); g.setAttribute('normal', new THREE.BufferAttribute(q, 3, true)); }
+  if (c && c.array instanceof Float32Array) { const q = new Uint8Array(c.array.length); for (let i = 0; i < q.length; i++) q[i] = Math.max(0, Math.min(255, Math.round(c.array[i] * 255))); g.setAttribute('color', new THREE.BufferAttribute(q, c.itemSize, true)); }
+  const drop = function () { this.array = null; }; for (const a of Object.values(g.attributes)) a.onUpload(drop); if (g.index) g.index.onUpload(drop); return g;
+}
 // Painted sign board
 const SIGNS = new Map(); // one texture per distinct sign: number plates, TAXI STAND, POLICE and the like repeat many times
 export function signMesh(text, w, h, bg = '#f4f1e8', fg = '#141414') {
