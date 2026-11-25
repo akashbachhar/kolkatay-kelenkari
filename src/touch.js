@@ -41,6 +41,6 @@ export function initTouch(player, dom, act) {
   btn('bJump', () => { player.keys.Space = true; }, () => { player.keys.Space = false; });
   btn('bHit', () => player.hit());
   btn('bRun', b => { player.run = !player.run; b.classList.toggle('act', player.run); });
-  btn('bMap', () => act.map()); btn('bSnd', b => { const off = act.sound(); b.classList.toggle('off', off); b.innerHTML = off ? ICON.mute : ICON.sound; });
+  btn('bMap', () => act.map()); btn('bSnd', b => { const st = act.sound(); b.classList.toggle('off', st === 'off'); b.classList.toggle('nomusic', st === 'nomusic'); b.innerHTML = st === 'off' ? ICON.mute : ICON.sound; }); // tap: music off, then all off, then back on
   for (const n of ['gesturestart', 'contextmenu']) addEventListener(n, e => e.preventDefault());
 }

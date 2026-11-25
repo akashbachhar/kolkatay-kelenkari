@@ -1,16 +1,42 @@
 // All sound is synthesised in the browser (no audio files): city hum, crowd murmur, horns, tram bell, crows, footsteps.
+
+// The soundtrack: three loops (explore, chase, temple) built by musicgen.js in a background thread while the city loads.
+// All three play together in step, silent but for the one that fits the moment; they cross-fade as the mood changes.
+const MVOL = { explore: .5, chase: .62, temple: .58 };
+export class Music {
+  constructor(lite) {
+    this.on = true; this.cur = null; this.want = 'explore';
+    try { const w = new Worker(new URL('./musicgen.js', import.meta.url), { type: 'module' }); w.onmessage = e => { this.data = e.data; w.terminate(); this.attach(); }; w.postMessage({ sr: lite ? 22050 : 24000, stereo: !lite }); } catch (e) { }
+  }
+  start(ctx, out) { if (this.ctx) return; this.ctx = ctx; this.dst = ctx.createGain(); this.dst.gain.value = this.on ? .7 : 0; this.dst.connect(out); this.attach(); }
+  attach() {
+    if (!this.ctx || !this.data || this.src) return; const c = this.ctx, { sr, loops } = this.data; this.src = {};
+    for (const [k, ch] of Object.entries(loops)) { const b = c.createBuffer(ch.length, ch[0].length, sr); ch.forEach((d, i) => b.copyToChannel(d, i)); const s = c.createBufferSource(); s.buffer = b; s.loop = true; const g = c.createGain(); g.gain.value = 0; s.connect(g); g.connect(this.dst); s.start(c.currentTime + .05); this.src[k] = { s, g }; }
+    this.data = null; this.cur = null; this.mood(this.want);
+  }
+  mood(m) { // 'explore' | 'chase' | 'temple' | 'none'
+    this.want = m; if (!this.src || m === this.cur) return; const t = this.ctx.currentTime, up = m === 'chase' ? .25 : 1.2;
+    for (const [k, { g }] of Object.entries(this.src)) { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(k === m ? MVOL[k] : 0, t, k === m ? up : .7); }
+    this.cur = m;
+  }
+  set(on) { this.on = on; if (this.dst) this.dst.gain.setTargetAtTime(on ? .7 : 0, this.ctx.currentTime, .3); }
+}
 export class Sound {
-  constructor() { this.px = 0; this.pz = 0; this.yaw = 0; this.muted = false; this.next = 2; this.crowT = 9; this.last = 0; }
+  constructor(music) { this.music = music; this.px = 0; this.pz = 0; this.yaw = 0; this.muted = false; this.next = 2; this.crowT = 9; this.last = 0; }
   start() {
     if (this.ctx) { this.ctx.resume?.(); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    const c = this.ctx = new AC(); this.out = c.createGain(); this.out.gain.value = .9; this.out.connect(c.destination);
+    const c = this.ctx = new AC(); this.out = c.createGain(); this.out.gain.value = .9; this.out.connect(c.destination); this.music?.start(c, this.out);
     const mk = (secs, brown) => { const n = c.sampleRate * secs, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); let v = 0; for (let i = 0; i < n; i++) { const w = Math.random() * 2 - 1; if (brown) { v = (v + .02 * w) / 1.02; d[i] = v * 3.5; } else d[i] = w; } return b; };
     this.brown = mk(4, true); this.white = mk(.5, false);
     const loop = (type, f, q, g) => { const s = c.createBufferSource(); s.buffer = this.brown; s.loop = true; const fl = c.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; const gn = c.createGain(); gn.gain.value = g; s.connect(fl); fl.connect(gn); gn.connect(this.out); s.start(); return gn; };
     this.rumble = loop('lowpass', 240, .4, .34); this.murmur = loop('bandpass', 850, .5, .2);
   }
   toggle() { this.muted = !this.muted; if (this.out) this.out.gain.value = this.muted ? 0 : .9; return this.muted; }
+  cycle() { // everything on → music off → all off → everything on
+    if (this.muted) { this.toggle(); this.music?.set(true); } else if (this.music?.on) this.music.set(false); else this.toggle();
+    return this.muted ? 'off' : this.music?.on ? 'on' : 'nomusic';
+  }
   listen(p, yaw) { this.px = p.x; this.pz = p.z; this.yaw = yaw; }
   at(x, z, base, reach = 110) { const dx = x - this.px, dz = z - this.pz, d = Math.hypot(dx, dz); if (d > reach) return null; return [base / (1 + d / 10), Math.max(-1, Math.min(1, (dx * Math.cos(this.yaw) - dz * Math.sin(this.yaw)) / Math.max(d, 4)))]; }
   voice(freqs, t0, dur, vol, pan, type = 'square', cut = 2000, glide = 1) {

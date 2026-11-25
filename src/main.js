@@ -6,7 +6,7 @@ import { Traffic } from './traffic.js';
 import { Player } from './player.js';
 import { Hud } from './hud.js';
 import { People } from './people.js';
-import { Sound } from './audio.js';
+import { Sound, Music } from './audio.js';
 import { initTouch } from './touch.js';
 import { folk, roams, anims, LM } from './landmarks.js';
 import { Ferry } from './ferry.js';
@@ -32,6 +32,7 @@ async function start() {
   try { await Promise.race([Promise.all([document.fonts.load('700 36px "Baloo Da 2"', 'কলকাতা'), document.fonts.load('700 36px "Baloo Da 2"', 'Kolkata')]), new Promise(r => setTimeout(r, 2500))]); } catch { }
   // the loading bar: each stage of building the city reports in, and PLAY only appears once everything is ready and the first frames have been drawn
   const prog = async (p, txt) => { $('load').firstElementChild.textContent = `${txt} ${p}%`; $('load').lastElementChild.firstElementChild.style.width = p + '%'; await new Promise(r => requestAnimationFrame(() => setTimeout(r, 0))); };
+  const music = new Music(TOUCH); // composed in the background while the city is built
   await prog(8, 'Painting the walls…');
   initMats(TOUCH);
   await prog(30, 'Raising the landmarks…');
@@ -50,6 +51,7 @@ async function start() {
   scene.add(sun, sun.target);
   // picture quality: 2 High (ambient occlusion, bloom, grade), 1 Medium (bloom, grade), 0 Low (plain). G changes it; it steps down by itself if the frame rate is poor
   const fx = makeFx(renderer, scene, camera, sun); fx.maxPR = TOUCH ? 1.25 : 9; fx.set(Q.has('gfx') ? +Q.get('gfx') : TOUCH ? 0 : 1); // desktops start on Medium (bloom and grade); High adds ambient occlusion, on G. Phones start plain
+  const note = s => { const w = $('ptsWhy'); w.style.color = ''; w.textContent = s; w.classList.add('on'); clearTimeout(fx.nt); fx.nt = setTimeout(() => w.classList.remove('on'), 2200); };
   const gfxNote = () => { const w = $('ptsWhy'); w.style.color = ''; w.textContent = 'Graphics · ' + fx.names[fx.tier]; w.classList.add('on'); clearTimeout(fx.nt); fx.nt = setTimeout(() => w.classList.remove('on'), 2200); };
   addEventListener('keydown', e => { if (e.code === 'KeyG' && !e.repeat) { fx.set((fx.tier + 2) % 3); fx.auto = false; gfxNote(); } });
   // the sun's disc and glow, kept far away along the sun direction
@@ -66,7 +68,7 @@ async function start() {
 
   const world = buildWorld(scene); await prog(62, 'Putting taxis on the road…');
   const traffic = new Traffic(scene); await prog(76, 'Filling the streets…');
-  const player = new Player(scene, camera, renderer.domElement), hud = new Hud(), people = new People(scene, folk, roams, TOUCH ? 26 : 48, TOUCH), sound = new Sound();
+  const player = new Player(scene, camera, renderer.domElement), hud = new Hud(), people = new People(scene, folk, roams, TOUCH ? 26 : 48, TOUCH), sound = new Sound(music);
   let police; player.onStep = fast => sound.step(fast);
   player.onPunch = (x, z, fx, fz) => { // a person or an officer within reach falls; any officer within 50 m makes it a case
     const who = people.hitAt(x, z, fx, fz, sound), cop = who ? null : police.hitAt(x, z, fx, fz); sound.punch(!!(who || cop));
@@ -83,19 +85,19 @@ async function start() {
   let playing = false; const dom = renderer.domElement, ov = $('overlay');
   const lock = () => { if (!TOUCH) dom.requestPointerLock?.()?.catch?.(() => { }); };
   const go = () => { playing = true; sound.start(); ov.classList.add('hide'); $('hud').classList.add('on'); lock(); };
-  if (TOUCH) initTouch(player, dom, { map: () => hud.toggleMap(), sound: () => sound.toggle() });
+  if (TOUCH) initTouch(player, dom, { map: () => hud.toggleMap(), sound: () => sound.cycle() });
   $('bHelp').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.toggleHelp(); }); $('keys').addEventListener('pointerdown', () => hud.toggleHelp(false)); $('plist').addEventListener('pointerdown', e => { e.stopPropagation(); hud.togglePlaces(false); }); $('points').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); hud.togglePlaces(); });
   // before play: what earns points, the places to find, the controls
   Score.load();
   { const pgs = [...document.querySelectorAll('#intro .pg')]; let pi = -1;
     $('places').innerHTML = LM.map(l => `<span class="${Score.found.has(l.n) ? 'ok' : ''}">${l.bn || l.n}</span>`).join('');
     $('ctl').innerHTML = document.querySelector('#keys .kb').innerHTML; { const t = $('ctl2'); t.id = 'ctl'; t.className = 'tc'; t.innerHTML = document.querySelector('#keys .tc').innerHTML; }
-    const page = () => { pi++; if (pi >= pgs.length) { ov.classList.remove('pages'); return go(); } ov.classList.add('pages'); pgs.forEach((e, i) => e.classList.toggle('on', i === pi)); $('pgno').textContent = `${Score.BN(pi + 1)} / ${Score.BN(pgs.length)}`; $('next').textContent = pi === pgs.length - 1 ? 'খেলা শুরু ▶' : 'পরের পাতা ›'; };
+    const page = () => { sound.start(); pi++; if (pi >= pgs.length) { ov.classList.remove('pages'); return go(); } ov.classList.add('pages'); pgs.forEach((e, i) => e.classList.toggle('on', i === pi)); $('pgno').textContent = `${Score.BN(pi + 1)} / ${Score.BN(pgs.length)}`; $('next').textContent = pi === pgs.length - 1 ? 'খেলা শুরু ▶' : 'পরের পাতা ›'; };
     window.kkPage = page; $('next').onclick = page; }
   $('play').onclick = () => window.kkPage(); dom.addEventListener('click', () => { if (playing && !police.busted && document.pointerLockElement !== dom) lock(); });
   window.kkLock = lock;
   document.addEventListener('pointerlockchange', () => { if (playing && !TOUCH && !police.busted && document.pointerLockElement !== dom) $('paused').classList.add('on'); else $('paused').classList.remove('on'); });
-  addEventListener('keydown', e => { if (e.code === 'KeyM' && playing) hud.toggleMap(); if (e.code === 'KeyC' && playing) hud.toggleHelp(); if (e.code === 'KeyP' && playing) hud.togglePlaces(); if (e.code === 'KeyN' && playing) hud.toast(sound.toggle() ? '<small>SOUND</small>Off' : '<small>SOUND</small>On'); if (e.code === 'Enter' && !playing) window.kkPage(); });
+  addEventListener('keydown', e => { if (e.code === 'KeyM' && playing) hud.toggleMap(); if (e.code === 'KeyC' && playing) hud.toggleHelp(); if (e.code === 'KeyP' && playing) hud.togglePlaces(); if (e.code === 'KeyN' && playing) note({ on: 'Music & sound on', nomusic: 'Music off', off: 'All sound off' }[sound.cycle()]); if (e.code === 'Enter' && !playing) window.kkPage(); });
   const fit = () => { camera.aspect = innerWidth / innerHeight; camera.fov = innerWidth < innerHeight ? 72 : 58; camera.updateProjectionMatrix(); fx.size(); };
   addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 250)); fit();
   if (Q.has('auto')) go();
@@ -108,6 +110,7 @@ async function start() {
     sound.listen(player.pos, player.yaw); traffic.update(dt, player.pos, playing ? sound : null); people.update(dt, player.pos);
     if (playing && (oc -= dt) < 0) { oc = 1; open = !!player.zone || player.ride || nearestRoad(player.pos.x, player.pos.z).d > 45; }
     if (playing) sound.tick(dt, open, !!player.zone && !player.ride);
+    music.mood(police.busted ? 'none' : (puja.t >= 0 || player.zone) && !player.ride ? 'temple' : police.wanted ? 'chase' : 'explore');
     ferry.update(dt, t, playing); for (const f of anims) f(t);
     if (playing) { const L = LOCKED.find(q => Math.hypot(player.pos.x - q.x, player.pos.z - q.z) < q.r), el = $('lock'); if ((L?.html || '') !== el.dataset.h) { el.dataset.h = L?.html || ''; el.innerHTML = L?.html || ''; el.classList.toggle('on', !!L); if (L) { const s = LM.find(l => l.n === 'Sonagachi'); if (s) Score.find(s); } } }
     if (playing && RACE.horses.length && Math.hypot(player.pos.x - RACE.x, player.pos.z - RACE.z) < RACE.a + 30) for (const h of RACE.horses) { // a galloping horse knocks people over

@@ -45,7 +45,7 @@ body.touch #hud.on~#touch,body.touch #touch.show{display:block}
 #touch button{pointer-events:auto;touch-action:none;position:absolute;border:2px solid rgba(244,236,216,.6);background:rgba(23,19,15,.45);color:#f4ecd8;font:800 13px "Baloo Da 2",system-ui;border-radius:50%;letter-spacing:.06em}
 #bJump{right:26px;bottom:34px;width:84px;height:84px}#bRun{right:120px;bottom:22px;width:68px;height:68px}
 #bRun.act{background:var(--taxi);color:var(--ink);border-color:var(--taxi)}
-#bMap,#bSnd{top:14px;width:50px;height:50px;font-size:11px}#bMap{right:14px}#bSnd{right:72px}#bSnd.off{opacity:.45;text-decoration:line-through}
+#bMap,#bSnd{top:14px;width:50px;height:50px;font-size:11px}#bMap{right:14px}#bSnd{right:72px}#bSnd.off{opacity:.45;text-decoration:line-through}#bSnd.nomusic::after{content:'♪';position:absolute;right:6px;top:3px;font-size:14px;color:#f2c118;text-decoration:line-through}
 body.touch #help,body.touch #paused{display:none}
 body.touch .keys.kb{display:none}body.touch .keys.tc{display:grid}
 /* small screens and touch devices: map and place name move to the top-left, out of the thumbs' way */
@@ -174,8 +174,8 @@ body.touch #where{top:44px}body.touch #ptsWhy{top:100px;right:14px;font-size:14p
   <div id="where"><div id="road"></div><div id="area"></div></div>
   <button id="bHelp" aria-label="Controls">C</button>
   <div id="keys"><h4>Controls</h4>
-    <div class="grid kb"><b>W A S D</b><span>walk / drive</span><b>Mouse</b><span>look around</span><b>Shift</b><span>sprint</span><b>Space</b><span>jump · brake</span><b>Left click</b><span>hit</span><b>X</b><span>walk / jog</span><b>E</b><span>get in / out of a taxi or bus</span><b>V</b><span>first / third person</span><b>H</b><span>horn</span><b>Wheel</b><span>zoom</span><b>G</b><span>graphics quality</span><b>M</b><span>city map</span><b>P</b><span>places to find</span><b>N</b><span>sound on / off</span><b>C</b><span>these controls</span><b>Esc</b><span>free the mouse</span></div>
-    <div class="grid tc"><b>Left thumb</b><span>walk / drive</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump · brake</span><b>HIT</b><span>hit</span><b>CAR</b><span>get in / out</span><b>VIEW</b><span>first / third person</span><b>MAP</b><span>city map</span><b>Points</b><span>tap for places to find</span><b>SOUND</b><span>sound on / off</span></div>
+    <div class="grid kb"><b>W A S D</b><span>walk / drive</span><b>Mouse</b><span>look around</span><b>Shift</b><span>sprint</span><b>Space</b><span>jump · brake</span><b>Left click</b><span>hit</span><b>X</b><span>walk / jog</span><b>E</b><span>get in / out of a taxi or bus</span><b>V</b><span>first / third person</span><b>H</b><span>horn</span><b>Wheel</b><span>zoom</span><b>G</b><span>graphics quality</span><b>M</b><span>city map</span><b>P</b><span>places to find</span><b>N</b><span>music off · all off · on</span><b>C</b><span>these controls</span><b>Esc</b><span>free the mouse</span></div>
+    <div class="grid tc"><b>Left thumb</b><span>walk / drive</span><b>Right thumb</b><span>drag to look</span><b>RUN</b><span>sprint on / off</span><b>JUMP</b><span>jump · brake</span><b>HIT</b><span>hit</span><b>CAR</b><span>get in / out</span><b>VIEW</b><span>first / third person</span><b>MAP</b><span>city map</span><b>Points</b><span>tap for places to find</span><b>SOUND</b><span>music off · all off · on</span></div>
     <small>Tap or press C to close</small></div>
   <div id="plist"><h4></h4><div id="places2"></div><small>Tap or press P to close</small></div>
   <canvas id="big"></canvas>
